@@ -66,6 +66,7 @@ Repository variables：
 |---|---|---|
 | `OSS_PUBLIC_BASE_URL` | `https://download.example.com` | manifest 中 zipUrl 的 base，需与 Spherse 端 manifest 常量同源 |
 | `OSS_BUCKET` | `my-bucket` | 上传目标 bucket |
+| `OSS_ENDPOINT` | `oss-cn-beijing.aliyuncs.com` | bucket 所在地 endpoint（ossutil `-e` 参数，不带 bucket 前缀） |
 
 Repository secrets：
 
