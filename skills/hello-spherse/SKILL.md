@@ -1,7 +1,7 @@
 ---
 name: hello-spherse
 description: 示例技能：介绍技能包仓库的目录结构与发布流程，可作为新技能的模板。
-version: 0.1.0
+version: 0.2.0
 ---
 
 # Hello Spherse
