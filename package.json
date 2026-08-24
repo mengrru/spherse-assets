@@ -1,0 +1,14 @@
+{
+  "name": "spherse-assets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "publish:skills": "node scripts/publish-skills.mjs",
+    "test": "node scripts/publish-skills.test.mjs"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "gray-matter": "^4.0.3"
+  }
+}

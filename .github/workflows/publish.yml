@@ -1,0 +1,74 @@
+name: Publish assets to OSS
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource:
+        description: Resource type to publish
+        type: choice
+        required: true
+        default: skills
+        options:
+          - skills
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build publish artifacts
+        if: inputs.resource == 'skills'
+        env:
+          OSS_PUBLIC_BASE_URL: ${{ vars.OSS_PUBLIC_BASE_URL }}
+        run: node scripts/publish-skills.mjs
+
+      - name: Install ossutil
+        if: inputs.resource == 'skills'
+        run: |
+          curl -fsSL -o /tmp/ossutil https://gosspublic.alicdn.com/ossutil/1.7.18/ossutil64
+          chmod +x /tmp/ossutil
+
+      - name: Upload skill zips
+        if: inputs.resource == 'skills'
+        env:
+          OSS_BUCKET: ${{ vars.OSS_BUCKET }}
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        run: |
+          find dist/spherse/skills -type f -name '*.zip' | while read -r f; do
+            key="${f#dist/}"
+            echo "uploading $key"
+            /tmp/ossutil cp "$f" "oss://$OSS_BUCKET/$key" \
+              --access-key-id "$OSS_ACCESS_KEY_ID" \
+              --access-key-secret "$OSS_ACCESS_KEY_SECRET" \
+              --force
+          done
+
+      - name: Upload manifest (last, keeps marketplace consistent)
+        if: inputs.resource == 'skills'
+        env:
+          OSS_BUCKET: ${{ vars.OSS_BUCKET }}
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        run: |
+          /tmp/ossutil cp dist/spherse/skills/manifest.json "oss://$OSS_BUCKET/spherse/skills/manifest.json" \
+            --access-key-id "$OSS_ACCESS_KEY_ID" \
+            --access-key-secret "$OSS_ACCESS_KEY_SECRET" \
+            --force
