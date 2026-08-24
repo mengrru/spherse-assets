@@ -166,7 +166,7 @@ test("publish bundles companion files under the skill-name top-level directory",
   assert.ok(names.includes("with-files/references/guide.md"));
 });
 
-test("publish refuses an empty skills directory", async () => {
+test("publish refuses when both the skills directory and the marketplace are empty", async () => {
   const root = makeTmpRoot();
   await assert.rejects(
     () =>
@@ -177,6 +177,34 @@ test("publish refuses an empty skills directory", async () => {
         manifestUrl: `${BASE_URL}/spherse/skills/manifest.json`,
         fetchFn: async () => new Response("", { status: 404 }),
       }),
-    /refusing to publish an empty manifest/,
+    /already empty; nothing to publish/,
   );
+});
+
+test("publish removes marketplace entries when the skills directory is emptied", async () => {
+  const root = makeTmpRoot();
+  const distDir = path.join(root, "dist");
+  const result = await publish({
+    skillsDir: root,
+    distDir,
+    baseUrl: BASE_URL,
+    manifestUrl: `${BASE_URL}/spherse/skills/manifest.json`,
+    fetchFn: async () =>
+      new Response(
+        JSON.stringify({
+          schemaVersion: 1,
+          generatedAt: "2026-01-01T00:00:00Z",
+          skills: [
+            { name: "old", description: "Old", version: "1.0.0", zipUrl: zipUrlFor(BASE_URL, "old", "1.0.0"), size: 100, updatedAt: "2026-01-01T00:00:00Z" },
+          ],
+        }),
+        { status: 200 },
+      ),
+  });
+
+  assert.deepEqual(result.published, []);
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(distDir, "spherse", "skills", "manifest.json"), "utf-8"),
+  );
+  assert.deepEqual(manifest.skills, []);
 });

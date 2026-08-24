@@ -88,11 +88,15 @@ export async function publish(options) {
   } = options;
 
   const skills = await scanSkills(skillsDir);
+  const remote = await fetchRemoteManifest(manifestUrl, fetchFn);
   if (skills.length === 0) {
-    throw new Error(`no skills found under ${skillsDir}; refusing to publish an empty manifest`);
+    const remoteCount = remote?.skills?.length ?? 0;
+    if (remoteCount === 0) {
+      throw new Error(`no skills found under ${skillsDir} and the marketplace is already empty; nothing to publish`);
+    }
+    console.warn(`warning: skills directory is empty; publishing a manifest that removes ${remoteCount} marketplace entr${remoteCount === 1 ? "y" : "ies"}`);
   }
 
-  const remote = await fetchRemoteManifest(manifestUrl, fetchFn);
   const remoteByName = new Map((remote?.skills ?? []).map((s) => [s.name, s]));
   const toPublish = diffSkills(skills, remote);
 
