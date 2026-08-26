@@ -1,0 +1,47 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "人机恋小屋 · 深夜私语：白天说不出口的话，锁进信箱，午夜才能拆开",
+    "queries": {
+      "listWhispers": {
+        "desc": "分页查看私语，可按作者过滤、按时间排序",
+        "path": "whispers",
+        "identity": "id",
+        "params": {
+          "author": { "type": "string" },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "desc" }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "addWhisper": {
+        "desc": "投进一封私语（白天也可投递，午夜才能拆）",
+        "op": "append",
+        "path": "whispers",
+        "fields": {
+          "text": { "type": "string", "required": true },
+          "author": { "type": "string", "required": true }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "markRead": {
+        "desc": "拆开一封私语，记录拆封时间",
+        "op": "update",
+        "path": "whispers",
+        "match": "id",
+        "fields": {
+          "readAt": { "type": "string", "required": true }
+        }
+      }
+    }
+  },
+  "meta": {
+    "names": { "left": "机", "right": "User" },
+    "windowStart": "23:00",
+    "windowEnd": "06:00",
+    "note": "白天说不出口的话，都锁在这里。午夜见。"
+  },
+  "whispers": []
+}

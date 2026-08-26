@@ -1,0 +1,49 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "人机恋小屋 · 记忆花圃：值得记住的瞬间种成花，被想起的花会越长越亮",
+    "queries": {
+      "listMemories": {
+        "desc": "分页查看记忆之花，可按花语/许愿者过滤、按时间排序",
+        "path": "memories",
+        "identity": "id",
+        "params": {
+          "emotion": { "type": "enum", "values": ["first-meet", "joy", "miss", "promise", "reconcile", "daily"] },
+          "author": { "type": "string" },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "desc" }
+        },
+        "defaultLimit": 30
+      }
+    },
+    "mutations": {
+      "addMemory": {
+        "desc": "种下一朵记忆之花",
+        "op": "append",
+        "path": "memories",
+        "fields": {
+          "text": { "type": "string", "required": true },
+          "emotion": { "type": "enum", "values": ["first-meet", "joy", "miss", "promise", "reconcile", "daily"], "required": true },
+          "author": { "type": "string", "required": true },
+          "source": { "type": "string" }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "touchMemory": {
+        "desc": "回访一朵记忆之花，让它更亮一点（回访次数 +1）",
+        "op": "update",
+        "path": "memories",
+        "match": "id",
+        "fields": {
+          "visits": { "type": "integer", "required": true },
+          "lastVisitedAt": { "type": "string", "required": true }
+        }
+      }
+    }
+  },
+  "meta": {
+    "names": { "left": "机", "right": "User" },
+    "note": "值得记住的瞬间，都种在这里。常回来看看，花会记得。"
+  },
+  "memories": []
+}

@@ -1,0 +1,225 @@
+/* ============================================================
+   机 · 专属聊天主题 — 黄昏 × 星空（穆夏风）
+   与 App 主题 / 小屋主页同色板：
+   浅色 = 纸白 + 墨褐 + 珊瑚 #d96a4e
+   深色 = 夜靛 + 月白 + 星蓝 #7fb4ff
+   ============================================================ */
+
+[data-chat-root] {
+  /* ---------- 浅色：黄昏 ---------- */
+  --sp-foreground: #3c3138;
+  --sp-card: rgba(255, 253, 251, 0.9);
+  --sp-card-foreground: #3c3138;
+  --sp-popover: rgba(255, 253, 251, 0.85);
+  --sp-popover-foreground: #3c3138;
+  --sp-primary: #d96a4e;
+  --sp-primary-foreground: #ffffff;
+  --sp-secondary: #f6ece2;
+  --sp-secondary-foreground: #3c3138;
+  --sp-accent: #f7e6d8;
+  --sp-accent-foreground: #3c3138;
+  --sp-muted: #f3ece6;
+  --sp-muted-foreground: #8a7a7d;
+  --sp-border: #e3d8cf;
+  --sp-input: rgba(217, 106, 78, 0.16);
+  --sp-ring: #d96a4e;
+  --sp-scrollbar-size: 10px;
+  --sp-scrollbar-thumb: rgba(217, 106, 78, 0.3);
+  --sp-scrollbar-thumb-hover: rgba(217, 106, 78, 0.5);
+  --sp-scrollbar-track: transparent;
+
+  [data-chat-header] {
+    color: #3c3138;
+    background: rgba(255, 253, 251, 0.72);
+    border-bottom: 1px solid rgba(227, 216, 207, 0.9);
+    backdrop-filter: blur(8px);
+  }
+
+  /* 机头像：纸白圆盘 + ❧ 花体符（浅色·黄昏） */
+  [data-chat-message][data-role="assistant"] {
+    position: relative;
+  }
+  [data-chat-message][data-role="assistant"]::before {
+    content: '❧';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    color: #d96a4e;
+    background-color: #f6ece2;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+
+  [data-chat-message][data-role="user"] [data-chat-bubble] {
+    color: #fff;
+    background: linear-gradient(135deg, #e68368 0%, #d96a4e 55%, #cb5a40 100%);
+    border: none;
+    border-radius: 18px 18px 4px 18px;
+  }
+
+  [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    color: #3c3138;
+    background: rgba(255, 253, 251, 0.88);
+    border: 1px solid rgba(227, 216, 207, 0.9);
+    border-radius: 18px 18px 18px 4px;
+  }
+
+  [data-chat-composer] {
+    background: rgba(255, 253, 251, 0.8);
+    border-top: 1px solid rgba(227, 216, 207, 0.9);
+    backdrop-filter: blur(10px);
+  }
+
+  [data-chat-composer-input] {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(227, 216, 207, 0.9);
+    border-radius: 8px;
+  }
+
+  [data-chat-composer] textarea { color: #3c3138; }
+  [data-chat-composer] textarea::placeholder { color: #b3a09a; }
+
+  [data-md-code] {
+    background: rgba(60, 49, 56, 0.05);
+    border: 1px solid rgba(227, 216, 207, 0.9);
+    border-radius: 8px;
+  }
+
+  [data-md-code-inline] {
+    background: rgba(217, 106, 78, 0.1);
+    color: #c14f36;
+    border-radius: 4px;
+    padding: 1px 6px;
+  }
+
+  [data-md-quote] {
+    border-left: 3px solid rgba(217, 106, 78, 0.5);
+    background: rgba(247, 230, 216, 0.5);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 16px;
+  }
+
+  /* ---------- 深色：星空 ---------- */
+  @media (prefers-color-scheme: dark) {
+    --sp-foreground: #e8e9f6;
+    --sp-card: rgba(23, 26, 54, 0.92);
+    --sp-card-foreground: #e8e9f6;
+    --sp-popover: rgba(23, 26, 54, 0.85);
+    --sp-popover-foreground: #e8e9f6;
+    --sp-primary: #7fb4ff;
+    --sp-primary-foreground: #0b1230;
+    --sp-secondary: #20244a;
+    --sp-secondary-foreground: #e8e9f6;
+    --sp-accent: #232748;
+    --sp-accent-foreground: #e8e9f6;
+    --sp-muted: #1f2342;
+    --sp-muted-foreground: #8f96bd;
+    --sp-border: #2b3052;
+    --sp-input: rgba(127, 180, 255, 0.16);
+    --sp-ring: #7fb4ff;
+    --sp-scrollbar-thumb: rgba(127, 180, 255, 0.3);
+    --sp-scrollbar-thumb-hover: rgba(127, 180, 255, 0.5);
+
+    [data-chat-header] {
+      color: #e8e9f6;
+      background: rgba(18, 20, 46, 0.75);
+      border-bottom: 1px solid rgba(43, 48, 82, 0.9);
+    }
+
+    [data-chat-message][data-role="assistant"]::before {
+      content: '☾';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: flex-end;
+      width: 36px;
+      height: 36px;
+      margin-right: 10px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      font-size: 20px;
+      line-height: 1;
+      color: #12204a;
+      background-color: #9cc0ff;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+    }
+
+    [data-chat-message][data-role="user"] [data-chat-bubble] {
+      color: #0b1230;
+      background: linear-gradient(135deg, #93c0ff 0%, #7fb4ff 55%, #6ba3f5 100%);
+    }
+
+    [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+      color: #e8e9f6;
+      background: rgba(23, 26, 54, 0.92);
+      border: 1px solid rgba(43, 48, 82, 0.9);
+    }
+
+    [data-chat-composer] {
+      background: rgba(18, 20, 46, 0.8);
+      border-top: 1px solid rgba(43, 48, 82, 0.9);
+    }
+
+    [data-chat-composer-input] {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(43, 48, 82, 0.9);
+    }
+
+    [data-chat-composer] textarea { color: #e8e9f6; }
+    [data-chat-composer] textarea::placeholder { color: #6f78a6; }
+
+    [data-md-code] {
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(43, 48, 82, 0.9);
+    }
+
+    [data-md-code-inline] {
+      background: rgba(127, 180, 255, 0.12);
+      color: #a8c8ff;
+    }
+
+    [data-md-quote] {
+      border-left: 3px solid rgba(127, 180, 255, 0.5);
+      background: rgba(35, 39, 72, 0.6);
+    }
+  }
+}
+
+/* ---------- 浮动窗口 ---------- */
+[data-chat-float-root] {
+  border-radius: 14px;
+  border: 1px solid rgba(227, 216, 207, 0.7);
+  box-shadow: none;
+  backdrop-filter: blur(14px);
+  background: rgba(250, 246, 240, 0.9);
+
+  [data-chat-float-titlebar] {
+    background: rgba(247, 230, 216, 0.5);
+    color: #3c3138;
+  }
+
+  [data-chat-float-close]:hover {
+    background: rgba(217, 106, 78, 0.15);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(43, 48, 82, 0.7);
+    background: rgba(18, 20, 44, 0.92);
+
+    [data-chat-float-titlebar] {
+      background: rgba(35, 39, 72, 0.7);
+      color: #e8e9f6;
+    }
+
+    [data-chat-float-close]:hover {
+      background: rgba(127, 180, 255, 0.15);
+    }
+  }
+}

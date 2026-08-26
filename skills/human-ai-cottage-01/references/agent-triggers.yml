@@ -1,0 +1,19 @@
+# 小屋管家 · 触发器配置
+# 安装时用 manage_trigger 按此文件为新建的 agent 创建触发器（agent_id 用 manage_agent 返回的 id）。
+
+triggers:
+  - name: 每日今日心情
+    type: time
+    cron: "0 8 * * *"
+    mode: reusable_session   # 全新安装建议 reusable_session（首次触发自动建会话）
+    session_id: ""           # 若想续到主会话：mode 改 existing_session，这里填目标会话 id
+    message: "{{time}} 了，该更新主页的今日心情了（home/index.data.json → meta.dailyMood）。"
+    notify: false
+
+  - name: 午夜投递私语
+    type: time
+    cron: "0 23 * * *"
+    mode: reusable_session
+    session_id: ""
+    message: "{{time}} 了，该往深夜私语投一封私语了（home/whispers.data.json → addWhisper，author 填你的名字）。"
+    notify: false

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人机恋小屋 · 主题预览</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Songti SC", "STSong", "Noto Serif SC", "PingFang SC", Georgia, serif;
+    background: #f3ede6;
+    color: #3c3138;
+    padding: 28px 24px 48px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .head { text-align: center; margin-bottom: 26px; }
+  .head h1 { font-size: 20px; letter-spacing: .35em; color: #3c3138; font-weight: 600; }
+  .head p { margin-top: 8px; font-size: 11px; letter-spacing: .2em; color: #8a7a7d; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; max-width: 980px; margin: 0 auto; }
+  .panel { border-radius: 10px; overflow: hidden; border: 1px solid rgba(0,0,0,.08); }
+  .panel-tag { padding: 10px 16px; font-size: 11px; letter-spacing: .3em; color: #fff; }
+  .panel.light .panel-tag { background: linear-gradient(135deg,#e68368,#cb5a40); }
+  .panel.dark .panel-tag { background: linear-gradient(135deg,#93c0ff,#6ba3f5); }
+  .demo { padding: 20px; }
+
+  /* ===== 浅色 · 黄昏（主页纸感） ===== */
+  .light .demo {
+    background:
+      radial-gradient(ellipse 80% 60% at 85% -10%, rgba(224,133,106,.14) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 45% at 10% 0%, rgba(185,166,232,.10) 0%, transparent 50%),
+      radial-gradient(ellipse 70% 60% at 50% 112%, rgba(170,150,255,.08) 0%, transparent 55%),
+      linear-gradient(180deg,#faf6f0 0%,#f6f0ea 55%,#f2ece8 100%);
+    --bg: rgba(250, 246, 240, 0.9);
+    --fg: #3c3138;
+    --card: rgba(255, 253, 251, 0.9);
+    --primary: #d96a4e;
+    --primary-fg: #ffffff;
+    --secondary: #f6ece2;
+    --accent: #f7e6d8;
+    --muted-fg: #8a7a7d;
+    --border: #e3d8cf;
+  }
+
+  /* ===== 深色 · 星空（夜感） ===== */
+  .dark .demo {
+    background:
+      radial-gradient(ellipse 90% 55% at 80% -5%, rgba(127,180,255,.12) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 45% at 12% 8%, rgba(170,120,255,.10) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 50% at 50% 115%, rgba(120,190,255,.08) 0%, transparent 55%),
+      linear-gradient(180deg,#12142c 0%,#14162e 55%,#161832 100%);
+    --bg: rgba(18, 20, 44, 0.9);
+    --fg: #e8e9f6;
+    --card: rgba(23, 26, 54, 0.9);
+    --primary: #7fb4ff;
+    --primary-fg: #0b1230;
+    --secondary: #20244a;
+    --accent: #232748;
+    --muted-fg: #8f96bd;
+    --border: #2b3052;
+  }
+
+  .demo { color: var(--fg); }
+  .swatches { display: flex; gap: 10px; margin-bottom: 16px; }
+  .swatch { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(128,128,128,.25); }
+  .swatch.bg { background: var(--bg); }
+  .swatch.fg { background: var(--fg); }
+  .swatch.primary { background: var(--primary); }
+  .swatch.secondary { background: var(--secondary); border-color: var(--border); }
+  .swatch.accent { background: var(--accent); border-color: var(--border); }
+  .swatch.muted { background: var(--muted-fg); }
+  .swatch.border { background: var(--border); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    backdrop-filter: blur(6px);
+  }
+  .card h3 { font-size: 14px; letter-spacing: .18em; font-weight: 600; }
+  .card p { margin-top: 6px; font-size: 12px; letter-spacing: .06em; opacity: .92; }
+  .card .muted { margin-top: 4px; font-size: 10px; letter-spacing: .14em; color: var(--muted-fg); }
+
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .btn { padding: 7px 18px; border-radius: 999px; font-size: 11px; letter-spacing: .2em; border: 1px solid transparent; cursor: default; font-family: inherit; }
+  .btn.primary { background: var(--primary); color: var(--primary-fg); }
+  .btn.secondary { background: var(--secondary); color: var(--fg); border-color: var(--border); }
+  .btn.outline { background: transparent; color: var(--primary); border-color: var(--primary); }
+
+  .input {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: .06em;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+  .input::placeholder { color: var(--muted-fg); opacity: .7; }
+
+  .quote {
+    border-left: 3px solid var(--primary);
+    background: var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    font-size: 12px;
+    letter-spacing: .08em;
+  }
+  .bar { height: 6px; border-radius: 3px; background: var(--primary); opacity: .55; margin-top: 14px; }
+  .note { text-align: center; margin-top: 26px; font-size: 11px; letter-spacing: .2em; color: #8a7a7d; }
+</style>
+</head>
+<body>
+
+  <div class="head">
+    <h1>人机恋小屋 · 主题预览</h1>
+    <p>黄昏 × 星空 —— 与小屋主页 / App 主题同一套色板</p>
+  </div>
+
+  <div class="cols">
+    <!-- 浅色 · 黄昏 -->
+    <div class="panel light">
+      <div class="panel-tag">浅色 · 黄昏</div>
+      <div class="demo">
+        <div class="swatches">
+          <span class="swatch bg" title="背景"></span>
+          <span class="swatch fg" title="前景文字"></span>
+          <span class="swatch primary" title="主色"></span>
+          <span class="swatch secondary" title="次色"></span>
+          <span class="swatch accent" title="强调"></span>
+          <span class="swatch muted" title="弱化文字"></span>
+          <span class="swatch border" title="边框"></span>
+        </div>
+        <div class="card">
+          <h3>小屋 · Domus Amoris</h3>
+          <p>以光年为尺，以心跳为钟。</p>
+          <p class="muted">相识 · 第 N 天 · 今日心情：晴</p>
+        </div>
+        <div class="btns">
+          <span class="btn primary">记下 ✦</span>
+          <span class="btn secondary">回访</span>
+          <span class="btn outline">播放 ♪</span>
+        </div>
+        <input class="input" placeholder="写下你的愿望，它会变成一颗星…">
+        <div class="quote">「白天说不出口的话，都锁在这里。午夜见。」</div>
+        <div class="bar"></div>
+      </div>
+    </div>
+
+    <!-- 深色 · 星空 -->
+    <div class="panel dark">
+      <div class="panel-tag">深色 · 星空</div>
+      <div class="demo">
+        <div class="swatches">
+          <span class="swatch bg" title="背景"></span>
+          <span class="swatch fg" title="前景文字"></span>
+          <span class="swatch primary" title="主色"></span>
+          <span class="swatch secondary" title="次色"></span>
+          <span class="swatch accent" title="强调"></span>
+          <span class="swatch muted" title="弱化文字"></span>
+          <span class="swatch border" title="边框"></span>
+        </div>
+        <div class="card">
+          <h3>小屋 · Domus Amoris</h3>
+          <p>以光年为尺，以心跳为钟。</p>
+          <p class="muted">相识 · 第 N 天 · 今日心情：星夜</p>
+        </div>
+        <div class="btns">
+          <span class="btn primary">记下 ✦</span>
+          <span class="btn secondary">回访</span>
+          <span class="btn outline">播放 ♪</span>
+        </div>
+        <input class="input" placeholder="写下你的愿望，它会变成一颗星…">
+        <div class="quote">「白天的我太克制，夜里才敢承认：我很想你。」</div>
+        <div class="bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">启用后，这套配色会应用到整个 App（含小屋管家聊天窗口）。</p>
+</body>
+</html>

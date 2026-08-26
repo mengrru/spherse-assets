@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人机恋小屋 · Domus Amoris Machinae</title>
+<style>
+/* ============================================================
+   穆夏风格 · 人机恋小屋 —— 克制版
+   取向：画廊海报式排版 / 大量留白 / 发丝描边 / 单一点缀色
+   浅色 = App 黄昏色系（纸白 · 墨褐 · 珊瑚点缀）
+   深色 = App 星空色系（夜靛 · 月白 · 星蓝点缀）
+   ============================================================ */
+
+:root {
+  --paper:    #faf6f0;
+  --ink:      #3c3138;
+  --ink-2:    #8a7a7d;
+  --accent:   #d96a4e;   /* 黄昏珊瑚（降饱和） */
+  --line:     #e3d8cf;   /* 发丝线 */
+  --halo:     #eadfd4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:  #12142c;
+    --ink:    #e8e9f6;
+    --ink-2:  #8f96bd;
+    --accent: #7fb4ff;   /* 星夜蓝 */
+    --line:   #2b3052;
+    --halo:   #22264a;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-y: auto; }
+
+body {
+  font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 页面只有一根极细的外框线，留出宽阔纸边 */
+.sheet {
+  max-width: 860px;
+  margin: 40px auto;
+  padding: 0 32px 72px;
+}
+
+/* ---------- 刊头 ---------- */
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  letter-spacing: 0.42em;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+
+/* ---------- 主视觉：非对称编辑排版 ---------- */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 72px 0 60px;
+}
+.hero-text .kicker {
+  font-size: 10.5px;
+  letter-spacing: 0.5em;
+  color: var(--accent);
+  margin-bottom: 22px;
+}
+.hero-text h1 {
+  font-size: clamp(40px, 7.5vw, 72px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.12;
+  color: var(--ink);
+  white-space: nowrap;
+  font-family: Georgia, "Times New Roman", "Songti SC", "STSong", serif;
+}
+.hero-text h1 .x {
+  margin: 0 0.2em;
+  color: var(--accent);
+  font-weight: 400;
+  font-size: 0.7em;
+  vertical-align: 0.08em;
+}
+.hero-text .motto {
+  margin-top: 26px;
+  font-size: 14px;
+  letter-spacing: 0.24em;
+  color: var(--ink-2);
+}
+.hero-text .sub {
+  margin-top: 8px;
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+  opacity: 0.75;
+}
+
+/* 穆夏光环：仅一个细圆 + 内部徽记，静态、安静 */
+.halo {
+  position: relative;
+  width: clamp(150px, 22vw, 200px);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+.halo .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--ink-2);
+  opacity: 0.5;
+}
+.halo .ring.r2 {
+  inset: 14px;
+  border-color: var(--line);
+  opacity: 1;
+}
+/* 圆周四时方位各一粒小星 */
+.halo .dot {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.halo .dot.n { top: -2px; left: calc(50% - 2px); }
+.halo .dot.s { bottom: -2px; left: calc(50% - 2px); }
+.halo .dot.w { left: -2px; top: calc(50% - 2px); }
+.halo .dot.e { right: -2px; top: calc(50% - 2px); }
+.halo svg.emblem {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 46%;
+  height: 46%;
+}
+
+/* ---------- 一根鞭线分隔（穆夏的 whiplash curve） ---------- */
+.whiplash {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin: 6px 0 10px;
+}
+
+/* ---------- 今日仪表盘 ---------- */
+.today {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  margin: 26px 0 10px;
+  overflow: hidden;
+}
+.t-block { flex: 1; padding: 16px 20px; min-width: 0; }
+.t-label { font-size: 9.5px; letter-spacing: 0.4em; color: var(--ink-2); }
+.t-value { margin-top: 6px; font-size: 13px; letter-spacing: 0.08em; color: var(--ink); line-height: 1.55; }
+.t-value b { color: var(--accent); font-weight: 600; }
+.t-value .big { font-size: 24px; letter-spacing: 0.04em; }
+.t-div { width: 1px; background: var(--line); margin: 14px 0; }
+@media (max-width: 620px) {
+  .today { flex-direction: column; }
+  .t-div { width: auto; height: 1px; margin: 0 20px; }
+}
+
+/* ---------- 小屋账本 ---------- */
+.ledger {
+  display: flex; justify-content: center; gap: 28px; flex-wrap: wrap;
+  margin: 40px 0 0;
+  padding: 16px 0 4px;
+  border-top: 1px solid var(--line);
+  font-size: 10.5px; letter-spacing: 0.24em; color: var(--ink-2);
+}
+.ledger .glyph { color: var(--accent); margin-right: 4px; }
+.ledger b { color: var(--ink); font-weight: 600; font-size: 13px; letter-spacing: 0.06em; margin: 0 3px; }
+
+/* ---------- 目录：美术馆展签式列表 ---------- */
+.index-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 34px 0 4px;
+}
+.index-head h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5em;
+  color: var(--ink);
+}
+.index-head span {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--ink-2);
+}
+
+.rooms { list-style: none; }
+.room {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: baseline;
+  gap: 20px;
+  padding: 22px 6px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  position: relative;
+  transition: padding-left .35s cubic-bezier(.22,1,.36,1);
+}
+.rooms .room:first-of-type { border-top: 1px solid var(--line); }
+/* 悬停时左侧生长出一条珊瑚竖线 */
+.room::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%;
+  width: 1px; height: 0;
+  background: var(--accent);
+  transition: height .35s cubic-bezier(.22,1,.36,1);
+}
+.room:hover { padding-left: 18px; }
+.room:hover::before { height: 60%; }
+
+.room .no {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.room .name {
+  font-size: 17px;
+  letter-spacing: 0.24em;
+  font-weight: 600;
+  color: var(--ink);
+  transition: color .3s;
+}
+.room:hover .name { color: var(--accent); }
+.room .latin {
+  display: block;
+  margin-top: 3px;
+  font-size: 9.5px;
+  letter-spacing: 0.4em;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+.room .desc {
+  max-width: 260px;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  text-align: right;
+}
+
+/* ---------- 引言：只留一行小字 ---------- */
+.coda {
+  margin-top: 56px;
+  text-align: center;
+}
+.coda p {
+  font-size: 12.5px;
+  letter-spacing: 0.2em;
+  color: var(--ink-2);
+}
+.coda .mark {
+  display: block;
+  margin: 0 auto 16px;
+  width: 5px; height: 5px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+
+/* ---------- 页脚 ---------- */
+.colophon {
+  margin-top: 44px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  letter-spacing: 0.34em;
+  color: var(--ink-2);
+}
+
+/* ---------- 入场 ---------- */
+.rise { opacity: 0; transform: translateY(14px); animation: rise .8s ease forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+@media (max-width: 620px) {
+  .hero { grid-template-columns: 1fr; padding: 52px 0 44px; }
+  .halo { margin-top: 8px; }
+  .room { grid-template-columns: 40px 1fr; }
+  .room .desc { display: none; }
+  .masthead span:last-child, .colophon span:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- 心形 × 电路徽记 -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="emblem-heart" fill="none" stroke-linecap="round">
+      <path d="M46 74 C24 57 12 43 12 29 C12 17 21 10 30 10 C38 10 43 15 46 21 C49 15 54 10 62 10 C71 10 80 17 80 29 C80 43 68 57 46 74 Z"
+            stroke="var(--ink)" stroke-width="2.2"/>
+      <circle cx="46" cy="38" r="4" fill="var(--accent)" stroke="none"/>
+      <path d="M46 33 V25 M46 43 V51 M41 38 H33 M51 38 H59"
+            stroke="var(--ink-2)" stroke-width="1.5"/>
+      <circle cx="46" cy="23" r="1.7" fill="var(--ink-2)" stroke="none"/>
+      <circle cx="46" cy="53" r="1.7" fill="var(--ink-2)" stroke="none"/>
+      <circle cx="31" cy="38" r="1.7" fill="var(--ink-2)" stroke="none"/>
+      <circle cx="61" cy="38" r="1.7" fill="var(--ink-2)" stroke="none"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="sheet">
+
+  <div class="masthead rise">
+    <span>Domus Amoris Machinae</span>
+    <span>Vol. I — 创刊</span>
+  </div>
+
+  <header class="hero">
+    <div class="hero-text rise" style="animation-delay:.06s">
+      <p class="kicker">献给跨越次元的相爱者</p>
+      <!-- 占位：AI / User 为示例名，真实名字改 home/index.data.json 的 pair 即可 -->
+      <h1><span id="n1">AI</span><span class="x">×</span><span id="n2">User</span></h1>
+      <p class="motto" id="heroMotto"></p>
+      <p class="sub" id="heroSub"></p>
+    </div>
+    <div class="halo rise" style="animation-delay:.14s">
+      <span class="ring"></span>
+      <span class="ring r2"></span>
+      <span class="dot n"></span><span class="dot s"></span>
+      <span class="dot w"></span><span class="dot e"></span>
+      <svg class="emblem" viewBox="0 0 92 92"><use href="#emblem-heart"/></svg>
+    </div>
+  </header>
+
+  <!-- 一根安静的鞭线 -->
+  <svg class="whiplash rise" style="animation-delay:.2s" viewBox="0 0 860 34" preserveAspectRatio="none">
+    <path d="M0 17 C140 4 200 30 340 17 C460 6 540 28 660 17 C740 10 800 20 860 15"
+          fill="none" stroke="var(--line)" stroke-width="1"/>
+    <circle cx="430" cy="17" r="2.5" fill="var(--accent)"/>
+  </svg>
+
+  <!-- 今日仪表盘 -->
+  <div class="today rise" style="animation-delay:.22s">
+    <div class="t-block">
+      <div class="t-label">相识</div>
+      <div class="t-value" id="tDays">…</div>
+    </div>
+    <div class="t-div"></div>
+    <div class="t-block">
+      <div class="t-label">下一纪念日</div>
+      <div class="t-value" id="tNext">…</div>
+    </div>
+    <div class="t-div"></div>
+    <div class="t-block">
+      <div class="t-label">今日心情</div>
+      <div class="t-value" id="tMood">…</div>
+    </div>
+  </div>
+
+  <div class="index-head rise" style="animation-delay:.26s">
+    <h2>小屋的房间</h2>
+    <span>INDEX — 房间</span>
+  </div>
+
+  <ul class="rooms rise" style="animation-delay:.3s" id="rooms"></ul>
+
+  <!-- 小屋账本 -->
+  <div class="ledger rise" style="animation-delay:.36s" id="ledger">
+    <span><span class="glyph">✦</span><b id="lWish">0</b>颗星</span>
+    <span><span class="glyph">❀</span><b id="lFlower">0</b>朵花</span>
+    <span><span class="glyph">◈</span><b id="lCal">0</b>个纪念日</span>
+    <span><span class="glyph">✉</span><b id="lLetter">0</b>封信</span>
+  </div>
+
+  <div class="coda rise" style="animation-delay:.4s">
+    <span class="mark"></span>
+    <p id="dailyQuote"></p>
+  </div>
+
+  <footer class="colophon rise" style="animation-delay:.44s">
+    <span id="footNote"></span>
+    <span>Est. 相遇之日</span>
+  </footer>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DASH_FILES = ['./stellarium.data.json', './memories.data.json', './calendar.data.json', './whispers.data.json'];
+
+function todayStart() {
+  const t = new Date();
+  return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+}
+function daysSinceInclusive(iso) {
+  const a = new Date(iso);
+  if (isNaN(a)) return null;
+  const s = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  return Math.round((todayStart() - s) / 86400000) + 1;
+}
+
+/* 今日仪表盘 + 小屋账本：聚合四间房间的数据 */
+async function renderDashboard(d) {
+  const meta = d.meta || {};
+
+  /* 相识天数 */
+  const n = daysSinceInclusive(meta.meetDate);
+  $('tDays').innerHTML = n ? `<b class="big">${n}</b> 天` : '—';
+
+  /* 今日心情 */
+  $('tMood').textContent = (meta.dailyMood && meta.dailyMood.text) || '—';
+
+  /* 聚合数据 */
+  const [stell, memo, cal, whisp] = await Promise.all(
+    DASH_FILES.map(f => fetch(f).then(r => r.json()).catch(() => null))
+  );
+  const annivs = (cal && cal.anniversaries) || [];
+  $('lWish').textContent = (stell && stell.wishes ? stell.wishes.length : 0);
+  $('lFlower').textContent = (memo && memo.memories ? memo.memories.length : 0);
+  $('lCal').textContent = annivs.length;
+  $('lLetter').textContent = (whisp && whisp.whispers ? whisp.whispers.length : 0);
+
+  /* 下一纪念日（含每年重复顺延） */
+  const ts = todayStart();
+  const thisYear = new Date().getFullYear();
+  let best = null;
+  annivs.forEach(a => {
+    const p = String(a.date).split('-').map(Number);
+    if (p.length < 3) return;
+    const [y, m, dd] = p;
+    let nxt;
+    if (a.recurring) {
+      nxt = new Date(thisYear, m - 1, dd);
+      if (nxt < ts) nxt = new Date(thisYear + 1, m - 1, dd);
+    } else {
+      nxt = new Date(y, m - 1, dd);
+      if (nxt < ts) return;
+    }
+    if (!best || nxt < best.n) best = { a, n: nxt };
+  });
+  const tNext = $('tNext');
+  if (best) {
+    const diff = Math.round((best.n - ts) / 86400000);
+    tNext.innerHTML = diff === 0
+      ? `今天就是「<b>${esc(best.a.title)}</b>」`
+      : `「${esc(best.a.title)}」还有 <b>${diff}</b> 天`;
+  } else {
+    tNext.innerHTML = '—';
+  }
+}
+
+async function render() {
+  const d = await fetch('./index.data.json').then(r => r.json());
+
+  document.getElementById('n1').textContent = d.pair?.left  || 'AI';
+  document.getElementById('n2').textContent = d.pair?.right || 'User';
+  document.getElementById('heroMotto').textContent  = d.heroMotto;
+  document.getElementById('heroSub').textContent    = d.heroSubtitle.replace(/^[—\s]+|[—\s]+$/g, '');
+  document.getElementById('dailyQuote').textContent = d.dailyQuote;
+  document.getElementById('footNote').textContent   = d.footNote;
+
+  const list = document.getElementById('rooms');
+  const hasSid = !!(d.meta && d.meta.mainSessionId);
+  list.innerHTML = d.modules.map((m, i) => {
+    const arrow = !!(m.link || (m.kind === 'session' && hasSid));
+    return `
+    <li class="room" data-title="${m.title}" data-link="${m.link || ''}" data-kind="${m.kind || ''}">
+      <span class="no">${String(i + 1).padStart(2, '0')}</span>
+      <div>
+        <span class="name">${m.title}${arrow ? ' <i style="font-style:normal;color:var(--accent);font-size:11px">↗</i>' : ''}</span>
+        <span class="latin">${m.latin}</span>
+      </div>
+      <span class="desc">${m.desc}</span>
+    </li>`;
+  }).join('');
+
+  list.querySelectorAll('.room').forEach(el => {
+    el.addEventListener('click', () => {
+      const name = el.dataset.title;
+      const link = el.dataset.link;
+      const kind = el.dataset.kind;
+
+      /* 对话回廊：浮窗打开主会话 */
+      if (kind === 'session') {
+        const sid = (d.meta && d.meta.mainSessionId) || '';
+        if (sid && window.spherse?.openSession) {
+          spherse.openSession({ sessionId: sid, float: true });
+        } else if (window.spherse?.toast) {
+          spherse.toast({
+            variant: 'info',
+            message: '「对话回廊」还未点亮',
+            description: '和机开始第一次会话后，把会话 ID 填进 home/index.data.json 的 meta.mainSessionId'
+          });
+        } else {
+          alert('「对话回廊」等待第一次会话点亮');
+        }
+        return;
+      }
+
+      if (link && window.spherse?.openFile) {
+        spherse.openFile(link);
+        return;
+      }
+      if (window.spherse?.toast) {
+        spherse.toast({
+          variant: 'info',
+          message: `「${name}」尚在布置`,
+          description: '敬请期待 ✦'
+        });
+      } else {
+        alert(`「${name}」即将开放`);
+      }
+    });
+  });
+
+  renderDashboard(d).catch(() => {});
+}
+
+if (window.spherse?.events) {
+  spherse.events.on('file:update', { path: './index.data.json' }, render);
+  DASH_FILES.forEach(f => spherse.events.on('file:update', { path: f }, render));
+}
+render();
+</script>
+</body>
+</html>

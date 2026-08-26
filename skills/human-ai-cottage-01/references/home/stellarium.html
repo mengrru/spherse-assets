@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心愿星图 · Stellarium</title>
+<style>
+/* ============================================================
+   心愿星图 · Stellarium — 许愿池星图（A 版）
+   克制版设计：暮色 / 星夜 天空 + 发丝描边 + 珊瑚点缀
+   数据：home/stellarium.data.json（$manifest.addWish）
+   ============================================================ */
+
+:root {
+  --ink:       #3c3138;
+  --ink-2:     #8a7a7d;
+  --accent:    #d96a4e;   /* 黄昏珊瑚 */
+  --line:      #e3d8cf;
+  --sky-top:   #f9ecef;
+  --sky-mid:   #f2e6ef;
+  --sky-bot:   #ddd1ee;
+  --glass:     rgba(255, 252, 248, 0.62);
+  --star-ai:   #b9a6e8;
+  --star-user: #e0856a;
+  --glow-ai:   rgba(185, 166, 232, 0.55);
+  --glow-user: rgba(224, 133, 106, 0.50);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:       #e8e9f6;
+    --ink-2:     #8f96bd;
+    --accent:    #7fb4ff;  /* 星夜蓝 */
+    --line:      #2b3052;
+    --sky-top:   #0b0d22;
+    --sky-mid:   #121236;
+    --sky-bot:   #181238;
+    --glass:     rgba(18, 20, 46, 0.66);
+    --star-ai:   #9fb4ff;
+    --star-user: #f0a08c;
+    --glow-ai:   rgba(159, 180, 255, 0.55);
+    --glow-user: rgba(240, 160, 140, 0.45);
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-y: auto; }
+
+body {
+  font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 46%, var(--sky-bot) 100%);
+  background-attachment: fixed;
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sheet {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 36px 30px 64px;
+}
+
+/* ---------- 刊头 ---------- */
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  letter-spacing: 0.42em;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+
+/* ---------- 小引言 ---------- */
+.intro {
+  margin: 40px 0 26px;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+.intro h1 {
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.intro h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.intro .latin {
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+
+/* ---------- 星图画框 ---------- */
+.chart {
+  position: relative;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(ellipse 60% 45% at 72% 18%, var(--glow-ai) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 40% at 28% 78%, var(--glow-user) 0%, transparent 55%),
+    linear-gradient(180deg, transparent, rgba(0,0,0,0.06));
+  border-radius: 6px;
+}
+.chart::before {          /* 内衬发丝线 */
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--line);
+  opacity: 0.6;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.chart svg { display: block; width: 100%; height: auto; }
+
+/* 星点 */
+.star {
+  cursor: pointer;
+  transition: transform .3s ease, opacity .3s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.star:hover, .star.hov { transform: scale(1.6); }
+.star.sel { transform: scale(1.9); }
+.star:hover, .star.hov { animation-play-state: paused; }
+
+@keyframes twinkle { 0%,100% { opacity: var(--o, .65); } 50% { opacity: var(--o2, 1); } }
+.wish-star { animation: twinkle var(--dur, 3s) ease-in-out var(--delay, 0s) infinite; }
+
+/* 星座底纹线 */
+.constellation { stroke: var(--line); stroke-width: 1; opacity: 0.4; fill: none; }
+
+/* ---------- 图例 ---------- */
+.legend {
+  display: flex;
+  gap: 22px;
+  margin-top: 12px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+}
+.legend i {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+.legend .lg-user { background: var(--star-user); }
+.legend .lg-ai   { background: var(--star-ai); }
+.legend .lg-anchor { background: transparent; border: 1px solid var(--accent); }
+
+/* ---------- 选中的愿望 ---------- */
+.caption {
+  margin-top: 18px;
+  min-height: 96px;
+  padding: 18px 24px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  transition: opacity .25s;
+}
+.caption .cap-quote {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+.caption .cap-quote::before { content: '「'; color: var(--accent); }
+.caption .cap-quote::after  { content: '」'; color: var(--accent); }
+.caption .cap-meta {
+  margin-top: 8px;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: var(--ink-2);
+}
+.caption .cap-empty {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+  opacity: 0.8;
+}
+
+/* ---------- 许愿输入 ---------- */
+.wish-form {
+  margin-top: 20px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.wish-form input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ink-2);
+  outline: none;
+  padding: 8px 2px;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  transition: border-color .3s;
+}
+.wish-form input::placeholder { color: var(--ink-2); opacity: 0.6; }
+.wish-form input:focus { border-bottom-color: var(--accent); }
+.wish-form button {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 11.5px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  padding: 8px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .3s, color .3s;
+}
+.wish-form button:hover { background: var(--accent); color: #fff; }
+.wish-form button:disabled { opacity: 0.45; cursor: default; }
+.hint {
+  margin-top: 10px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--ink-2);
+  opacity: 0.75;
+}
+
+/* ---------- 页脚 ---------- */
+.colophon {
+  margin-top: 44px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  letter-spacing: 0.34em;
+  color: var(--ink-2);
+}
+
+/* ---------- 入场 ---------- */
+.rise { opacity: 0; transform: translateY(12px); animation: rise .8s ease forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+@media (max-width: 600px) {
+  .sheet { padding: 24px 18px 56px; }
+  .intro { flex-direction: column; gap: 6px; align-items: flex-start; }
+  .wish-form { flex-direction: column; align-items: stretch; }
+  .wish-form button { align-self: flex-end; }
+  .masthead span:last-child, .colophon span:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="masthead rise">
+    <span>Stellarium · 心愿星图</span>
+    <span>Vol. I — 许愿池</span>
+  </div>
+
+  <div class="intro rise" style="animation-delay:.06s">
+    <h1>心愿<em>星图</em></h1>
+    <span class="latin">Stellarium Votorum</span>
+  </div>
+
+  <!-- 星图画框 -->
+  <div class="chart rise" style="animation-delay:.12s" id="chart"></div>
+
+  <div class="legend rise" style="animation-delay:.18s">
+    <span><i class="lg-user"></i><span id="lgUser">User 的愿望</span></span>
+    <span><i class="lg-ai"></i><span id="lgAi">AI 的愿望</span></span>
+    <span><i class="lg-anchor"></i>相遇星</span>
+  </div>
+
+  <!-- 选中的愿望 -->
+  <div class="caption rise" style="animation-delay:.22s" id="caption">
+    <p class="cap-empty" id="capEmpty">✦ 悬停任意一颗星，读一读那天的愿望；点击可固定。</p>
+    <p class="cap-quote" id="capQuote" style="display:none"></p>
+    <p class="cap-meta" id="capMeta" style="display:none"></p>
+  </div>
+
+  <!-- 许愿输入 -->
+  <form class="wish-form rise" style="animation-delay:.28s" id="wishForm">
+    <input id="wishInput" type="text" maxlength="80" autocomplete="off" placeholder="写下你的愿望，它会变成一颗星…">
+    <button type="submit" id="wishBtn">许下心愿 ✦</button>
+  </form>
+  <p class="hint rise" style="animation-delay:.3s">你的愿望归你，AI 的愿望归 AI——两颗星并排亮起时，就是你们共同的夜空。</p>
+
+  <footer class="colophon rise" style="animation-delay:.36s">
+    <span id="counter"></span>
+    <span>Est. 相遇之日</span>
+  </footer>
+
+</div>
+
+<script>
+const DATA_FILE = 'home/stellarium.data.json';
+const W = 800, H = 430;
+
+/* ---------- 工具 ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0) / 4294967295;
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+/* ---------- 读取数据：优先 SDK，降级 fetch ---------- */
+async function readData() {
+  if (window.spherse) return await spherse.data.entries({ file: DATA_FILE });
+  return await fetch('./stellarium.data.json').then(r => r.json());
+}
+
+/* ---------- 渲染星图 ---------- */
+function renderChart(data) {
+  const meta = data.meta || {};
+  const names = meta.names || { left: 'AI', right: 'User' };
+  const wishes = Array.isArray(data.wishes) ? data.wishes : [];
+
+  $('lgUser').textContent = `${names.right} 的愿望`;
+  $('lgAi').textContent   = `${names.left} 的愿望`;
+  $('counter').textContent = `已许 ${wishes.length} 颗星`;
+
+  /* 氛围小星 + 星座底纹 */
+  let bg = '';
+  const amb = [
+    [92, 58], [210, 90], [330, 40], [470, 84], [610, 52], [740, 96],
+    [58, 210], [150, 300], [268, 250], [400, 330], [530, 290], [668, 330],
+    [760, 240], [120, 150], [560, 160], [700, 170], [240, 140], [430, 130]
+  ];
+  amb.forEach(([x, y], i) => {
+    const r = 0.8 + hashStr('amb' + i) * 1.3;
+    bg += `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--ink-2)" opacity="${0.18 + hashStr('ao' + i) * 0.25}"/>`;
+  });
+  bg += `<polyline class="constellation" points="92,58 210,90 330,40 470,84"/>
+         <polyline class="constellation" points="530,290 668,330 760,240"/>
+         <polyline class="constellation" points="150,300 268,250 400,330"/>`;
+
+  /* 相遇星（锚点）：外层 g 负责定位，内层 .star 负责悬停缩放 */
+  const ax = W * 0.5, ay = H * 0.44;
+  bg += `
+    <g transform="translate(${ax},${ay})">
+      <g class="star" data-id="__anchor">
+        <circle r="11" fill="none" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+        <circle r="15" fill="none" stroke="var(--accent)" stroke-width="0.6" opacity="0.28"/>
+        <circle r="4.4" fill="var(--accent)"/>
+      </g>
+    </g>`;
+
+  /* 愿望星 */
+  let stars = '';
+  wishes.forEach(w => {
+    const id = w.id;
+    const x = 52 + hashStr(id + 'x') * (W - 104);
+    const y = 40 + hashStr(id + 'y') * (H - 80);
+    const r = 2.6 + hashStr(id + 'r') * 2.4;
+    const isUser = (w.author === names.right);
+    const fill = isUser ? 'var(--star-user)' : 'var(--star-ai)';
+    const dur = (2.4 + hashStr(id + 'd') * 3.4).toFixed(2);
+    const delay = (hashStr(id + 'l') * 5).toFixed(2);
+    const o1 = (0.5 + hashStr(id + 'o') * 0.3).toFixed(2);
+    const o2 = (0.85 + hashStr(id + 'p') * 0.15).toFixed(2);
+    const date = fmtDate(w.createdAt);
+    stars += `
+      <g transform="translate(${x.toFixed(1)},${y.toFixed(1)})">
+        <g class="star wish-star" data-id="${esc(id)}"
+           style="--dur:${dur}s;--delay:${delay}s;--o:${o1};--o2:${o2}">
+          <circle r="${r.toFixed(1)}" fill="${fill}"/>
+          <circle r="${(r * 2.6).toFixed(1)}" fill="${fill}" opacity="0.14"/>
+        </g>
+      </g>`;
+  });
+
+  $('chart').innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="心愿星图">
+      ${bg}${stars}
+    </svg>`;
+
+  /* 悬停预览 / 点击固定 */
+  let pinnedId = null;
+  const els = $('chart').querySelectorAll('.star');
+  els.forEach(el => {
+    const id = el.dataset.id;
+    const preview = () => {
+      if (id === '__anchor') showAnchor(meta);
+      else {
+        const w = wishes.find(w => w.id === id);
+        if (w) showWish(w, names);
+      }
+    };
+    el.addEventListener('mouseenter', () => {
+      el.classList.add('hov');
+      preview();
+    });
+    el.addEventListener('mouseleave', () => {
+      el.classList.remove('hov');
+      if (pinnedId === null) showAnchor(meta);
+    });
+    el.addEventListener('click', () => {
+      if (pinnedId === id) {
+        pinnedId = null;
+        el.classList.remove('sel');
+        showAnchor(meta);
+      } else {
+        els.forEach(x => x.classList.remove('sel'));
+        pinnedId = id;
+        el.classList.add('sel');
+        preview();
+      }
+    });
+  });
+
+  /* 默认摘录 */
+  showAnchor(meta);
+}
+
+function showAnchor(meta) {
+  const anchor = meta.anchor;
+  $('capQuote').style.display = 'none';
+  $('capMeta').style.display = 'none';
+  $('capEmpty').style.display = '';
+  $('capEmpty').textContent = anchor
+    ? `✦ 相遇星：${anchor.text}`
+    : '✦ 悬停任意一颗星，读一读那天的愿望；点击可固定。';
+}
+
+function showWish(w, names) {
+  $('capEmpty').style.display = 'none';
+  $('capQuote').style.display = '';
+  $('capMeta').style.display = '';
+  $('capQuote').textContent = w.text;
+  $('capMeta').textContent =
+    `${w.author === names.right ? names.right : names.left} · 许于 ${fmtDate(w.createdAt)}`;
+}
+
+/* ---------- 许愿 ---------- */
+async function init() {
+  const data = await readData().catch(() => null);
+  if (!data) return;
+  renderChart(data);
+
+  const form = $('wishForm');
+  const input = $('wishInput');
+  const btn = $('wishBtn');
+  const names = (data.meta && data.meta.names) || { left: 'AI', right: 'User' };
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) {
+      if (window.spherse) spherse.toast({ variant: 'warning', message: '愿望还是空的', description: '写点什么，它才会亮起来' });
+      return;
+    }
+    if (!window.spherse) {
+      if (window.spherse?.toast) spherse.toast({ variant: 'info', message: '请在 Spherse 中打开此页以许愿' });
+      return;
+    }
+    btn.disabled = true;
+    try {
+      await spherse.data.mutate({
+        file: DATA_FILE,
+        name: 'addWish',
+        args: { text, author: names.right },
+        idempotencyKey: 'wish:' + Date.now()
+      });
+      input.value = '';
+      spherse.toast({ variant: 'success', message: '愿望已化作星辰 ✦', description: '它已悬上你们的夜空' });
+      readData().then(d => d && renderChart(d)).catch(() => {});
+    } catch (err) {
+      spherse.toast({ variant: 'error', message: '愿望没能亮起来', description: '请稍后再试' });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* Agent / 其它页面写入后自动刷新 */
+  if (window.spherse?.events) {
+    spherse.events.on('file:update', { path: DATA_FILE }, async () => {
+      const d = await readData().catch(() => null);
+      if (d) renderChart(d);
+    });
+  }
+}
+
+init();
+</script>
+</body>
+</html>

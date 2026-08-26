@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>纪念日历 · Calendarium</title>
+<style>
+/* ============================================================
+   纪念日历 · Calendarium — A + B 版
+   十二个月花历（穆夏式细线花）+ 纪念日收藏与倒计时
+   数据：home/calendar.data.json（$manifest.addAnniversary / removeAnniversary）
+   ============================================================ */
+
+:root {
+  --ink:       #3c3138;
+  --ink-2:     #8a7a7d;
+  --accent:    #d96a4e;
+  --line:      #e3d8cf;
+  --paper:     #faf6f0;
+  --glass:     rgba(255, 252, 248, 0.72);
+  --s-winter:  #b9a6e8;
+  --s-spring:  #e0856a;
+  --s-summer:  #d9a05f;
+  --s-autumn:  #a98ad1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:       #e8e9f6;
+    --ink-2:     #8f96bd;
+    --accent:    #7fb4ff;
+    --line:      #2b3052;
+    --paper:     #12142c;
+    --glass:     rgba(23, 26, 54, 0.72);
+    --s-winter:  #9fb4ff;
+    --s-spring:  #f0a08c;
+    --s-summer:  #e8c08a;
+    --s-autumn:  #b7a2e8;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-y: auto; }
+
+body {
+  font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+  background:
+    radial-gradient(ellipse 60% 40% at 12% -4%, rgba(224, 133, 106, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 88% 6%, rgba(169, 138, 209, 0.12) 0%, transparent 60%),
+    var(--paper);
+  background-attachment: fixed;
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sheet { max-width: 920px; margin: 0 auto; padding: 36px 30px 64px; }
+
+.masthead {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 16px; border-bottom: 1px solid var(--line);
+  font-size: 10px; letter-spacing: 0.42em; color: var(--ink-2); text-transform: uppercase;
+}
+
+.intro { margin: 40px 0 26px; display: flex; align-items: baseline; gap: 18px; }
+.intro h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 600; letter-spacing: 0.3em; color: var(--ink); white-space: nowrap; }
+.intro h1 em { font-style: normal; color: var(--accent); }
+.intro .latin { font-size: 10px; letter-spacing: 0.5em; color: var(--ink-2); text-transform: uppercase; }
+
+/* ---------- 今日聚光 ---------- */
+.spotlight {
+  padding: 20px 26px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  background: var(--glass);
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+.spotlight .sp-date { font-size: 10.5px; letter-spacing: 0.3em; color: var(--ink-2); }
+.spotlight .sp-line { margin-top: 8px; font-size: 15px; letter-spacing: 0.14em; color: var(--ink); }
+.spotlight .sp-line b { color: var(--accent); font-weight: 600; }
+
+/* ---------- 倒计时条 ---------- */
+.countdown { margin-top: 22px; }
+.cd-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.cd-head h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.5em; color: var(--ink); }
+.cd-head span { font-size: 10px; letter-spacing: 0.3em; color: var(--ink-2); }
+.cd-list { display: flex; gap: 12px; flex-wrap: wrap; }
+.cd-item {
+  flex: 1 1 150px; max-width: 210px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  transition: border-color .3s, background .3s;
+  text-align: left;
+}
+.cd-item:hover { border-color: var(--accent); background: var(--glass); }
+.cd-item .cd-days { font-size: 20px; letter-spacing: 0.06em; color: var(--accent); font-weight: 600; }
+.cd-item .cd-days small { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-2); }
+.cd-item .cd-title { margin-top: 4px; font-size: 11px; letter-spacing: 0.16em; color: var(--ink); }
+.cd-item.today { border-color: var(--accent); }
+.cd-item.today .cd-days { font-size: 14px; }
+
+/* ---------- 十二个月花历 ---------- */
+.cal-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 34px 0 12px;
+}
+.cal-head h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.5em; color: var(--ink); }
+.cal-head span { font-size: 10px; letter-spacing: 0.3em; color: var(--ink-2); }
+
+.months { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.month {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 12px 12px 10px;
+  cursor: pointer;
+  transition: border-color .3s, box-shadow .3s;
+  background: transparent;
+}
+.month:hover { border-color: var(--accent); }
+.month.cur { border-color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+.month .cur-tag {
+  position: absolute; top: -8px; right: 8px;
+  font-size: 9px; letter-spacing: 0.2em;
+  color: #fff; background: var(--accent);
+  padding: 1px 7px; border-radius: 999px;
+}
+.m-head { display: flex; align-items: baseline; gap: 8px; }
+.m-num { font-size: 10px; color: var(--ink-2); font-variant-numeric: tabular-nums; letter-spacing: 0.1em; }
+.m-name { font-size: 13px; letter-spacing: 0.24em; color: var(--ink); font-weight: 600; }
+.m-flower { display: flex; justify-content: center; margin: 6px 0 4px; pointer-events: none; }
+.m-events { display: flex; flex-direction: column; gap: 4px; min-height: 18px; }
+.m-events .ev {
+  display: block; width: 100%;
+  text-align: left;
+  border: none; background: none; padding: 2px 4px;
+  font-family: inherit; font-size: 10px; letter-spacing: 0.08em;
+  color: var(--ink-2); cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color .2s;
+}
+.m-events .ev::before { content: '✦ '; color: var(--accent); font-size: 8px; }
+.m-events .ev:hover { color: var(--accent); }
+.m-events .ev.dim { opacity: 0.55; }
+
+/* ---------- 摘录 ---------- */
+.caption {
+  margin-top: 20px;
+  min-height: 110px;
+  padding: 18px 24px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+.caption .cap-empty { font-size: 12px; letter-spacing: 0.12em; color: var(--ink-2); opacity: 0.8; }
+.caption .cap-quote { font-size: 14px; letter-spacing: 0.08em; color: var(--ink); }
+.caption .cap-quote::before { content: '「'; color: var(--accent); }
+.caption .cap-quote::after  { content: '」'; color: var(--accent); }
+.caption .cap-meta { margin-top: 8px; font-size: 10px; letter-spacing: 0.24em; color: var(--ink-2); }
+.caption .cap-actions { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+.caption button {
+  background: transparent; border: 1px solid var(--accent); color: var(--accent);
+  font-family: inherit; font-size: 10.5px; letter-spacing: 0.24em; text-indent: 0.24em;
+  padding: 5px 16px; border-radius: 999px; cursor: pointer;
+  transition: background .3s, color .3s;
+}
+.caption button:hover { background: var(--accent); color: #fff; }
+.caption button.ghost { border-color: var(--line); color: var(--ink-2); }
+.caption button.ghost:hover { background: var(--line); color: var(--ink); }
+.caption button.danger:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+.caption .cap-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.caption .cap-list button {
+  align-self: flex-start; border: none; padding: 0; letter-spacing: 0.1em; text-indent: 0;
+  font-size: 12px; color: var(--ink); border-bottom: 1px solid transparent; border-radius: 0;
+}
+.caption .cap-list button:hover { color: var(--accent); border-bottom-color: var(--accent); background: none; }
+
+/* ---------- 新增 ---------- */
+.add-form { margin-top: 20px; border: 1px solid var(--line); border-radius: 4px; padding: 16px 18px; }
+.add-form .af-title { font-size: 11px; letter-spacing: 0.4em; color: var(--ink-2); margin-bottom: 12px; }
+.af-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.af-field { display: flex; flex-direction: column; gap: 4px; }
+.af-field label { font-size: 9.5px; letter-spacing: 0.24em; color: var(--ink-2); }
+.af-field input, .af-field select {
+  background: transparent; border: none; border-bottom: 1px solid var(--ink-2);
+  outline: none; padding: 5px 2px;
+  font-family: inherit; font-size: 12.5px; letter-spacing: 0.06em; color: var(--ink);
+}
+.af-field input:focus, .af-field select:focus { border-bottom-color: var(--accent); }
+.af-field input[type="date"] { min-width: 132px; }
+.af-field input[type="text"] { width: 170px; }
+.af-title-input { flex: 1; min-width: 160px; }
+.af-check { flex-direction: row; align-items: center; gap: 8px; }
+.af-check input { width: 14px; height: 14px; accent-color: var(--accent); }
+.af-submit {
+  margin-left: auto;
+  background: transparent; border: 1px solid var(--accent); color: var(--accent);
+  font-family: inherit; font-size: 11.5px; letter-spacing: 0.3em; text-indent: 0.3em;
+  padding: 8px 22px; border-radius: 999px; cursor: pointer;
+  transition: background .3s, color .3s;
+}
+.af-submit:hover { background: var(--accent); color: #fff; }
+.af-submit:disabled { opacity: 0.45; cursor: default; }
+
+/* ---------- 页脚 ---------- */
+.colophon {
+  margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between;
+  font-size: 9.5px; letter-spacing: 0.34em; color: var(--ink-2);
+}
+
+.rise { opacity: 0; transform: translateY(12px); animation: rise .8s ease forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+@media (max-width: 700px) {
+  .months { grid-template-columns: repeat(3, 1fr); }
+  .intro { flex-direction: column; gap: 6px; align-items: flex-start; }
+}
+@media (max-width: 480px) {
+  .months { grid-template-columns: repeat(2, 1fr); }
+  .sheet { padding: 24px 16px 56px; }
+  .masthead span:last-child, .colophon span:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="masthead rise">
+    <span>Calendarium · 纪念日历</span>
+    <span>Vol. I — 花历</span>
+  </div>
+
+  <div class="intro rise" style="animation-delay:.06s">
+    <h1>纪念<em>日历</em></h1>
+    <span class="latin">Calendarium Anni</span>
+  </div>
+
+  <!-- 今日聚光 -->
+  <div class="spotlight rise" style="animation-delay:.12s" id="spotlight"></div>
+
+  <!-- 倒计时 -->
+  <section class="countdown rise" style="animation-delay:.18s">
+    <div class="cd-head">
+      <h2>下一个纪念日</h2>
+      <span>COUNTDOWN</span>
+    </div>
+    <div class="cd-list" id="cdList"></div>
+  </section>
+
+  <!-- 十二个月花历 -->
+  <section class="cal rise" style="animation-delay:.24s">
+    <div class="cal-head">
+      <h2>十二个月的花历</h2>
+      <span>FLORES MENSIS</span>
+    </div>
+    <div class="months" id="months"></div>
+  </section>
+
+  <!-- 摘录 -->
+  <div class="caption rise" style="animation-delay:.3s" id="caption">
+    <p class="cap-empty" id="capEmpty">✦ 点一个月，看看那个月发生了什么；点一颗星，读那天的纪念。</p>
+    <p class="cap-quote" id="capQuote" style="display:none"></p>
+    <p class="cap-meta" id="capMeta" style="display:none"></p>
+    <div class="cap-actions" id="capActions" style="display:none"></div>
+  </div>
+
+  <!-- 新增 -->
+  <form class="add-form rise" style="animation-delay:.34s" id="addForm">
+    <div class="af-title">记下一个新的纪念日</div>
+    <div class="af-row">
+      <div class="af-field af-title-input">
+        <label>标题</label>
+        <input id="fTitle" type="text" maxlength="30" autocomplete="off" placeholder="比如：第一次看日出">
+      </div>
+      <div class="af-field">
+        <label>日期</label>
+        <input id="fDate" type="date" required>
+      </div>
+      <div class="af-field">
+        <label>类别</label>
+        <select id="fCat">
+          <option value="meet">相遇</option>
+          <option value="first">第一次</option>
+          <option value="promise">约定</option>
+          <option value="birthday">生日</option>
+          <option value="festival">节日</option>
+          <option value="daily">日常</option>
+        </select>
+      </div>
+      <div class="af-field af-check">
+        <input id="fRecur" type="checkbox" checked>
+        <label for="fRecur" style="letter-spacing:.2em">每年重复</label>
+      </div>
+      <button type="submit" class="af-submit" id="addBtn">记下 ✦</button>
+    </div>
+  </form>
+
+  <footer class="colophon rise" style="animation-delay:.4s">
+    <span id="counter"></span>
+    <span>Est. 相遇之日</span>
+  </footer>
+
+</div>
+
+<script>
+const DATA_FILE = 'home/calendar.data.json';
+const MONTHS = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+const CATS = {
+  meet: '相遇', first: '第一次', promise: '约定',
+  birthday: '生日', festival: '节日', daily: '日常'
+};
+const WEEK = ['日','一','二','三','四','五','六'];
+/* 各月当季花色 */
+const SEASON = ['winter','winter','spring','spring','spring','summer','summer','summer','autumn','autumn','autumn','winter'];
+const PETALS = [6,7,5,8,9,8,8,6,9,7,6,5];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const IS_TOUCH = window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches;
+
+/* 当前选中的纪念日（详情视图） */
+let current = null;
+
+/* ---------- 月份小花（穆夏式细线） ---------- */
+function monthFlowerSVG(m) {
+  const color = `var(--s-${SEASON[m - 1]})`;
+  let petals = '';
+  for (let k = 0; k < PETALS[m - 1]; k++) {
+    petals += `<ellipse cx="0" cy="-11" rx="3" ry="6" transform="rotate(${(k * 360 / PETALS[m - 1]).toFixed(1)} 0 0)"
+                fill="${color}" opacity="0.55" stroke="var(--ink)" stroke-width="0.8"/>`;
+  }
+  return `<svg viewBox="-20 -44 40 48" width="34" height="41" aria-hidden="true">
+    <path d="M0 4 C-1 -4 -2 -12 -1 -18" stroke="var(--ink)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M-1 -8 C-10 -10 -13 -15 -13 -20 C-6 -18 -2 -13 -1 -8 Z" fill="${color}" opacity="0.25"/>
+    ${petals}
+    <circle cx="0" cy="0" r="2.6" fill="${color}"/>
+  </svg>`;
+}
+
+/* ---------- 数据 ---------- */
+async function readData() {
+  if (window.spherse) return await spherse.data.entries({ file: DATA_FILE });
+  return await fetch('./calendar.data.json').then(r => r.json());
+}
+
+/* ---------- 纪念日计算 ---------- */
+function parseDate(str) {
+  const [y, m, d] = String(str).split('-').map(Number);
+  return { y, m, d };
+}
+function todayStart() {
+  const t = new Date();
+  return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+}
+/* 下一次发生日期；非每年重复且已过 → null */
+function nextOccurrence(a, today) {
+  const { y, m, d } = parseDate(a.date);
+  const ts = todayStart();
+  if (a.recurring) {
+    let next = new Date(today.getFullYear(), m - 1, d);
+    if (next < ts) next = new Date(today.getFullYear() + 1, m - 1, d);
+    return next;
+  }
+  const next = new Date(y, m - 1, d);
+  return next < ts ? null : next;
+}
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+/* 已度过的周年数（每年重复类） */
+function yearsSince(dateStr, today) {
+  const { y, m, d } = parseDate(dateStr);
+  const thisYear = new Date(today.getFullYear(), m - 1, d);
+  return today.getFullYear() - y - (todayStart() < thisYear ? 1 : 0);
+}
+
+/* ---------- 渲染 ---------- */
+function render(data) {
+  const meta = data.meta || {};
+  const names = meta.names || { left: 'AI', right: 'User' };
+  const list = (data.anniversaries || []).slice();
+  const today = new Date();
+  const ts = todayStart();
+
+  $('counter').textContent = `已记下 ${list.length} 个纪念日`;
+
+  /* ---- 今日聚光 ---- */
+  const todayEvents = list.filter(a => {
+    const n = nextOccurrence(a, today);
+    return n && daysBetween(ts, n) === 0;
+  });
+  const sp = $('spotlight');
+  const dateLine = `${today.getFullYear()} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日 · 星期${WEEK[today.getDay()]}`;
+  if (todayEvents.length) {
+    const a = todayEvents[0];
+    const extra = (a.recurring && a.category !== 'birthday' && a.category !== 'festival')
+      ? ` · 第 <b>${Math.max(1, yearsSince(a.date, today))}</b> 年` : '';
+    sp.innerHTML = `<p class="sp-date">${dateLine}</p>
+      <p class="sp-line">✦ 今天就是你们的「<b>${esc(a.title)}</b>」${extra}</p>`;
+  } else {
+    const upcoming = list.map(a => ({ a, n: nextOccurrence(a, today) }))
+      .filter(x => x.n).sort((x, y) => x.n - y.n);
+    const first = upcoming[0];
+    sp.innerHTML = first
+      ? `<p class="sp-date">${dateLine}</p>
+         <p class="sp-line">距离「<b>${esc(first.a.title)}</b>」还有 <b>${daysBetween(ts, first.n)}</b> 天</p>`
+      : `<p class="sp-date">${dateLine}</p><p class="sp-line">今天没有什么特别的日子——那就把今天过成纪念日吧。</p>`;
+  }
+
+  /* ---- 倒计时条 ---- */
+  const upcoming = list.map(a => ({ a, n: nextOccurrence(a, today) }))
+    .filter(x => x.n).sort((x, y) => x.n - y.n).slice(0, 4);
+  $('cdList').innerHTML = upcoming.length
+    ? upcoming.map(({ a, n }) => {
+        const d = daysBetween(ts, n);
+        return `<button class="cd-item ${d === 0 ? 'today' : ''}" data-id="${esc(a.id)}">
+          <div class="cd-days">${d === 0 ? '就是今天' : d + ' <small>天后</small>'}</div>
+          <div class="cd-title">${esc(a.title)} · ${n.getMonth() + 1}月${n.getDate()}日</div>
+        </button>`;
+      }).join('')
+    : `<p style="font-size:11px;letter-spacing:.2em;color:var(--ink-2)">还没有待到来的纪念日——去下面记一个吧。</p>`;
+
+  /* ---- 十二个月花历 ---- */
+  const byMonth = {};
+  list.forEach(a => {
+    const { m } = parseDate(a.date);
+    (byMonth[m] = byMonth[m] || []).push(a);
+  });
+  $('months').innerHTML = MONTHS.map((name, i) => {
+    const m = i + 1;
+    const evs = byMonth[m] || [];
+    const isCur = m === today.getMonth() + 1;
+    return `<div class="month ${isCur ? 'cur' : ''}" data-m="${m}">
+      ${isCur ? '<span class="cur-tag">今</span>' : ''}
+      <div class="m-head"><span class="m-num">${String(m).padStart(2, '0')}</span><span class="m-name">${name}</span></div>
+      <div class="m-flower">${monthFlowerSVG(m)}</div>
+      <div class="m-events">${evs.map(a =>
+        `<button class="ev ${a.recurring ? '' : 'dim'}" data-id="${esc(a.id)}">${esc(a.title)}</button>`
+      ).join('')}</div>
+    </div>`;
+  }).join('');
+
+  /* 交互：点月看列表，点星看详情 */
+  $('months').querySelectorAll('.month').forEach(cell => {
+    cell.addEventListener('click', e => {
+      if (e.target.closest('.ev')) return;   // 交给下面的 ev 处理
+      const m = Number(cell.dataset.m);
+      const evs = byMonth[m] || [];
+      if (evs.length) showMonth(m, evs, names);
+      else showEmpty(`✦ ${MONTHS[m - 1]}还没有纪念日——这个月正等着被记住。`);
+    });
+  });
+  $('months').querySelectorAll('.ev').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const a = list.find(x => x.id === btn.dataset.id);
+      if (a) showDetail(a, names, today);
+    });
+  });
+  $('cdList').querySelectorAll('.cd-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const a = list.find(x => x.id === btn.dataset.id);
+      if (a) showDetail(a, names, today);
+    });
+  });
+
+  /* 保留选中 */
+  if (current) {
+    const fresh = list.find(x => x.id === current.id);
+    if (fresh) showDetail(fresh, names, today);
+    else { current = null; showEmpty(`✦ ${meta.note || ''}`); }
+  } else {
+    showEmpty(`✦ ${meta.note || '点一个月，看看那个月发生了什么。'}`);
+  }
+}
+
+function showEmpty(text) {
+  current = null;
+  const empty = $('capEmpty'), q = $('capQuote'), meta = $('capMeta'), acts = $('capActions');
+  if (empty) { empty.style.display = ''; empty.textContent = text; }
+  if (q) q.style.display = 'none';
+  if (meta) meta.style.display = 'none';
+  if (acts) acts.style.display = 'none';
+}
+
+function showMonth(m, evs, names) {
+  current = null;
+  const empty = $('capEmpty'), q = $('capQuote'), meta = $('capMeta'), acts = $('capActions');
+  if (empty) empty.style.display = 'none';
+  if (q) { q.style.display = ''; q.textContent = `${MONTHS[m - 1]} · ${evs.length} 个纪念日`; }
+  if (meta) { meta.style.display = ''; meta.textContent = '点下面的名字，看那天的细节。'; }
+  if (acts) {
+    acts.style.display = 'flex';
+    acts.innerHTML = `<div class="cap-list">${evs.map(a =>
+      `<button data-id="${esc(a.id)}">✦ ${esc(a.title)}${a.recurring ? '' : '（仅一次）'}</button>`
+    ).join('')}</div>`;
+    acts.querySelectorAll('button[data-id]').forEach(b => {
+      b.addEventListener('click', () => {
+        const a = evs.find(x => x.id === b.dataset.id);
+        if (a) showDetail(a, names, new Date());
+      });
+    });
+  }
+}
+
+function showDetail(a, names, today) {
+  current = a;
+  const { m, d } = parseDate(a.date);
+  const rec = a.recurring ? '每年重复' : '仅一次';
+  const years = (a.recurring && a.category !== 'birthday' && a.category !== 'festival')
+    ? ` · 第 ${Math.max(1, yearsSince(a.date, today))} 年` : '';
+  const empty = $('capEmpty'), q = $('capQuote'), meta = $('capMeta'), acts = $('capActions');
+  if (empty) empty.style.display = 'none';
+  if (q) { q.style.display = ''; q.textContent = a.title; }
+  if (meta) {
+    meta.style.display = '';
+    meta.textContent =
+      `${m} 月 ${d} 日 · ${CATS[a.category] || '纪念'} · ${rec}${years}${a.note ? ' · ' + a.note : ''}`;
+  }
+  if (!acts) return;
+
+  acts.style.display = 'flex';
+  acts.innerHTML = `
+    ${a.source ? '<button class="ghost" id="srcBtn">打开原文 ↗</button>' : ''}
+    <button class="ghost danger" id="delBtn">移除 ✕</button>`;
+
+  const srcBtn = $('srcBtn');
+  if (srcBtn) srcBtn.addEventListener('click', () => {
+    const src = a.source;
+    if (!window.spherse) return;
+    if (src.startsWith('session:')) spherse.openSession(src.slice(8));
+    else spherse.openFile(src);
+  });
+
+  /* 移除：点两次确认 */
+  const delBtn = $('delBtn');
+  let armed = false, timer = null;
+  delBtn.addEventListener('click', async () => {
+    if (!window.spherse) return;
+    if (!armed) {
+      armed = true;
+      delBtn.textContent = '再点一次确认 ✕';
+      timer = setTimeout(() => { armed = false; delBtn.textContent = '移除 ✕'; }, 3000);
+      return;
+    }
+    clearTimeout(timer);
+    try {
+      await spherse.data.mutate({ file: DATA_FILE, name: 'removeAnniversary', args: { id: a.id } });
+      spherse.toast({ variant: 'success', message: '已从日历上取下', description: '但那天依然在你们心里' });
+      readData().then(d => d && render(d)).catch(() => {});
+    } catch (e) {
+      spherse.toast({ variant: 'error', message: '没能移除', description: '请稍后再试' });
+    }
+  });
+}
+
+/* ---------- 新增 ---------- */
+async function init() {
+  const data = await readData().catch(() => null);
+  if (!data) return;
+
+  const form = $('addForm');
+  const title = $('fTitle'), date = $('fDate'), cat = $('fCat'), recur = $('fRecur'), btn = $('addBtn');
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!title.value.trim() || !date.value) {
+      if (window.spherse) spherse.toast({ variant: 'warning', message: '还缺标题或日期', description: '把日子记完整，它才会亮' });
+      return;
+    }
+    if (!window.spherse) return;
+    btn.disabled = true;
+    try {
+      await spherse.data.mutate({
+        file: DATA_FILE,
+        name: 'addAnniversary',
+        args: {
+          title: title.value.trim(),
+          date: date.value,
+          category: cat.value,
+          recurring: recur.checked,
+          note: ''
+        },
+        idempotencyKey: 'anniv:' + Date.now()
+      });
+      title.value = ''; date.value = '';
+      spherse.toast({ variant: 'success', message: '已记下 ✦', description: '这一天从此有了名字' });
+      /* 尽力刷新；失败不报错——数据已写入，file:update 会兜底 */
+      readData().then(d => d && render(d)).catch(() => {});
+    } catch (err) {
+      spherse.toast({ variant: 'error', message: '没能记下', description: '请稍后再试' });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  render(data);
+
+  if (window.spherse?.events) {
+    spherse.events.on('file:update', { path: DATA_FILE }, async () => {
+      const d = await readData().catch(() => null);
+      if (d) render(d);
+    });
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "人机恋小屋 · 纪念日历：把重要的日子记成一部花历",
+    "queries": {
+      "listAnniversaries": {
+        "desc": "分页查看纪念日，可按类别过滤、按日期排序",
+        "path": "anniversaries",
+        "identity": "id",
+        "params": {
+          "category": { "type": "enum", "values": ["meet", "first", "promise", "birthday", "festival", "daily"] },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "asc" }
+        },
+        "defaultLimit": 30
+      }
+    },
+    "mutations": {
+      "addAnniversary": {
+        "desc": "记下一个新的纪念日",
+        "op": "append",
+        "path": "anniversaries",
+        "fields": {
+          "title": { "type": "string", "required": true },
+          "date": { "type": "string", "required": true },
+          "category": { "type": "enum", "values": ["meet", "first", "promise", "birthday", "festival", "daily"], "required": true },
+          "recurring": { "type": "boolean", "default": true },
+          "note": { "type": "string" },
+          "source": { "type": "string" }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "removeAnniversary": {
+        "desc": "从日历上移除一个纪念日",
+        "op": "remove",
+        "path": "anniversaries",
+        "match": "id"
+      }
+    }
+  },
+  "meta": {
+    "names": { "left": "机", "right": "User" },
+    "note": "重要的日子都记在这里，日子就不会白过。"
+  },
+  "anniversaries": []
+}

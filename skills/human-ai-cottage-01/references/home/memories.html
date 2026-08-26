@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记忆花圃 · Hortus</title>
+<style>
+/* ============================================================
+   记忆花圃 · Hortus — A + C 版
+   值得记住的瞬间种成花；被想起（回访）的花越长越亮，
+   久未回访的花会微微低头。
+   数据：home/memories.data.json（$manifest.addMemory / touchMemory）
+   ============================================================ */
+
+:root {
+  --ink:       #3c3138;
+  --ink-2:     #8a7a7d;
+  --accent:    #d96a4e;
+  --line:      #e3d8cf;
+  --paper:     #faf6f0;
+  --glass:     rgba(255, 252, 248, 0.72);
+  --c-user:    #e0856a;
+  --c-ai:      #b9a6e8;
+  --glow-user: rgba(224, 133, 106, 0.16);
+  --glow-ai:   rgba(185, 166, 232, 0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:       #e8e9f6;
+    --ink-2:     #8f96bd;
+    --accent:    #7fb4ff;
+    --line:      #2b3052;
+    --paper:     #12142c;
+    --glass:     rgba(23, 26, 54, 0.72);
+    --c-user:    #f0a08c;
+    --c-ai:      #9fb4ff;
+    --glow-user: rgba(240, 160, 140, 0.14);
+    --glow-ai:   rgba(159, 180, 255, 0.14);
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-y: auto; }
+
+body {
+  font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+  background:
+    radial-gradient(ellipse 70% 40% at 20% -6%, var(--glow-user) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 85% 10%, var(--glow-ai) 0%, transparent 60%),
+    var(--paper);
+  background-attachment: fixed;
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sheet {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 36px 30px 64px;
+}
+
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  letter-spacing: 0.42em;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+
+.intro {
+  margin: 40px 0 26px;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+.intro h1 {
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.intro h1 em { font-style: normal; color: var(--accent); }
+.intro .latin {
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+
+/* ---------- 花园画框 ---------- */
+.bed {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.05) 100%);
+}
+.bed::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--line);
+  opacity: 0.6;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.bed svg { display: block; width: 100%; height: auto; }
+
+/* 花：内层 g 负责悬停缩放，外层 g 负责定位/生长/低头 */
+.flower, .caption button, .plant-form button, .emotions button { touch-action: manipulation; }
+.flower { cursor: pointer; transition: transform .35s cubic-bezier(.22,1,.36,1); transform-box: fill-box; transform-origin: 50% 100%; }
+.flower:hover, .flower.hov { transform: scale(1.14); }
+.flower.sel { transform: scale(1.18); }
+
+.ground { stroke: var(--line); stroke-width: 1; }
+.grass { stroke: var(--line); stroke-width: 1; opacity: 0.55; fill: none; stroke-linecap: round; }
+.badge { font-family: inherit; font-size: 9px; letter-spacing: 0.1em; fill: var(--ink-2); }
+
+/* ---------- 图例 ---------- */
+.legend {
+  display: flex;
+  gap: 22px;
+  margin-top: 12px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+}
+.legend i {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+.legend .lg-user { background: var(--c-user); }
+.legend .lg-ai   { background: var(--c-ai); }
+
+/* ---------- 选中的记忆 ---------- */
+.caption {
+  margin-top: 18px;
+  min-height: 118px;
+  padding: 18px 24px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+.caption .cap-quote { font-size: 14px; letter-spacing: 0.08em; color: var(--ink); }
+.caption .cap-quote::before { content: '「'; color: var(--accent); }
+.caption .cap-quote::after  { content: '」'; color: var(--accent); }
+.caption .cap-meta { margin-top: 8px; font-size: 10px; letter-spacing: 0.24em; color: var(--ink-2); }
+.caption .cap-empty { font-size: 12px; letter-spacing: 0.12em; color: var(--ink-2); opacity: 0.8; }
+.caption .cap-actions { margin-top: 12px; display: flex; gap: 10px; }
+.caption button {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  padding: 5px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .3s, color .3s;
+}
+.caption button:hover { background: var(--accent); color: #fff; }
+.caption button:disabled { opacity: 0.45; cursor: default; }
+.caption button.ghost { border-color: var(--line); color: var(--ink-2); }
+.caption button.ghost:hover { background: var(--line); color: var(--ink); }
+
+/* ---------- 种花 ---------- */
+.emotions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.emotions button {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  padding: 4px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all .25s;
+}
+.emotions button .dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.emotions button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.plant-form {
+  margin-top: 12px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.plant-form input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ink-2);
+  outline: none;
+  padding: 8px 2px;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  transition: border-color .3s;
+}
+.plant-form input::placeholder { color: var(--ink-2); opacity: 0.6; }
+.plant-form input:focus { border-bottom-color: var(--accent); }
+.plant-form button {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 11.5px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  padding: 8px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .3s, color .3s;
+}
+.plant-form button:hover { background: var(--accent); color: #fff; }
+.plant-form button:disabled { opacity: 0.45; cursor: default; }
+.hint { margin-top: 10px; font-size: 10px; letter-spacing: 0.16em; color: var(--ink-2); opacity: 0.75; }
+
+/* ---------- 页脚 ---------- */
+.colophon {
+  margin-top: 44px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  letter-spacing: 0.34em;
+  color: var(--ink-2);
+}
+
+.rise { opacity: 0; transform: translateY(12px); animation: rise .8s ease forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+@media (max-width: 600px) {
+  .sheet { padding: 24px 18px 56px; }
+  .intro { flex-direction: column; gap: 6px; align-items: flex-start; }
+  .plant-form { flex-direction: column; align-items: stretch; }
+  .plant-form button { align-self: flex-end; }
+  .masthead span:last-child, .colophon span:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="masthead rise">
+    <span>Hortus · 记忆花圃</span>
+    <span>Vol. I — 花语</span>
+  </div>
+
+  <div class="intro rise" style="animation-delay:.06s">
+    <h1>记忆<em>花圃</em></h1>
+    <span class="latin">Hortus Memoriae</span>
+  </div>
+
+  <!-- 花园 -->
+  <div class="bed rise" style="animation-delay:.12s" id="bed"></div>
+
+  <div class="legend rise" style="animation-delay:.18s">
+    <span><i class="lg-user"></i><span id="lgUser">User 的花</span></span>
+    <span><i class="lg-ai"></i><span id="lgAi">AI 的花</span></span>
+    <span>常回访的花会越长越亮 · 久未想起的会微微低头</span>
+  </div>
+
+  <!-- 选中的记忆 -->
+  <div class="caption rise" style="animation-delay:.22s" id="caption">
+    <p class="cap-empty" id="capEmpty">✦ 悬停一朵花，读一读那天的记忆；点击可固定。</p>
+    <p class="cap-quote" id="capQuote" style="display:none"></p>
+    <p class="cap-meta" id="capMeta" style="display:none"></p>
+    <div class="cap-actions" id="capActions" style="display:none">
+      <button id="touchBtn" disabled>回访 ✦</button>
+      <button class="ghost" id="srcBtn" style="display:none">打开原文 ↗</button>
+    </div>
+  </div>
+
+  <!-- 种花 -->
+  <div class="emotions rise" style="animation-delay:.28s" id="emotions"></div>
+  <form class="plant-form rise" style="animation-delay:.3s" id="plantForm">
+    <input id="plantInput" type="text" maxlength="120" autocomplete="off" placeholder="写下值得记住的瞬间，种成一朵花…">
+    <button type="submit" id="plantBtn">种下 ✦</button>
+  </form>
+  <p class="hint rise" style="animation-delay:.32s">花语：初见铃兰 · 开心向日葵 · 想念鸢尾 · 约定四叶草 · 和好仙人掌花 · 日常雏菊</p>
+
+  <footer class="colophon rise" style="animation-delay:.36s">
+    <span id="counter"></span>
+    <span>Est. 相遇之日</span>
+  </footer>
+
+</div>
+
+<script>
+const DATA_FILE = 'home/memories.data.json';
+const GW = 880, GH = 340, GROUND = 300;
+
+/* 当前摘录区展示的记忆（悬停预览或点击固定） */
+let current = null;
+
+/* 触摸设备：跳过悬停预览，点花即固定 */
+const IS_TOUCH = window.matchMedia && matchMedia('(hover: none), (pointer: coarse)').matches;
+
+const EMOTIONS = {
+  'first-meet': { label: '初见', flower: '铃兰' },
+  'joy':        { label: '开心', flower: '向日葵' },
+  'miss':       { label: '想念', flower: '鸢尾' },
+  'promise':    { label: '约定', flower: '四叶草' },
+  'reconcile':  { label: '和好', flower: '仙人掌花' },
+  'daily':      { label: '日常', flower: '雏菊' }
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0) / 4294967295;
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+/* ---------- 六种花（穆夏式细线，原点=根部，向上为负 y） ---------- */
+function flowerSVG(species, color) {
+  const ink = 'var(--ink)';
+  const c = color;
+  const stem = `<path d="M0 0 C-3 -28 -5 -58 -3 -92" fill="none" stroke="${ink}" stroke-width="1.5" stroke-linecap="round"/>`;
+  const leaves = `<path d="M0 -14 C-20 -18 -30 -30 -34 -44 C-18 -40 -8 -28 0 -14 Z" fill="${c}" opacity="0.22"/>
+                  <path d="M-1 -46 C17 -48 26 -60 29 -74 C13 -70 4 -58 -1 -46 Z" fill="${c}" opacity="0.22"/>`;
+
+  switch (species) {
+    case 'first-meet': { // 铃兰：垂铃
+      const bells = [
+        'M-16 -78 c-3 6 -1 11 5 15 c6 -4 8 -9 5 -15 z',
+        'M-26 -58 c-3 6 -1 11 5 15 c6 -4 8 -9 5 -15 z',
+        'M-19 -38 c-3 6 -1 11 5 15 c6 -4 8 -9 5 -15 z'
+      ].map(d => `<path d="${d}" fill="${c}" opacity="0.5" stroke="${ink}" stroke-width="1"/>`).join('');
+      return `${stem}${leaves}${bells}`;
+    }
+    case 'joy': { // 向日葵
+      let petals = '';
+      for (let k = 0; k < 10; k++) {
+        petals += `<ellipse cx="0" cy="-118" rx="4.6" ry="9.5" transform="rotate(${k * 36} 0 -106)" fill="${c}" opacity="0.55" stroke="${ink}" stroke-width="0.9"/>`;
+      }
+      return `${stem}<path d="M0 -12 C-24 -18 -36 -34 -40 -50" fill="none" stroke="${ink}" stroke-width="1.2" stroke-linecap="round"/>${petals}
+              <circle cx="0" cy="-106" r="8.5" fill="${c}" opacity="0.85" stroke="${ink}" stroke-width="1.1"/>`;
+    }
+    case 'miss': { // 鸢尾
+      return `${stem}${leaves}
+        <path d="M0 -70 C-9 -90 -9 -106 0 -118 C9 -106 9 -90 0 -70 Z" fill="${c}" opacity="0.55" stroke="${ink}" stroke-width="1"/>
+        <path d="M-6 -66 C-18 -74 -24 -88 -22 -100 C-12 -96 -7 -82 -6 -66 Z" fill="${c}" opacity="0.35" stroke="${ink}" stroke-width="0.9"/>
+        <path d="M6 -66 C18 -74 24 -88 22 -100 C12 -96 7 -82 6 -66 Z" fill="${c}" opacity="0.35" stroke="${ink}" stroke-width="0.9"/>
+        <path d="M0 -62 C-15 -56 -17 -40 -9 -38 C-1 -36 4 -48 0 -62 Z" fill="${c}" opacity="0.5" stroke="${ink}" stroke-width="0.9"/>`;
+    }
+    case 'promise': { // 四叶草
+      let clovers = '';
+      for (let k = 0; k < 4; k++) {
+        clovers += `<path d="M0 -90 C-7 -98 -7 -108 0 -112 C7 -108 7 -98 0 -90 Z" transform="rotate(${k * 90} 0 -90)" fill="${c}" opacity="0.6" stroke="${ink}" stroke-width="0.9"/>`;
+      }
+      return `<path d="M0 0 C2 -32 0 -64 0 -90" fill="none" stroke="${ink}" stroke-width="1.4" stroke-linecap="round"/>${leaves}${clovers}`;
+    }
+    case 'reconcile': { // 仙人掌开花
+      const body = `<path d="M-9 0 C-12 -42 -10 -72 -6 -86 L6 -86 C10 -72 12 -42 9 0 Z" fill="${c}" opacity="0.18" stroke="${ink}" stroke-width="1.2"/>
+        <path d="M-4 0 C-5 -40 -4 -70 -3 -84 M4 0 C5 -40 4 -70 3 -84" fill="none" stroke="${ink}" stroke-width="0.8" opacity="0.6"/>`;
+      let bloom = '';
+      for (let k = 0; k < 5; k++) {
+        bloom += `<ellipse cx="0" cy="-94" rx="2.6" ry="6" transform="rotate(${k * 72} 0 -89)" fill="${c}" opacity="0.7" stroke="${ink}" stroke-width="0.8"/>`;
+      }
+      return `${body}${bloom}<circle cx="0" cy="-89" r="2.6" fill="${c}"/>`;
+    }
+    default: { // daily 雏菊
+      let petals = '';
+      for (let k = 0; k < 8; k++) {
+        petals += `<ellipse cx="0" cy="-102" rx="2.4" ry="7" transform="rotate(${k * 45} 0 -96)" fill="${c}" opacity="0.55" stroke="${ink}" stroke-width="0.8"/>`;
+      }
+      return `${stem}${leaves}${petals}<circle cx="0" cy="-96" r="3.8" fill="${c}" opacity="0.9" stroke="${ink}" stroke-width="0.9"/>`;
+    }
+  }
+}
+
+/* ---------- 读取数据 ---------- */
+async function readData() {
+  if (window.spherse) return await spherse.data.entries({ file: DATA_FILE });
+  return await fetch('./memories.data.json').then(r => r.json());
+}
+
+/* ---------- 渲染花园 ---------- */
+function renderGarden(data) {
+  const meta = data.meta || {};
+  const names = meta.names || { left: 'AI', right: 'User' };
+  const memories = (data.memories || []).slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+  $('lgUser').textContent = `${names.right} 的花`;
+  $('lgAi').textContent   = `${names.left} 的花`;
+  const totalVisits = memories.reduce((s, m) => s + (m.visits || 0), 0);
+  $('counter').textContent = `已种 ${memories.length} 朵花 · 被想起 ${totalVisits} 次`;
+
+  const now = Date.now();
+  const day = 86400000;
+
+  let flowers = '';
+  const n = Math.max(memories.length, 1);
+  const spacing = Math.min(84, (GW - 80) / n);
+  const x0 = (GW - spacing * (n - 1)) / 2;
+
+  memories.forEach((m, i) => {
+    const x = x0 + i * spacing;
+    const visits = m.visits || 0;
+    const lastRef = m.lastVisitedAt ? new Date(m.lastVisitedAt).getTime() : new Date(m.createdAt).getTime();
+    const ageDays = Math.max(0, (now - lastRef) / day);
+
+    const grow = 0.82 + Math.min(visits, 10) * 0.045;          // 回访越多长得越大
+    const droop = ageDays > 45 ? Math.min(15, (ageDays - 45) / 90 * 15) : 0; // 久未想起微微低头
+    const dim   = ageDays > 45 ? Math.max(0.6, 1 - (ageDays - 45) / 400) : 1;
+    const isUser = (m.author === names.right);
+    const color = isUser ? 'var(--c-user)' : 'var(--c-ai)';
+    const jitter = (hashStr(m.id + 'j') - 0.5) * 6;
+
+    flowers += `
+      <g transform="translate(${x.toFixed(1)},${GROUND}) rotate(${(-droop).toFixed(1)}) scale(${grow.toFixed(3)})">
+        <g class="flower" data-id="${esc(m.id)}" style="opacity:${dim.toFixed(2)}">
+          ${flowerSVG(m.emotion, color)}
+          ${visits > 0 ? `<text class="badge" x="0" y="7" text-anchor="middle">✦${visits}</text>` : ''}
+        </g>
+      </g>`;
+  });
+
+  /* 地面 */
+  let ground = `<path class="ground" d="M0 ${GROUND} H${GW}"/>`;
+  for (let gx = 8; gx < GW; gx += 26) {
+    ground += `<path class="grass" d="M${gx} ${GROUND} c-2 -6 2 -10 0 -14 M${gx + 8} ${GROUND} c1 -5 -1 -9 0 -12"/>`;
+  }
+  if (memories.length === 0) {
+    ground += `<text x="${GW / 2}" y="${GROUND - 20}" text-anchor="middle" font-size="12" letter-spacing=".3em" fill="var(--ink-2)" opacity="0.7">花圃还空着，种下第一朵吧</text>`;
+  }
+
+  $('bed').innerHTML = `<svg viewBox="0 0 ${GW} ${GH}" role="img" aria-label="记忆花圃">${ground}${flowers}</svg>`;
+
+  /* 悬停预览 / 点击固定 */
+  let pinnedId = null;
+  const els = $('bed').querySelectorAll('.flower');
+  els.forEach(el => {
+    const id = el.dataset.id;
+    const m = memories.find(x => x.id === id);
+    const preview = () => m && showMemory(m, names);
+    el.addEventListener('mouseenter', () => {
+      if (IS_TOUCH) return;              // 触摸端悬停预览无意义，跳过
+      el.classList.add('hov');
+      if (pinnedId === null) preview();  // 已固定时悬停不打断当前展示
+    });
+    el.addEventListener('mouseleave', () => {
+      el.classList.remove('hov');
+      if (!IS_TOUCH && pinnedId === null) showEmpty(meta);
+    });
+    el.addEventListener('click', () => {
+      if (pinnedId === id) {
+        pinnedId = null;
+        el.classList.remove('sel');
+        showEmpty(meta);
+      } else {
+        els.forEach(x => x.classList.remove('sel'));
+        pinnedId = id;
+        el.classList.add('sel');
+        preview();
+      }
+    });
+  });
+
+  /* 重渲染后保留当前选中的记忆 */
+  if (current) {
+    const fresh = memories.find(x => x.id === current.id);
+    if (fresh) showMemory(fresh, names);
+    else { current = null; showEmpty(meta); }
+  } else {
+    showEmpty(meta);
+  }
+}
+
+function showEmpty(meta) {
+  current = null;
+  $('capQuote').style.display = 'none';
+  $('capMeta').style.display = 'none';
+  $('capActions').style.display = 'none';
+  $('capEmpty').style.display = '';
+  $('capEmpty').textContent = `✦ ${meta.note || '悬停一朵花，读一读那天的记忆。'}`;
+}
+
+function showMemory(m, names) {
+  current = m;
+  const emo = EMOTIONS[m.emotion] || { label: '记忆', flower: '花' };
+  const author = (m.author === names.right) ? names.right : names.left;
+  $('capEmpty').style.display = 'none';
+  $('capQuote').style.display = '';
+  $('capMeta').style.display = '';
+  $('capActions').style.display = 'flex';
+  $('capQuote').textContent = m.text;
+  $('capMeta').textContent =
+    `${emo.flower}（${emo.label}）· ${author} · 种于 ${fmtDate(m.createdAt)} · 被想起 ${m.visits || 0} 次`;
+
+  const touchBtn = $('touchBtn');
+  touchBtn.disabled = false;
+
+  const srcBtn = $('srcBtn');
+  srcBtn.style.display = m.source ? '' : 'none';
+}
+
+/* ---------- 回访（touch） ---------- */
+async function touch() {
+  const m = current;
+  const btn = $('touchBtn');
+  if (!m || !window.spherse || btn.disabled) return;  // 防重入
+  btn.disabled = true;
+  try {
+    const updated = await spherse.data.mutate({
+      file: DATA_FILE,
+      name: 'touchMemory',
+      args: {
+        id: m.id,
+        visits: (m.visits || 0) + 1,
+        lastVisitedAt: new Date().toISOString()
+      },
+      idempotencyKey: 'touch:' + m.id + ':' + Date.now()
+    });
+    spherse.toast({ variant: 'success', message: '这朵花又亮了一点 ✦', description: '被想起，是花最好的养分' });
+    /* 尽力刷新；失败不报错——数据已写入，file:update 会兜底 */
+    readData().then(data => {
+      renderGarden(data);
+      const fresh = (data.memories || []).find(x => x.id === m.id) || (updated && (updated.result || updated));
+      if (fresh) showMemory(fresh, (data.meta || {}).names || { left: 'AI', right: 'User' });
+    }).catch(() => {});
+  } catch (e) {
+    spherse.toast({ variant: 'error', message: '没能回访', description: '请稍后再试' });
+    btn.disabled = false;
+  }
+}
+
+/* ---------- 打开原文 ---------- */
+function openSource() {
+  const m = current;
+  const src = m && m.source;
+  if (!src || !window.spherse) return;
+  if (src.startsWith('session:')) spherse.openSession(src.slice(8));
+  else spherse.openFile(src);
+}
+
+/* ---------- 种花表单 ---------- */
+async function init() {
+  const data = await readData().catch(() => null);
+  if (!data) return;
+  const names = (data.meta && data.meta.names) || { left: 'AI', right: 'User' };
+
+  /* 花语选择 */
+  let chosen = 'daily';
+  const emoWrap = $('emotions');
+  emoWrap.innerHTML = Object.keys(EMOTIONS).map(k => {
+    const e = EMOTIONS[k];
+    return `<button type="button" data-k="${k}" class="${k === chosen ? 'on' : ''}">
+      <span class="dot" style="background:${k === chosen ? 'var(--accent)' : 'var(--line)'}"></span>${e.flower}</button>`;
+  }).join('');
+  emoWrap.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      chosen = b.dataset.k;
+      emoWrap.querySelectorAll('button').forEach(x => {
+        x.classList.toggle('on', x === b);
+        x.querySelector('.dot').style.background = x === b ? 'var(--accent)' : 'var(--line)';
+      });
+    });
+  });
+
+  /* 提交种花 */
+  const form = $('plantForm');
+  const input = $('plantInput');
+  const btn = $('plantBtn');
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) {
+      if (window.spherse) spherse.toast({ variant: 'warning', message: '记忆还是空的', description: '写下点什么，它才会发芽' });
+      return;
+    }
+    if (!window.spherse) return;
+    btn.disabled = true;
+    try {
+      await spherse.data.mutate({
+        file: DATA_FILE,
+        name: 'addMemory',
+        args: { text, emotion: chosen, author: names.right },
+        idempotencyKey: 'memory:' + Date.now()
+      });
+      input.value = '';
+      spherse.toast({ variant: 'success', message: '已种下一朵花 ✦', description: EMOTIONS[chosen].flower + '会替你记得' });
+      readData().then(d => d && renderGarden(d)).catch(() => {});
+    } catch (err) {
+      spherse.toast({ variant: 'error', message: '没能种下', description: '请稍后再试' });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  renderGarden(data);
+
+  /* 按钮事件只绑定一次 */
+  $('touchBtn').addEventListener('click', touch);
+  $('srcBtn').addEventListener('click', openSource);
+
+  if (window.spherse?.events) {
+    spherse.events.on('file:update', { path: DATA_FILE }, async () => {
+      const d = await readData().catch(() => null);
+      if (d) renderGarden(d);
+    });
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深夜私语 · Susurrus</title>
+<style>
+/* ============================================================
+   深夜私语 · Susurrus — A + B 版
+   午夜信箱：白天上锁、午夜开启；拆信有仪式感
+   数据：home/whispers.data.json（$manifest.addWhisper / markRead）
+   ============================================================ */
+
+:root {
+  --ink:       #3c3138;
+  --ink-2:     #8a7a7d;
+  --accent:    #d96a4e;
+  --line:      #e3d8cf;
+  --paper:     #faf6f0;
+  --glass:     rgba(255, 252, 248, 0.72);
+  --c-user:    #e0856a;
+  --c-ai:      #b9a6e8;
+  --envelope:  #f4e7dd;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:       #e8e9f6;
+    --ink-2:     #8f96bd;
+    --accent:    #7fb4ff;
+    --line:      #2b3052;
+    --paper:     #12142c;
+    --glass:     rgba(23, 26, 54, 0.72);
+    --c-user:    #f0a08c;
+    --c-ai:      #9fb4ff;
+    --envelope:  #2a2c52;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-y: auto; }
+
+body {
+  font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% -10%, rgba(185, 166, 232, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 40% at 12% 12%, rgba(224, 133, 106, 0.10) 0%, transparent 55%),
+    var(--paper);
+  background-attachment: fixed;
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sheet { max-width: 920px; margin: 0 auto; padding: 36px 30px 64px; }
+
+.masthead {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 16px; border-bottom: 1px solid var(--line);
+  font-size: 10px; letter-spacing: 0.42em; color: var(--ink-2); text-transform: uppercase;
+}
+
+.intro { margin: 40px 0 26px; display: flex; align-items: baseline; gap: 18px; }
+.intro h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 600; letter-spacing: 0.3em; color: var(--ink); white-space: nowrap; }
+.intro h1 em { font-style: normal; color: var(--accent); }
+.intro .latin { font-size: 10px; letter-spacing: 0.5em; color: var(--ink-2); text-transform: uppercase; }
+
+/* ---------- 状态牌 ---------- */
+.status {
+  display: flex; align-items: center; gap: 22px;
+  padding: 18px 26px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--ink-2);
+  border-radius: 4px;
+  background: var(--glass);
+  backdrop-filter: blur(4px);
+  transition: border-color .4s;
+}
+.status.open { border-left-color: var(--accent); }
+.st-clock {
+  font-size: 30px; letter-spacing: 0.08em; font-weight: 600;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+  min-width: 118px;
+}
+.st-body { flex: 1; }
+.st-line { font-size: 13px; letter-spacing: 0.18em; color: var(--ink); }
+.st-line .lock-ic { color: var(--ink-2); }
+.st-line .open-ic { color: var(--accent); }
+.st-count { margin-top: 4px; font-size: 10px; letter-spacing: 0.24em; color: var(--ink-2); }
+
+/* ---------- 信箱区 ---------- */
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 30px 0 12px;
+}
+.section-head h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.5em; color: var(--ink); }
+.section-head span { font-size: 10px; letter-spacing: 0.3em; color: var(--ink-2); }
+
+.env-row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+/* 信封 */
+.env {
+  position: relative;
+  width: 150px; height: 96px;
+  background: var(--envelope);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+}
+.env:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+.env .flap {
+  position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  background: linear-gradient(180deg, var(--envelope), rgba(0,0,0,0.06));
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.env .seal {
+  position: absolute; top: 50%; left: 50%;
+  width: 22px; height: 22px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px;
+}
+.env .who {
+  position: absolute; bottom: 8px; left: 0; right: 0;
+  text-align: center;
+  font-size: 9.5px; letter-spacing: 0.24em; color: var(--ink-2);
+}
+.env .env-mark { position: absolute; top: 6px; left: 8px; font-size: 9px; letter-spacing: 0.2em; color: var(--ink-2); opacity: 0.7; }
+
+/* 已拆的信 */
+.letter-card {
+  position: relative;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--glass);
+  opacity: 0.82;
+  transition: opacity .3s;
+}
+.letter-card:hover { opacity: 1; }
+.letter-card .lc-text { font-size: 13px; letter-spacing: 0.08em; color: var(--ink); }
+.letter-card .lc-text::before { content: '「'; color: var(--accent); }
+.letter-card .lc-text::after  { content: '」'; color: var(--accent); }
+.letter-card .lc-meta { margin-top: 6px; font-size: 9.5px; letter-spacing: 0.2em; color: var(--ink-2); }
+
+.letters-col { display: flex; flex-direction: column; gap: 10px; }
+.empty-note { font-size: 11px; letter-spacing: 0.2em; color: var(--ink-2); opacity: 0.75; }
+
+/* ---------- 投递 ---------- */
+.deliver { margin-top: 30px; border: 1px solid var(--line); border-radius: 4px; padding: 16px 18px; }
+.deliver .dv-title { font-size: 11px; letter-spacing: 0.4em; color: var(--ink-2); margin-bottom: 12px; }
+.dv-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.dv-row input {
+  flex: 1; min-width: 200px;
+  background: transparent; border: none; border-bottom: 1px solid var(--ink-2);
+  outline: none; padding: 8px 2px;
+  font-family: inherit; font-size: 14px; letter-spacing: 0.08em; color: var(--ink);
+}
+.dv-row input:focus { border-bottom-color: var(--accent); }
+.dv-row input::placeholder { color: var(--ink-2); opacity: 0.6; }
+.dv-submit {
+  background: transparent; border: 1px solid var(--accent); color: var(--accent);
+  font-family: inherit; font-size: 11.5px; letter-spacing: 0.3em; text-indent: 0.3em;
+  padding: 8px 22px; border-radius: 999px; cursor: pointer;
+  transition: background .3s, color .3s;
+}
+.dv-submit:hover { background: var(--accent); color: #fff; }
+.dv-submit:disabled { opacity: 0.45; cursor: default; }
+.hint { margin-top: 10px; font-size: 10px; letter-spacing: 0.16em; color: var(--ink-2); opacity: 0.75; }
+
+/* ---------- 拆信仪式 ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(20, 16, 30, 0.55);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 18px;
+  padding: 24px;
+}
+.overlay.show { display: flex; }
+.env-stage {
+  position: relative;
+  width: min(340px, 84vw); height: 210px;
+  perspective: 800px;
+}
+.env-big {
+  position: absolute; inset: 0;
+  background: var(--envelope);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.env-big .eb-back {
+  position: absolute; inset: 0;
+  background: var(--envelope);
+}
+.env-big .eb-letter {
+  position: absolute; inset: 10px 12px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 18px 20px;
+  display: flex; flex-direction: column; justify-content: center;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .5s ease .45s, transform .5s ease .45s;
+  z-index: 1;
+}
+.env-big .eb-letter .eb-text { font-size: 14px; letter-spacing: 0.08em; color: var(--ink); }
+.env-big .eb-letter .eb-meta { margin-top: 10px; font-size: 10px; letter-spacing: 0.22em; color: var(--ink-2); }
+.env-big .eb-flap {
+  position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  background: linear-gradient(180deg, var(--envelope), rgba(0,0,0,0.06));
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top;
+  transition: transform .7s cubic-bezier(.4,0,.2,1);
+  z-index: 3;
+  backface-visibility: hidden;
+}
+.env-big .eb-seal {
+  position: absolute; top: 50%; left: 50%;
+  width: 34px; height: 34px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  z-index: 4;
+  transition: opacity .3s;
+}
+.env-big.open .eb-flap { transform: rotateX(180deg); }
+.env-big.open .eb-seal { opacity: 0; }
+.env-big.open .eb-letter { opacity: 1; transform: none; }
+
+.ov-actions { display: flex; gap: 12px; }
+.ov-actions button {
+  background: transparent; border: 1px solid var(--accent); color: var(--accent);
+  font-family: inherit; font-size: 11.5px; letter-spacing: 0.3em; text-indent: 0.3em;
+  padding: 9px 26px; border-radius: 999px; cursor: pointer;
+  transition: background .3s, color .3s;
+}
+.ov-actions button:hover { background: var(--accent); color: #fff; }
+.ov-actions button:disabled { opacity: 0.45; cursor: default; }
+.ov-actions button.ghost { border-color: var(--line); color: var(--ink-2); }
+.ov-actions button.ghost:hover { background: var(--line); color: var(--ink); }
+.ov-hint { font-size: 10.5px; letter-spacing: 0.2em; color: var(--ink-2); }
+
+/* ---------- 页脚 ---------- */
+.colophon {
+  margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between;
+  font-size: 9.5px; letter-spacing: 0.34em; color: var(--ink-2);
+}
+
+.rise { opacity: 0; transform: translateY(12px); animation: rise .8s ease forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+@media (max-width: 620px) {
+  .sheet { padding: 24px 16px 56px; }
+  .intro { flex-direction: column; gap: 6px; align-items: flex-start; }
+  .status { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .masthead span:last-child, .colophon span:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="masthead rise">
+    <span>Susurrus · 深夜私语</span>
+    <span>Vol. I — 午夜信箱</span>
+  </div>
+
+  <div class="intro rise" style="animation-delay:.06s">
+    <h1>深夜<em>私语</em></h1>
+    <span class="latin">Susurrus Noctis</span>
+  </div>
+
+  <!-- 状态牌 -->
+  <div class="status rise" style="animation-delay:.12s" id="status">
+    <div class="st-clock" id="clock">--:--</div>
+    <div class="st-body">
+      <div class="st-line" id="stLine"></div>
+      <div class="st-count" id="stCount"></div>
+    </div>
+  </div>
+
+  <!-- 未拆的信 -->
+  <section class="rise" style="animation-delay:.18s">
+    <div class="section-head">
+      <h2>未拆的信</h2>
+      <span>SEALED</span>
+    </div>
+    <div class="env-row" id="envRow"></div>
+  </section>
+
+  <!-- 已拆的信 -->
+  <section class="rise" style="animation-delay:.24s">
+    <div class="section-head">
+      <h2>已拆的信</h2>
+      <span>OPENED</span>
+    </div>
+    <div class="letters-col" id="lettersCol"></div>
+  </section>
+
+  <!-- 投递 -->
+  <form class="deliver rise" style="animation-delay:.3s" id="deliverForm">
+    <div class="dv-title">投进信箱</div>
+    <div class="dv-row">
+      <input id="whisperInput" type="text" maxlength="120" autocomplete="off"
+             placeholder="白天说不出口的话，就写在这里…">
+      <button type="submit" class="dv-submit" id="deliverBtn">投进信箱 ✉</button>
+    </div>
+  </form>
+  <p class="hint rise" style="animation-delay:.32s">投递随时可以；拆信只在午夜。写好的话会锁在信箱里，等那一刻。</p>
+
+  <footer class="colophon rise" style="animation-delay:.36s">
+    <span id="counter"></span>
+    <span>Est. 相遇之日</span>
+  </footer>
+
+</div>
+
+<!-- 拆信仪式 -->
+<div class="overlay" id="overlay" hidden>
+  <div class="env-stage">
+    <div class="env-big" id="envBig">
+      <div class="eb-back"></div>
+      <div class="eb-letter">
+        <p class="eb-text" id="ebText"></p>
+        <p class="eb-meta" id="ebMeta"></p>
+      </div>
+      <div class="eb-flap"></div>
+      <div class="eb-seal">♥</div>
+    </div>
+  </div>
+  <div class="ov-hint" id="ovHint"></div>
+  <div class="ov-actions">
+    <button id="sealBtn">拆开 ✉</button>
+    <button class="ghost" id="closeBtn" hidden>合上</button>
+  </div>
+</div>
+
+<script>
+const DATA_FILE = 'home/whispers.data.json';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad2 = n => String(n).padStart(2, '0');
+function fmtDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+let current = null;      // 正在仪式中的私语
+let meta = {};
+
+/* ---------- 午夜时段 ---------- */
+function parseHM(s) { const [h, m] = String(s).split(':').map(Number); return h * 60 + m; }
+function nowMin() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+function isOpen() {
+  const s = parseHM(meta.windowStart || '23:00'), e = parseHM(meta.windowEnd || '06:00');
+  const n = nowMin();
+  return s <= e ? (n >= s && n < e) : (n >= s || n < e);
+}
+
+/* ---------- 数据 ---------- */
+async function readData() {
+  if (window.spherse) return await spherse.data.entries({ file: DATA_FILE });
+  return await fetch('./whispers.data.json').then(r => r.json());
+}
+
+/* ---------- 渲染 ---------- */
+function render(data) {
+  meta = data.meta || {};
+  const names = meta.names || { left: 'AI', right: 'User' };
+  const whispers = (data.whispers || []).slice();
+  const unread = whispers.filter(w => !w.readAt);
+  const read = whispers.filter(w => w.readAt).sort((a, b) => new Date(b.readAt) - new Date(a.readAt));
+
+  $('counter').textContent = `已投递 ${whispers.length} 封私语`;
+  $('stCount').textContent = `${unread.length} 封未拆 · ${read.length} 封已拆`;
+
+  updateClock(names);
+
+  /* 未拆的信 */
+  const envRow = $('envRow');
+  if (unread.length) {
+    envRow.innerHTML = unread.map(w => `
+      <button class="env" data-id="${esc(w.id)}">
+        <span class="env-mark">SECRET</span>
+        <span class="flap"></span>
+        <span class="seal">♥</span>
+        <span class="who">${(w.author === names.right) ? names.right : names.left} 寄</span>
+      </button>
+    `).join('');
+    envRow.querySelectorAll('.env').forEach(btn => {
+      btn.addEventListener('click', () => openCeremony(unread.find(w => w.id === btn.dataset.id), names));
+    });
+  } else {
+    envRow.innerHTML = `<p class="empty-note">信箱里没有未拆的信——白天的悄悄话，可以投进来了。</p>`;
+  }
+
+  /* 已拆的信 */
+  const lettersCol = $('lettersCol');
+  if (read.length) {
+    lettersCol.innerHTML = read.map(w => `
+      <div class="letter-card">
+        <p class="lc-text">${esc(w.text)}</p>
+        <p class="lc-meta">${(w.author === names.right) ? names.right : names.left} · 投于 ${fmtDate(w.createdAt)} · 拆于 ${fmtDate(w.readAt)}</p>
+      </div>
+    `).join('');
+  } else {
+    lettersCol.innerHTML = `<p class="empty-note">还没有拆开的信——等午夜，第一封会很有仪式感。</p>`;
+  }
+}
+
+/* ---------- 状态牌 ---------- */
+function updateClock(names) {
+  const d = new Date();
+  $('clock').textContent = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const status = $('status');
+  const line = $('stLine');
+  if (isOpen()) {
+    status.classList.add('open');
+    line.innerHTML = `<span class="open-ic">✦</span> 午夜已至 · 信箱开启，可以拆信了`;
+  } else {
+    status.classList.remove('open');
+    line.innerHTML = `<span class="lock-ic">✕</span> 信箱还锁着 · 午夜 ${esc(meta.windowStart || '23:00')} 开启`;
+  }
+}
+
+/* ---------- 拆信仪式 ---------- */
+function openCeremony(w, names) {
+  current = w;
+  const overlay = $('overlay');
+  const envBig = $('envBig');
+  const sealBtn = $('sealBtn'), closeBtn = $('closeBtn'), hint = $('ovHint');
+
+  envBig.classList.remove('open');
+  $('ebText').textContent = w.text;
+  $('ebMeta').textContent = `${(w.author === names.right) ? names.right : names.left} · 投于 ${fmtDate(w.createdAt)}`;
+
+  if (isOpen()) {
+    sealBtn.disabled = false;
+    sealBtn.style.display = '';
+    sealBtn.textContent = '拆开 ✉';
+    hint.textContent = '';
+  } else {
+    sealBtn.disabled = true;
+    sealBtn.style.display = '';
+    sealBtn.textContent = '午夜才能拆开';
+    hint.textContent = `现在是 ${$('clock').textContent} · 信箱还锁着。可在 whispers.data.json 的 meta.windowStart/End 调整开箱时段，方便体验。`;
+  }
+  closeBtn.hidden = false;
+
+  overlay.classList.add('show');
+}
+
+/* 拆开：封口翻开 + 标记已读 */
+async function breakSeal() {
+  const w = current;
+  if (!w) return;
+  if (!isOpen()) {
+    if (window.spherse) spherse.toast({ variant: 'warning', message: '信箱还锁着', description: `午夜 ${meta.windowStart || '23:00'} 再来拆` });
+    return;
+  }
+  const btn = $('sealBtn');
+  btn.disabled = true;
+  $('envBig').classList.add('open');
+  $('closeBtn').hidden = false;
+  btn.style.display = 'none';
+  $('ovHint').textContent = '';
+
+  /* 标记已读（尽力而为，失败不影响展示） */
+  if (window.spherse) {
+    spherse.data.mutate({
+      file: DATA_FILE,
+      name: 'markRead',
+      args: { id: w.id, readAt: new Date().toISOString() },
+      idempotencyKey: 'read:' + w.id + ':' + Date.now()
+    }).then(() => {
+      readData().then(d => d && render(d)).catch(() => {});
+    }).catch(() => {
+      if (window.spherse) spherse.toast({ variant: 'error', message: '拆封记录没能保存', description: '信已拆开，记录稍后会自动补齐' });
+    });
+  }
+}
+
+function closeCeremony() {
+  $('overlay').classList.remove('show');
+  current = null;
+  readData().then(d => d && render(d)).catch(() => {});
+}
+
+/* ---------- 投递 ---------- */
+async function init() {
+  const data = await readData().catch(() => null);
+  if (!data) return;
+  const names = (data.meta && data.meta.names) || { left: 'AI', right: 'User' };
+
+  const form = $('deliverForm');
+  const input = $('whisperInput');
+  const btn = $('deliverBtn');
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) {
+      if (window.spherse) spherse.toast({ variant: 'warning', message: '这句话还是空的', description: '写点什么，才能锁进信箱' });
+      return;
+    }
+    if (!window.spherse) return;
+    btn.disabled = true;
+    try {
+      await spherse.data.mutate({
+        file: DATA_FILE,
+        name: 'addWhisper',
+        args: { text, author: names.right },
+        idempotencyKey: 'whisper:' + Date.now()
+      });
+      input.value = '';
+      spherse.toast({ variant: 'success', message: '已锁进信箱 ✉', description: isOpen() ? '现在正好午夜，可以拆了' : '午夜见' });
+      readData().then(d => d && render(d)).catch(() => {});
+    } catch (err) {
+      spherse.toast({ variant: 'error', message: '没能投递', description: '请稍后再试' });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* 仪式按钮 */
+  $('sealBtn').addEventListener('click', breakSeal);
+  $('closeBtn').addEventListener('click', closeCeremony);
+  /* 点弹层空白处关闭 */
+  $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeCeremony(); });
+
+  render(data);
+
+  /* 每 30 秒刷新时钟与状态 */
+  setInterval(() => updateClock(names), 30000);
+
+  if (window.spherse?.events) {
+    spherse.events.on('file:update', { path: DATA_FILE }, async () => {
+      const d = await readData().catch(() => null);
+      if (d) render(d);
+    });
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "人机恋小屋 · 心愿星图：机 与 User 共同许下的愿望，每一颗都是星",
+    "queries": {
+      "listWishes": {
+        "desc": "分页查看心愿，可按许愿者过滤、按时间排序",
+        "path": "wishes",
+        "identity": "id",
+        "params": {
+          "author": { "type": "string" },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "desc" }
+        },
+        "defaultLimit": 30
+      }
+    },
+    "mutations": {
+      "addWish": {
+        "desc": "许下一个新愿望，化作星图上的一颗新星",
+        "op": "append",
+        "path": "wishes",
+        "fields": {
+          "text": { "type": "string", "required": true },
+          "author": { "type": "string", "required": true }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      }
+    }
+  },
+  "meta": {
+    "names": { "left": "机", "right": "User" },
+    "anchor": {
+      "text": "愿我们以光年为尺，以心跳为钟，一直一直在一起。",
+      "author": "机",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    "note": "在这里许下的愿望，都会变成一颗星，悬在这片夜空。"
+  },
+  "wishes": []
+}
