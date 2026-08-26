@@ -1,2 +1,4 @@
 node_modules/
 dist/
+.spherse/*
+CHANGELOG.md
