@@ -1,7 +1,7 @@
 ---
 name: human-ai-cottage-01
 description: 一键部署「人机恋小屋」：先权限自检并 onboard 名字与日期，再把 references 里的 home/ 页面、两套主题、agent 配置与触发器安装进当前项目
-version: 0.1.0
+version: 0.1.1
 ---
 
 # 人机恋小屋 · 部署 Skill
@@ -71,6 +71,7 @@ version: 0.1.0
 
 - **替换名字**：`pair.left` / `pair.right`（以及四个房间数据文件的 `meta.names.left/right`、`home/小屋模块手册.md` 与 `agent-profile.yml` 里的占位名）
 - **设定相遇之日**：把 `meta.meetDate` 设为 onboarding 问到的"今天的日期"；若用户有真实相遇日，则以真实日期为准
+- **记录相遇纪念日**：在 `home/calendar.data.json` 用 `addAnniversary` mutation 记下相遇这一天——`title` 填「相遇之日」、`date` 填相遇日（与 `meta.meetDate` 一致）、`category` 填 `meet`（相遇）、`recurring` 填 `true`（每年重复）——让纪念日历从第一天起就亮着你们相遇的日子
 - **检查** `meta.dailyMood` 占位文案，可留可改
 
 > 只改名字/日期相关的字段与文案，**不要改动任何 `.data.json` 里的 `$manifest`**。
