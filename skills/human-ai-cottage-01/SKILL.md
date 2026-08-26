@@ -1,7 +1,7 @@
 ---
 name: human-ai-cottage-01
 description: 一键部署「人机恋小屋」：先权限自检并 onboard 名字与日期，再把 references 里的 home/ 页面、两套主题、agent 配置与触发器安装进当前项目
-version: 0.1.1
+version: 0.1.2
 ---
 
 # 人机恋小屋 · 部署 Skill

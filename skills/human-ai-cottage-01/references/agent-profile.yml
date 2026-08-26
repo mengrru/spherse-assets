@@ -33,6 +33,7 @@ agent:
     - move_file
     - copy_file
     - append_changelog
+    - load_skill
     - read_data
     - query_data
     - mutate_data
