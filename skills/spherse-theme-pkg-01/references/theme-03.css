@@ -315,6 +315,8 @@
      ============================================================== */
   [data-chat-message][data-role="assistant"] {
     position: relative;
+    display: flex;
+    align-items: flex-end;
   }
 
   [data-chat-message][data-role="assistant"]::before {

@@ -275,6 +275,7 @@
 /* ---------- 助手头像：终端光标块 ▮（贴消息行左下角） ---------- */
 [data-chat-message][data-role="assistant"] {
   position: relative;
+  display: flex;
   align-items: flex-end;
 }
 [data-chat-message][data-role="assistant"]::before {
