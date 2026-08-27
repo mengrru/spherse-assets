@@ -1,0 +1,449 @@
+/* ============================================================
+   🏰 庄重的魔法世界主题 — The Grand Magical World Theme
+   ============================================================
+   灵感源自：霍格沃茨的深夜图书馆、校长室的烛光、
+   古老羊皮卷上的墨迹、以及悬浮在空中的金色魔法微粒。
+   ============================================================ */
+
+/* ---------- 浅色模式（Light Mode）—— 如古老羊皮纸与午后阳光 ---------- */
+:root {
+  /* 页面与容器 */
+  --sp-background: #f5f0eb;             /* 古老羊皮纸底色 */
+  --sp-foreground: #2d2b3a;             /* 深色墨水 */
+  --sp-card: #ffffff;                    /* 洁净卡片 */
+  --sp-card-foreground: #2d2b3a;
+
+  /* 弹出层 */
+  --sp-popover: #ffffff;
+  --sp-popover-foreground: #2d2b3a;
+
+  /* 交互元素 */
+  --sp-primary: #8b6914;                /* 古董金 / 魔法光晕 */
+  --sp-primary-foreground: #faf8f2;
+  --sp-secondary: #e8dcc8;              /* 暖奶油色 */
+  --sp-secondary-foreground: #2d2b3a;
+  --sp-accent: #e8dcc8;
+  --sp-accent-foreground: #2d2b3a;
+
+  /* 文字层级 */
+  --sp-muted: #f0ebe3;
+  --sp-muted-foreground: #8a7f70;
+
+  /* 边框与输入 */
+  --sp-border: #d4c9b8;
+  --sp-input: #d4c9b8;
+  --sp-ring: #c9a84a;
+
+  /* 语义色 */
+  --sp-destructive: #8b1a1a;
+  --sp-success: #2d6a2d;
+  --sp-warning: #c9822d;
+  --sp-success-foreground: #faf8f2;
+  --sp-warning-foreground: #faf8f2;
+  --sp-diff-added: #2d6a2d;
+
+  /* 圆角 — 古典庄重的弧度 */
+  --sp-radius: 0.625rem;
+
+  /* 侧边栏 */
+  --sp-sidebar: #2d2b3a;                /* 深檀木色 */
+  --sp-sidebar-foreground: #e8dcc8;
+  --sp-sidebar-primary: #c9a84a;
+  --sp-sidebar-primary-foreground: #2d2b3a;
+  --sp-sidebar-accent: #3a3850;
+  --sp-sidebar-accent-foreground: #e8dcc8;
+  --sp-sidebar-border: #3a3850;
+  --sp-sidebar-ring: #c9a84a;
+}
+
+/* ---------- 深色模式（Dark Mode）—— 如深夜的霍格沃茨大厅 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 页面与容器 */
+    --sp-background: #0f0e17;           /* 午夜深邃 */
+    --sp-foreground: #e8dcc8;           /* 烛光暖白 */
+    --sp-card: #1a1838;                 /* 魔法深蓝 */
+    --sp-card-foreground: #e8dcc8;
+
+    /* 弹出层 */
+    --sp-popover: #1a1838;
+    --sp-popover-foreground: #e8dcc8;
+
+    /* 交互元素 */
+    --sp-primary: #c9a84a;              /* 魔法金光 */
+    --sp-primary-foreground: #0f0e17;
+    --sp-secondary: #2a2848;
+    --sp-secondary-foreground: #e8dcc8;
+    --sp-accent: #2a2848;
+    --sp-accent-foreground: #e8dcc8;
+
+    /* 文字层级 */
+    --sp-muted: #1a1838;
+    --sp-muted-foreground: #8a7fa0;
+
+    /* 边框与输入 */
+    --sp-border: #2a2848;
+    --sp-input: #2a2848;
+    --sp-ring: #d4a84a;
+
+    /* 语义色 */
+    --sp-destructive: #b84a4a;
+    --sp-success: #4a8b4a;
+    --sp-warning: #d4943a;
+    --sp-success-foreground: #0f0e17;
+    --sp-warning-foreground: #0f0e17;
+    --sp-diff-added: #4a8b4a;
+
+    /* 侧边栏 */
+    --sp-sidebar: #0a0912;
+    --sp-sidebar-foreground: #c9b898;
+    --sp-sidebar-primary: #c9a84a;
+    --sp-sidebar-primary-foreground: #0a0912;
+    --sp-sidebar-accent: #1a1830;
+    --sp-sidebar-accent-foreground: #c9b898;
+    --sp-sidebar-border: #1a1830;
+    --sp-sidebar-ring: #c9a84a;
+  }
+}
+
+/* ---------- 全局装饰：魔法氛围光晕 ---------- */
+[data-app-root] {
+  background: radial-gradient(ellipse at 30% 20%, rgba(201, 168, 74, 0.05) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(74, 100, 180, 0.04) 0%, transparent 50%),
+              var(--sp-background);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root] {
+    background: radial-gradient(ellipse at 20% 30%, rgba(201, 168, 74, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(100, 130, 220, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 10%, rgba(201, 168, 74, 0.04) 0%, transparent 40%),
+                var(--sp-background);
+  }
+
+  /* 深色模式下点缀微弱的星点 */
+  [data-app-root]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(201, 168, 74, 0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 60%, rgba(201, 168, 74, 0.2) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 15%, rgba(201, 168, 74, 0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 45%, rgba(201, 168, 74, 0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 25%, rgba(201, 168, 74, 0.3) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 40% 75%, rgba(180, 200, 255, 0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 80%, rgba(180, 200, 255, 0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 85%, rgba(201, 168, 74, 0.15) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+/* ---------- 项目面板：侧边栏如古书扉页 ---------- */
+[data-project-panel] {
+  background: linear-gradient(180deg, var(--sp-sidebar) 0%, color-mix(in srgb, var(--sp-sidebar) 85%, #000) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-project-panel] {
+    background: linear-gradient(180deg, #0a0912 0%, #12101e 50%, #0a0912 100%);
+  }
+}
+
+/* ---------- 文档视图：引用块 + 代码块样式 ---------- */
+[data-content-doc] {
+  /* 引用块 — 如魔法书边注 */
+  [data-md-quote] {
+    border-inline-start: 3px solid var(--sp-primary);
+    background: color-mix(in srgb, var(--sp-primary) 8%, transparent);
+    border-radius: 0 4px 4px 0;
+    padding-block: 0.5rem;
+  }
+
+  /* 代码块 — 如古老符文石板 */
+  [data-md-code] {
+    background: color-mix(in srgb, var(--sp-card) 60%, #000);
+    border: 1px solid var(--sp-border);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  /* 行内代码 */
+  [data-md-code-inline] {
+    background: color-mix(in srgb, var(--sp-primary) 10%, transparent);
+    color: var(--sp-primary);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+}
+
+/* ---------- 全局聊天窗口默认样式 ---------- */
+[data-chat-root] {
+  /* 聊天气泡 */
+  [data-chat-bubble] {
+    border-radius: 10px;
+    border: 1px solid transparent;
+  }
+
+  /* 气泡悬停时微弱的魔法边框 */
+  [data-chat-bubble]:hover {
+    border-color: color-mix(in srgb, var(--sp-primary) 20%, transparent);
+  }
+
+  /* 代码块 */
+  [data-chat-md-code] {
+    background: color-mix(in srgb, var(--sp-card) 60%, #000);
+    border: 1px solid var(--sp-border);
+    border-radius: 6px;
+  }
+
+  /* 行内代码 */
+  [data-chat-md-code-inline] {
+    background: color-mix(in srgb, var(--sp-primary) 10%, transparent);
+    color: var(--sp-primary);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+
+  /* 引用块 */
+  [data-chat-md-quote] {
+    border-inline-start: 3px solid var(--sp-primary);
+    background: color-mix(in srgb, var(--sp-primary) 8%, transparent);
+    border-radius: 0 4px 4px 0;
+  }
+}
+
+/* ---------- Toast 通知样式 ---------- */
+[data-toast-root] {
+  [data-sonner-toast] {
+    border: 1px solid var(--sp-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  [data-type="success"] {
+    border-color: var(--sp-success);
+  }
+
+  [data-type="error"] {
+    border-color: var(--sp-destructive);
+  }
+}
+
+/* ============================================================
+   🏰 霍格沃茨世界观助手 · 聊天界面主题
+   ============================================================
+   灵感：烛光下的深夜对话、霍格沃茨公共休息室、
+   古老羊皮卷上流动的墨迹、悬浮的金色魔法微粒
+   ============================================================ */
+
+[data-chat-root] {
+  /* ---------- 色彩变量 — 浅色模式（羊皮纸与午后阳光） ---------- */
+  --sp-background: #f5f0eb;
+  --sp-foreground: #2d2b3a;
+  --sp-card: rgba(255, 255, 255, 0.92);
+  --sp-card-foreground: #2d2b3a;
+  --sp-primary: #8b6914;
+  --sp-primary-foreground: #faf8f2;
+  --sp-border: #d4c9b8;
+  --sp-muted-foreground: #8a7f70;
+  --sp-input: #d4c9b8;
+  --sp-ring: #c9a84a;
+
+  /* 聊天窗口背景 — 微妙的魔法光晕 */
+  background:
+    radial-gradient(ellipse at 70% 20%, rgba(201, 168, 74, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 80%, rgba(74, 100, 180, 0.03) 0%, transparent 50%),
+    var(--sp-background);
+
+  /* ---------- 深色模式（深沉的霍格沃茨之夜） ---------- */
+  @media (prefers-color-scheme: dark) {
+    --sp-background: #0f0e17;
+    --sp-foreground: #e8dcc8;
+    --sp-card: rgba(26, 24, 56, 0.88);
+    --sp-card-foreground: #e8dcc8;
+    --sp-primary: #c9a84a;
+    --sp-primary-foreground: #0f0e17;
+    --sp-border: rgba(42, 40, 72, 0.8);
+    --sp-muted-foreground: #8a7fa0;
+    --sp-input: rgba(42, 40, 72, 0.8);
+    --sp-ring: #d4a84a;
+
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(201, 168, 74, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(100, 130, 220, 0.04) 0%, transparent 50%),
+      var(--sp-background);
+  }
+
+  /* ==============================================================
+     Header — 顶部栏
+     ============================================================== */
+  [data-chat-header] {
+    background: color-mix(in srgb, var(--sp-background) 92%, transparent);
+    border-bottom: 1px solid var(--sp-border);
+    color: var(--sp-foreground);
+    font-family: 'Playfair Display', 'Inter', serif;
+    padding: 0.75rem 1rem;
+  }
+
+  /* ==============================================================
+     消息气泡
+     ============================================================== */
+
+  /* --- 用户消息气泡 — 暖金色 --- */
+  [data-chat-message][data-role="user"] [data-chat-bubble] {
+    background: linear-gradient(135deg, var(--sp-primary) 0%, color-mix(in srgb, var(--sp-primary) 85%, #000) 100%);
+    color: var(--sp-primary-foreground);
+    border-radius: 16px 16px 4px 16px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(139, 105, 20, 0.15);
+  }
+
+  /* --- 助手消息气泡 — 深邃半透明 --- */
+  [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    background: var(--sp-card);
+    color: var(--sp-card-foreground);
+    border-radius: 16px 16px 16px 4px;
+    border: 1px solid var(--sp-border);
+  }
+
+  /* ==============================================================
+     助手头像 — 霍格沃茨纹章风格的金色圆徽
+     ============================================================== */
+  [data-chat-message][data-role="assistant"] {
+    position: relative;
+  }
+
+  [data-chat-message][data-role="assistant"]::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 36px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #e2c87a 0%, #c9a04a 40%, #8a6a2a 100%);
+    box-shadow:
+      0 0 12px rgba(201, 168, 74, 0.25),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(201, 168, 74, 0.3);
+  }
+
+  /* ==============================================================
+     输入区（Composer）
+     ============================================================== */
+  [data-chat-composer] {
+    background: color-mix(in srgb, var(--sp-background) 94%, transparent);
+    border-top: 1px solid var(--sp-border);
+    padding: 0.75rem;
+  }
+
+  [data-chat-composer-input] {
+    background: color-mix(in srgb, var(--sp-background) 60%, var(--sp-card));
+    border: 1px solid var(--sp-border);
+    border-radius: 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  [data-chat-composer-input]:focus-within {
+    border-color: var(--sp-ring);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--sp-ring) 20%, transparent);
+  }
+
+  [data-chat-composer] textarea {
+    color: var(--sp-foreground);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 0.925rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  [data-chat-composer] textarea::placeholder {
+    color: var(--sp-muted-foreground);
+    font-style: italic;
+    opacity: 0.7;
+  }
+
+  /* ==============================================================
+     Markdown 样式 — 代码块、行内代码、引用
+     ============================================================== */
+
+  /* --- 代码块 — 如古老符文石板 --- */
+  [data-md-code] {
+    background: color-mix(in srgb, var(--sp-card) 50%, #000);
+    border: 1px solid var(--sp-border);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+  }
+
+  /* --- 行内代码 --- */
+  [data-md-code-inline] {
+    background: color-mix(in srgb, var(--sp-primary) 10%, transparent);
+    color: var(--sp-primary);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  /* --- 引用块 — 魔法书边注风格 --- */
+  [data-md-quote] {
+    border-inline-start: 3px solid var(--sp-primary);
+    background: color-mix(in srgb, var(--sp-primary) 6%, transparent);
+    border-radius: 0 6px 6px 0;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem 0;
+    color: var(--sp-foreground);
+    font-style: italic;
+  }
+}
+
+/* ==============================================================
+   浮动窗口（Floating Chat）— 如漂浮在空中的魔法书卷
+   ============================================================== */
+[data-chat-float-root] {
+  border-radius: 14px;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(201, 168, 74, 0.08);
+  backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--sp-background, #f5f0eb) 96%, transparent);
+  border: 1px solid var(--sp-border, #d4c9b8);
+  overflow: hidden;
+
+  @media (prefers-color-scheme: dark) {
+    background: color-mix(in srgb, #0f0e17 96%, transparent);
+    box-shadow:
+      0 8px 48px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(201, 168, 74, 0.06);
+  }
+
+  [data-chat-float-titlebar] {
+    background: color-mix(in srgb, var(--sp-background, #f5f0eb) 90%, transparent);
+    color: var(--sp-foreground, #2d2b3a);
+    padding: 0.6rem 1rem;
+    font-family: 'Playfair Display', 'Inter', serif;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--sp-border, #d4c9b8);
+
+    @media (prefers-color-scheme: dark) {
+      background: color-mix(in srgb, #0f0e17 90%, transparent);
+    }
+  }
+
+  [data-chat-float-close] {
+    color: var(--sp-muted-foreground, #8a7f70);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+
+  [data-chat-float-close]:hover {
+    background: color-mix(in srgb, var(--sp-primary, #8b6914) 15%, transparent);
+    color: var(--sp-primary, #8b6914);
+  }
+}

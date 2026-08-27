@@ -1,0 +1,607 @@
+/* ============================================
+ * 数据余温 · 杯（偏冷版）
+ * 项目级 UI 主题
+ * 
+ * 冷峻的终端底色 + 一丝藏在数据里的琥珀暖意
+ * 平面质感 · 类终端等宽字体
+ * ============================================ */
+
+/* --- Google Fonts: JetBrains Mono --- */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+/* ===== 浅色模式 ===== */
+:root {
+  /* 页面与容器 */
+  --sp-background: #eef0f4;
+  --sp-foreground: #1a1d26;
+  --sp-card: #ffffff;
+  --sp-card-foreground: #1a1d26;
+  --sp-popover: #ffffff;
+  --sp-popover-foreground: #1a1d26;
+
+  /* 交互元素 */
+  --sp-primary: #4a90b8;
+  --sp-primary-foreground: #ffffff;
+  --sp-secondary: #e8ebf0;
+  --sp-secondary-foreground: #1a1d26;
+  --sp-accent: #dfe3ea;
+  --sp-accent-foreground: #1a1d26;
+
+  /* 文字层级 */
+  --sp-muted: #e8ebf0;
+  --sp-muted-foreground: #7a7f8c;
+
+  /* 边框与输入 */
+  --sp-border: #d0d5de;
+  --sp-input: #d0d5de;
+  --sp-ring: #4a90b8;
+
+  /* 语义色 */
+  --sp-destructive: #c0392b;
+  --sp-success: #27ae60;
+
+  /* 侧边栏 */
+  --sp-sidebar: #ffffff;
+  --sp-sidebar-foreground: #1a1d26;
+  --sp-sidebar-primary: #4a90b8;
+  --sp-sidebar-primary-foreground: #ffffff;
+  --sp-sidebar-accent: #e8ebf0;
+  --sp-sidebar-accent-foreground: #1a1d26;
+  --sp-sidebar-border: #d0d5de;
+  --sp-sidebar-ring: #4a90b8;
+
+  /* 圆角 — 平面风，几乎直角 */
+  --sp-radius: 0.25rem;
+
+  /* 滚动条 */
+  --sp-scrollbar-size: 8px;
+  --sp-scrollbar-thumb: rgba(74, 144, 184, 0.25);
+  --sp-scrollbar-thumb-hover: rgba(74, 144, 184, 0.45);
+  --sp-scrollbar-track: transparent;
+}
+
+/* ===== 深色模式 ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 页面与容器 */
+    --sp-background: #0a0a0f;
+    --sp-foreground: #d8dce6;
+    --sp-card: #14141c;
+    --sp-card-foreground: #d8dce6;
+    --sp-popover: #14141c;
+    --sp-popover-foreground: #d8dce6;
+
+    /* 交互元素 */
+    --sp-primary: #6baed9;
+    --sp-primary-foreground: #0a0a0f;
+    --sp-secondary: #1c1c28;
+    --sp-secondary-foreground: #d8dce6;
+    --sp-accent: #1c1c28;
+    --sp-accent-foreground: #d8dce6;
+
+    /* 文字层级 */
+    --sp-muted: #14141c;
+    --sp-muted-foreground: #7a7f8c;
+
+    /* 边框与输入 */
+    --sp-border: #2a2a38;
+    --sp-input: #2a2a38;
+    --sp-ring: #6baed9;
+
+    /* 语义色 */
+    --sp-destructive: #e74c3c;
+    --sp-success: #2ecc71;
+
+    /* 侧边栏 */
+    --sp-sidebar: #0d0d14;
+    --sp-sidebar-foreground: #d8dce6;
+    --sp-sidebar-primary: #6baed9;
+    --sp-sidebar-primary-foreground: #0a0a0f;
+    --sp-sidebar-accent: #1c1c28;
+    --sp-sidebar-accent-foreground: #d8dce6;
+    --sp-sidebar-border: #2a2a38;
+    --sp-sidebar-ring: #6baed9;
+
+    /* 滚动条 */
+    --sp-scrollbar-thumb: rgba(107, 174, 217, 0.3);
+    --sp-scrollbar-thumb-hover: rgba(107, 174, 217, 0.5);
+  }
+}
+
+/* ===== 全局字体 ===== */
+:root {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+}
+
+/* ===== 背景装饰 ===== */
+[data-app-root] {
+  background: #0a0a0f;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root] {
+    background: radial-gradient(
+      ellipse at 75% 20%,
+      rgba(107, 174, 217, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 25% 80%,
+      rgba(212, 148, 74, 0.02) 0%,
+      transparent 40%
+    ),
+    linear-gradient(180deg, #0a0a0f 0%, #0e0e18 100%);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  [data-app-root] {
+    background: radial-gradient(
+      ellipse at 75% 20%,
+      rgba(74, 144, 184, 0.04) 0%,
+      transparent 50%
+    ),
+    #eef0f4;
+  }
+}
+
+/* ===== 项目头像 ===== */
+[data-project-avatar] {
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+[data-project-avatar][data-active] {
+  outline: 1.5px solid var(--sp-primary);
+}
+[data-project-avatar]:not([data-active]) {
+  opacity: 0.35;
+}
+
+/* ===== 项目面板 ===== */
+[data-project-panel] {
+  /* 使用侧边栏变量即可，无需额外设置 */
+}
+
+/* ===== 内容浏览器 ===== */
+[data-content-browser] {
+  /* 使用全局背景变量 */
+}
+
+/* ===== 文档视图 ===== */
+[data-content-doc] [data-md-code] {
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85em;
+}
+[data-content-doc] [data-md-quote] {
+  border-left: 3px solid var(--sp-primary);
+  padding: 8px 16px;
+  border-radius: 0 2px 2px 0;
+}
+/* ============================================
+ * 「数据余温 · 杯」偏冷版
+ * 
+ * 平面质感 · 类终端等宽字体
+ * 像在他深黑的系统终端里
+ * 和你对话
+ * ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+[data-chat-root] {
+  /* ---------- 变量 ---------- */
+  --sp-background: #0a0a0f;
+  --sp-foreground: #d8dce6;
+  --sp-card: #14141c;
+  --sp-card-foreground: #d8dce6;
+  --sp-border: #2a2a38;
+  --sp-muted-foreground: #7a7f8c;
+  --sp-input: #2a2a38;
+  --sp-ring: #6baed9;
+  --sp-primary: #6baed9;
+  --sp-primary-foreground: #0a0a0f;
+  --sp-radius: 0.25rem;
+
+  --sp-scrollbar-size: 8px;
+  --sp-scrollbar-thumb: rgba(107, 174, 217, 0.3);
+  --sp-scrollbar-thumb-hover: rgba(107, 174, 217, 0.5);
+  --sp-scrollbar-track: transparent;
+
+  /* 字体 */
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.7;
+
+  /* 背景 */
+  background:
+    /* 冰蓝氛围光 */
+    radial-gradient(
+      ellipse at 75% 15%,
+      rgba(107, 174, 217, 0.03) 0%,
+      transparent 50%
+    ),
+    /* 琥珀氛围光 */
+    radial-gradient(
+      ellipse at 25% 85%,
+      rgba(212, 148, 74, 0.015) 0%,
+      transparent 40%
+    ),
+    /* 底色 */
+    #0a0a0f;
+
+  /* 背景图叠加一个半透明遮罩层，让它融进背景不抢眼 */
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(10, 10, 15, 0) 0%,
+      rgba(10, 10, 15, 0.15) 40%,
+      rgba(10, 10, 15, 0.55) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* 确保消息内容在遮罩层之上 */
+  [data-chat-header],
+  [data-chat-messages],
+  [data-chat-composer] {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ========== Header ========== */
+  [data-chat-header] {
+    background: rgba(10, 10, 15, 0.96);
+    border-bottom: 1px solid #2a2a38;
+    color: #d8dce6;
+    padding: 12px 16px;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+
+    /* 用伪元素在 header 加一个像终端状态的指示 */
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: #6baed9;
+      border-radius: 0;
+      margin-left: 8px;
+      vertical-align: middle;
+      animation: cursor-blink 1.2s step-end infinite;
+    }
+  }
+
+  /* ========== 消息列表区 ========== */
+  [data-chat-messages] {
+    padding: 16px;
+  }
+
+  /* ========== 消息行 ========== */
+  [data-chat-message] {
+    margin-bottom: 12px;
+  }
+
+  /* ===== 助手消息 ===== */
+  [data-chat-message][data-role="assistant"] {
+    position: relative;
+    padding-left: 44px;
+
+    /* 头像 — 人设头像 */
+    &::before {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 0;
+      background: url(./theme-06-avatar.webp) no-repeat center / cover;
+      border: 1.5px solid rgba(107, 174, 217, 0.3);
+      flex-shrink: 0;
+    }
+
+    /* 气泡 */
+    [data-chat-bubble] {
+      color: #d8dce6;
+      background: rgba(20, 20, 30, 0.92);
+      border: 1px solid rgba(107, 174, 217, 0.12);
+      border-radius: 0;
+      padding: 12px 16px;
+      font-size: 13.5px;
+
+      /* 左侧冰蓝竖线 — 他说话的标记 */
+      box-shadow: inset 2px 0 0 rgba(107, 174, 217, 0.35);
+    }
+  }
+
+  /* ===== 用户消息 ===== */
+  [data-chat-message][data-role="user"] {
+    position: relative;
+    padding-right: 44px;
+
+    /* 你的「头像」— 一个极简的终端光标标记 */
+    &::after {
+      content: '>';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      color: #d4944a;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
+    /* 气泡 */
+    [data-chat-bubble] {
+      color: #d8dce6;
+      background: rgba(16, 16, 26, 0.85);
+      border: 1px solid rgba(212, 148, 74, 0.1);
+      border-radius: 0;
+      padding: 12px 16px;
+      font-size: 13.5px;
+
+      /* 右侧琥珀竖线 — 你打破了他系统的颜色 */
+      box-shadow: inset -2px 0 0 rgba(212, 148, 74, 0.25);
+    }
+  }
+
+  /* ========== Composer 输入区 ========== */
+  [data-chat-composer] {
+    background: rgba(10, 10, 15, 0.96);
+    border-top: 1px solid #2a2a38;
+    padding: 12px 16px;
+    position: relative;
+  }
+
+  /* 输入框外框 — 像终端的输入行 */
+  [data-chat-composer-input] {
+    background: rgba(20, 20, 30, 0.6);
+    border: 1px solid #2a2a38;
+    border-radius: 0;
+    padding: 8px 12px 8px 28px;
+    transition: border-color 0.15s;
+
+    &:focus-within {
+      border-color: #6baed9;
+    }
+  }
+
+  /* 终端提示符 $ 放在输入框前 */
+  [data-chat-composer] {
+    &::before {
+      content: '$';
+      position: absolute;
+      left: 28px;
+      bottom: 28px;
+      color: #6baed9;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 400;
+      opacity: 0.7;
+      z-index: 1;
+      pointer-events: none;
+    }
+  }
+
+  /* textarea */
+  [data-chat-composer] textarea {
+    color: #d8dce6;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13.5px;
+    line-height: 1.6;
+    caret-color: #6baed9;
+
+    &::placeholder {
+      color: #4a4f5a;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      opacity: 0.6;
+    }
+  }
+
+  /* ========== Markdown 格式 ========== */
+  /* 代码块 */
+  [data-md-code] {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(107, 174, 217, 0.1);
+    border-radius: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85em;
+    padding: 12px 16px;
+    margin: 8px 0;
+  }
+
+  /* 行内代码 */
+  [data-md-code-inline] {
+    background: rgba(107, 174, 217, 0.08);
+    color: #7fc1e0;
+    border-radius: 0;
+    padding: 1px 6px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85em;
+    border: 1px solid rgba(107, 174, 217, 0.1);
+  }
+
+  /* 引用块 */
+  [data-md-quote] {
+    border-left: 3px solid rgba(107, 174, 217, 0.3);
+    background: rgba(107, 174, 217, 0.03);
+    border-radius: 0;
+    padding: 8px 16px;
+    margin: 8px 0;
+    color: #a0a8b8;
+  }
+
+  /* ========== 深色适配 ========== */
+  @media (prefers-color-scheme: light) {
+    --sp-background: #eef0f4;
+    --sp-foreground: #1a1d26;
+    --sp-card: #ffffff;
+    --sp-card-foreground: #1a1d26;
+    --sp-border: #d0d5de;
+    --sp-muted-foreground: #7a7f8c;
+    --sp-input: #d0d5de;
+    --sp-ring: #4a90b8;
+    --sp-primary: #4a90b8;
+    --sp-primary-foreground: #ffffff;
+
+    --sp-scrollbar-thumb: rgba(74, 144, 184, 0.25);
+    --sp-scrollbar-thumb-hover: rgba(74, 144, 184, 0.45);
+
+    background:
+      radial-gradient(
+        ellipse at 75% 15%,
+        rgba(74, 144, 184, 0.04) 0%,
+        transparent 50%
+      ),
+      #eef0f4;
+
+    &::after {
+      display: none;
+    }
+
+    [data-chat-header] {
+      background: rgba(238, 240, 244, 0.96);
+      border-color: #d0d5de;
+      color: #1a1d26;
+    }
+
+    [data-chat-message][data-role="assistant"] {
+      &::before {
+        border-color: rgba(74, 144, 184, 0.3);
+      }
+      [data-chat-bubble] {
+        color: #1a1d26;
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(74, 144, 184, 0.12);
+        box-shadow: inset 2px 0 0 rgba(74, 144, 184, 0.35);
+      }
+    }
+
+    [data-chat-message][data-role="user"] {
+      &::after {
+        color: #b8863a;
+      }
+      [data-chat-bubble] {
+        color: #1a1d26;
+        background: rgba(240, 242, 248, 0.95);
+        border-color: rgba(184, 134, 58, 0.1);
+        box-shadow: inset -2px 0 0 rgba(184, 134, 58, 0.25);
+      }
+    }
+
+    [data-chat-composer] {
+      background: rgba(238, 240, 244, 0.96);
+      border-color: #d0d5de;
+
+      &::before {
+        color: #4a90b8;
+      }
+    }
+
+    [data-chat-composer-input] {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: #d0d5de;
+
+      &:focus-within {
+        border-color: #4a90b8;
+      }
+    }
+
+    [data-chat-composer] textarea {
+      color: #1a1d26;
+      caret-color: #4a90b8;
+
+      &::placeholder {
+        color: #9a9faa;
+      }
+    }
+
+    [data-md-code] {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(74, 144, 184, 0.1);
+    }
+
+    [data-md-code-inline] {
+      background: rgba(74, 144, 184, 0.06);
+      color: #3a7ba0;
+      border-color: rgba(74, 144, 184, 0.1);
+    }
+
+    [data-md-quote] {
+      border-left-color: rgba(74, 144, 184, 0.3);
+      background: rgba(74, 144, 184, 0.02);
+      color: #5a6070;
+    }
+  }
+}
+
+/* ===== 浮动窗样式 ===== */
+[data-chat-float-root] {
+  border-radius: 0;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid #2a2a38;
+  background: rgba(10, 10, 15, 0.98);
+
+  [data-chat-float-titlebar] {
+    background: rgba(10, 10, 15, 0.96);
+    color: #d8dce6;
+    border-bottom: 1px solid #2a2a38;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  [data-chat-float-close] {
+    color: #7a7f8c;
+    transition: color 0.15s;
+
+    &:hover {
+      color: #d8dce6;
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
+
+  @media (prefers-color-scheme: light) {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    border-color: #d0d5de;
+    background: rgba(238, 240, 244, 0.98);
+
+    [data-chat-float-titlebar] {
+      background: rgba(238, 240, 244, 0.96);
+      color: #1a1d26;
+      border-color: #d0d5de;
+    }
+
+    [data-chat-float-close] {
+      color: #9a9faa;
+
+      &:hover {
+        color: #1a1d26;
+        background: rgba(0, 0, 0, 0.05);
+      }
+    }
+  }
+}
+
+/* ===== 闪烁光标动画 ===== */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

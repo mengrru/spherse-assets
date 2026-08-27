@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spherse 主题预览 · 7 款主题</title>
+  <link rel="stylesheet" href="./preview-base.css">
+  <style>
+    /* ============================================================
+       主题切换器（顶部悬浮胶囊）
+       ============================================================ */
+    .switcher {
+      position: sticky; top: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; margin-bottom: 18px;
+      background: color-mix(in srgb, var(--sp-card, #ffffff) 86%, transparent);
+      border: 1px solid var(--sp-border);
+      border-radius: 999px;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.20);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .sw-arrow {
+      width: 34px; height: 34px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--sp-border); border-radius: 50%;
+      background: var(--sp-secondary); color: var(--sp-secondary-foreground);
+      font-size: 18px; line-height: 1; cursor: pointer;
+    }
+    .sw-arrow:hover { background: var(--sp-accent); color: var(--sp-accent-foreground); }
+    .sw-current-wrap { position: relative; flex: 1; min-width: 0; }
+    .sw-current {
+      width: 100%; padding: 8px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      border: 1px solid var(--sp-border); border-radius: 999px;
+      background: var(--sp-primary); color: var(--sp-primary-foreground);
+      font-size: 13.5px; font-weight: 600; cursor: pointer;
+      overflow: hidden;
+    }
+    .sw-current:hover { filter: brightness(1.06); }
+    .sw-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .caret { font-size: 11px; opacity: 0.85; flex-shrink: 0; }
+    .sw-count {
+      flex-shrink: 0; font-size: 12px;
+      color: var(--sp-muted-foreground);
+      font-variant-numeric: tabular-nums;
+    }
+    .sw-list {
+      position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 6px;
+      padding: 10px; border-radius: 14px;
+      background: var(--sp-popover); color: var(--sp-popover-foreground);
+      border: 1px solid var(--sp-border);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+      z-index: 50;
+    }
+    .sw-list[hidden] { display: none; }
+    .sw-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent; color: var(--sp-popover-foreground);
+      font-size: 12.5px; text-align: left; cursor: pointer;
+    }
+    .sw-chip:hover { background: var(--sp-accent); color: var(--sp-accent-foreground); }
+    .sw-chip.active { background: var(--sp-primary); color: var(--sp-primary-foreground); }
+    .sw-num {
+      width: 22px; height: 22px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px; font-size: 11px; font-weight: 700;
+      background: var(--sp-muted); color: var(--sp-muted-foreground);
+    }
+    .sw-chip.active .sw-num { background: var(--sp-primary-foreground); color: var(--sp-primary); }
+
+    /* 切换时的淡出过渡 */
+    .preview-header, .section, .app-mock { transition: opacity 0.22s ease; }
+    body.switching .preview-header,
+    body.switching .section,
+    body.switching .app-mock { opacity: 0.35; }
+
+    /* ---------- 按主题生效的微调 ---------- */
+    /* theme-04：背景图 fixed 铺满视口，滚动到边界时露出 body 底色 */
+    body.theme-04 { background: #15100b; }
+  </style>
+</head>
+<body class="theme-01">
+<div data-app-root>
+  <div class="preview-content">
+
+    <!-- ======== 顶部主题切换器 ======== -->
+    <header class="switcher" role="toolbar" aria-label="主题切换">
+      <button class="sw-arrow" id="prev" type="button" aria-label="上一个主题" title="上一个主题（←）">‹</button>
+      <div class="sw-current-wrap">
+        <button class="sw-current" id="sw-current" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="sw-label" id="sw-label">Theme 01 · 黄昏 × 星空</span>
+          <span class="caret">▾</span>
+        </button>
+        <div class="sw-list" id="sw-list" role="listbox" hidden></div>
+      </div>
+      <button class="sw-arrow" id="next" type="button" aria-label="下一个主题" title="下一个主题（→）">›</button>
+      <span class="sw-count" id="theme-count">1 / 7</span>
+    </header>
+
+    <!-- ======== 主题信息 ======== -->
+    <header class="preview-header">
+      <h1 class="preview-title" id="theme-title">Theme 01 · 黄昏 × 星空</h1>
+      <p class="preview-sub" id="theme-sub">放学后的黄昏天空与深夜星空 —— 浅色是暖粉橙的黄昏，深色是靛紫星空；全局叠加 SVG 噪点纹理，营造动画画面质感。</p>
+      <div class="preview-meta" id="theme-meta">
+        <span class="meta-chip">浅色 = 黄昏暖橙</span>
+        <span class="meta-chip">深色 = 星空靛紫</span>
+        <span class="meta-chip">噪点纹理 + 星点</span>
+        <span class="meta-chip">跟随系统深浅色</span>
+      </div>
+    </header>
+
+    <!-- ======== App 模拟窗口 ======== -->
+    <div class="app-mock" id="app-mock">
+      <aside data-project-panel class="sidebar">
+        <div data-project-avatar data-active id="project-avatar">01</div>
+        <div class="nav-item active"><span class="nav-ico">💬</span><span class="nav-label">对话</span></div>
+        <div class="nav-item"><span class="nav-ico">📄</span><span class="nav-label">文档</span></div>
+        <div class="nav-item"><span class="nav-ico">🗂️</span><span class="nav-label">内容</span></div>
+        <div class="nav-item"><span class="nav-ico">⚙️</span><span class="nav-label">设置</span></div>
+        <div class="sidebar-foot" id="sidebar-foot">Spherse Theme Preview</div>
+      </aside>
+
+      <section data-chat-root class="chat-window">
+        <div data-chat-header>
+          <span class="header-avatar">✦</span>
+          <div class="header-info">
+            <div class="header-name" id="header-name">预览助手 · Theme 01</div>
+            <div class="header-status" id="header-status">黄昏 × 星空 · 在线</div>
+          </div>
+          <span class="header-extra" id="header-extra">spherse</span>
+        </div>
+
+        <div data-chat-messages>
+          <div data-chat-message data-role="assistant">
+            <div data-chat-bubble>
+              <p>嗨，我是你的专属伙伴，欢迎来到 <b>Spherse</b> ✨</p>
+              <p>今天想一起做点什么？我可以：</p>
+              <ul>
+                <li>帮你整理灵感与思路</li>
+                <li>写一点小代码</li>
+                <li>一起设计新主题</li>
+              </ul>
+              <blockquote data-md-quote data-chat-md-quote>主题是写给界面的一封信 —— 愿你被温柔以待。</blockquote>
+              <p>试试行内代码 <code data-md-code-inline data-chat-md-code-inline>spherse.events.on('file:update', render)</code>，或一段代码块：</p>
+              <pre data-md-code data-chat-md-code><code>function greet(name) {
+  return `你好，${name}！`;
+}</code></pre>
+            </div>
+          </div>
+          <div data-chat-message data-role="user">
+            <div data-chat-bubble>帮我看看这个主题的效果怎么样？😊</div>
+          </div>
+          <div data-chat-message data-role="assistant">
+            <div data-chat-bubble>
+              <p>当然可以！整体配色很协调，深浅色都清晰易读：</p>
+              <ul>
+                <li>主色用于按钮与高亮</li>
+                <li>语义色区分成功 / 警告 / 危险</li>
+                <li>半透明容器透出背景氛围</li>
+              </ul>
+              <p>你想从哪里开始体验？</p>
+            </div>
+          </div>
+        </div>
+
+        <div data-chat-composer>
+          <div data-chat-composer-input>
+            <textarea rows="1" placeholder="输入消息…"></textarea>
+          </div>
+          <button class="send-btn" type="button" aria-label="发送">➤</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ======== 界面组件 ======== -->
+    <section class="section">
+      <h2 class="section-title">界面组件</h2>
+      <p class="section-desc">按钮、输入框、徽章与 Toast —— 全部取自主题变量。</p>
+      <div class="comp-row">
+        <button class="btn btn-primary" type="button">主要按钮</button>
+        <button class="btn btn-secondary" type="button">次要按钮</button>
+        <button class="btn btn-outline" type="button">描边按钮</button>
+        <button class="btn btn-success" type="button">成功</button>
+        <button class="btn btn-warning" type="button">警告</button>
+        <button class="btn btn-danger" type="button">危险</button>
+      </div>
+      <div class="comp-row" style="margin-top:14px">
+        <span class="field">在输入框里输入点什么…</span>
+        <span class="badge">Beta</span>
+        <span class="badge">v1.0</span>
+      </div>
+      <div class="toast" style="margin-top:14px">
+        <span class="toast-ico">✓</span>
+        <span>操作成功：主题已应用</span>
+      </div>
+    </section>
+
+    <!-- ======== 色板 ======== -->
+    <section class="section">
+      <h2 class="section-title">色板</h2>
+      <p class="section-desc">取自当前生效的 --sp-* 变量，随系统深浅色自动切换。</p>
+      <div class="palette-grid" id="palette"></div>
+    </section>
+
+    <footer class="preview-footer">
+      <span id="footer-note">本页自动跟随系统深浅色（prefers-color-scheme）渲染主题。</span>
+      <button id="source-btn" class="source-btn" type="button">查看主题源码</button>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+  /* ================= 主题元数据 ================= */
+  const THEMES = [
+    {
+      id: 1, short: '黄昏 × 星空', file: '../references/theme-01.css',
+      title: 'Theme 01 · 黄昏 × 星空',
+      sub: '放学后的黄昏天空与深夜星空 —— 浅色是暖粉橙的黄昏，深色是靛紫星空；全局叠加 SVG 噪点纹理，营造动画画面质感。',
+      chips: ['浅色 = 黄昏暖橙', '深色 = 星空靛紫', '噪点纹理 + 星点', '跟随系统深浅色'],
+      headerName: '预览助手 · Theme 01', headerStatus: '黄昏 × 星空 · 在线', headerExtra: 'spherse',
+      sidebarFoot: 'Spherse Theme Preview',
+      source: 'skills/spherse-theme-pkg-01/references/theme-01.css',
+      footerNote: '本页自动跟随系统深浅色（prefers-color-scheme）渲染主题。',
+    },
+    {
+      id: 2, short: 'MOMO 复古终端', file: '../references/theme-02.css',
+      title: 'Theme 02 · MOMO 复古终端',
+      sub: '元素学院在线社区「MOMO 社区」的复古终端美学 —— 磷光绿字符、CRT 扫描线、等宽字体，琥珀色热点点缀。消息即终端会话：用户 = 输入的指令 ❯，助手 = 程序输出 ▮。',
+      chips: ['磷光绿 CRT 终端', '扫描线 + 噪点', '等宽字体', '深浅双模式'],
+      headerName: '预览助手 · Theme 02', headerStatus: 'MOMO TERMINAL · CONNECTED', headerExtra: 'tty0',
+      sidebarFoot: 'MOMO TERMINAL v1.0',
+      source: 'skills/spherse-theme-pkg-01/references/theme-02.css',
+      footerNote: '本页自动跟随系统深浅色（prefers-color-scheme）渲染主题。',
+    },
+    {
+      id: 3, short: '庄重的魔法世界', file: '../references/theme-03.css',
+      title: 'Theme 03 · 庄重的魔法世界',
+      sub: '灵感来自深夜图书馆、校长室的烛光与古老羊皮卷上的墨迹 —— 浅色如午后阳光下的羊皮纸，深色如深夜的魔法大厅；用户气泡为暖金渐变，助手气泡为深邃半透明，悬浮着金色魔法微粒。',
+      chips: ['羊皮纸 × 烛光金', '用户 = 暖金渐变', '助手 = 半透明深蓝', '跟随系统深浅色'],
+      headerName: '预览助手 · Theme 03', headerStatus: '魔法图书馆 · 烛光下', headerExtra: 'spherse',
+      sidebarFoot: '魔法图书馆 · 扉页',
+      source: 'skills/spherse-theme-pkg-01/references/theme-03.css',
+      footerNote: '本页自动跟随系统深浅色（prefers-color-scheme）渲染主题。',
+    },
+    {
+      id: 4, short: '魔法世界观', file: '../references/theme-04.css',
+      title: 'Theme 04 · 魔法世界观',
+      sub: '以 theme-04-bg.png 作为全窗背景图，覆盖半透明遮罩让图片柔和透出；所有容器改为半透明羊皮纸质感，文字依然清晰可读。',
+      chips: ['全窗背景图', '半透明遮罩', '羊皮纸容器', '深浅双模式'],
+      headerName: '预览助手 · Theme 04', headerStatus: '魔法世界 · 在线', headerExtra: 'spherse',
+      sidebarFoot: '魔法世界 · 羊皮卷',
+      source: 'skills/spherse-theme-pkg-01/references/theme-04.css',
+      footerNote: '本页自动跟随系统深浅色（prefers-color-scheme）渲染主题。',
+    },
+    {
+      id: 5, short: '紫晶金箔', file: '../references/theme-05.css',
+      title: 'Theme 05 · 紫晶金箔',
+      sub: '紫晶夜穹 × 金箔 —— 暗色是紫晶夜穹、亮色是浅紫羊皮纸；用户气泡为烫金，助手气泡为半透明紫晶玻璃，微尘纹理与金线纹饰点缀其间。',
+      chips: ['紫晶夜穹', '用户 = 烫金气泡', '助手 = 紫晶玻璃', '跟随系统深浅色'],
+      headerName: '预览助手 · Theme 05', headerStatus: '紫晶金箔 · 在线', headerExtra: 'spherse',
+      sidebarFoot: '紫晶金箔 · 夜穹',
+      source: 'skills/spherse-theme-pkg-01/references/theme-05.css',
+      footerNote: '本页自动跟随系统深浅色（prefers-color-scheme）渲染主题。',
+    },
+    {
+      id: 6, short: '数据余温', file: '../references/theme-06.css',
+      title: 'Theme 06 · 数据余温',
+      sub: '冷峻的终端底色里藏着一丝数据中的琥珀暖意 —— 平面质感、JetBrains Mono 等宽字体；像在他深黑的系统终端里，和你对话。冰蓝竖线是他说话的标记，琥珀竖线是你打破他系统的颜色。',
+      chips: ['终端冷蓝 × 琥珀暖意', 'JetBrains Mono', '冰蓝竖线 = 他', '琥珀竖线 = 你'],
+      headerName: '预览助手 · Theme 06', headerStatus: 'data-warmth@localhost · 已连接', headerExtra: 'tty1',
+      sidebarFoot: 'data-warmth@localhost',
+      source: 'skills/spherse-theme-pkg-01/references/theme-06.css',
+      footerNote: '本页自动跟随系统深浅色（prefers-color-scheme）渲染主题。',
+    },
+    {
+      id: 7, short: '霓虹深渊', file: '../references/theme-07.css',
+      title: 'Theme 07 · 霓虹深渊',
+      sub: 'Cyberpunk 2077 meets 1980s Miami —— 热粉 #ff2d95、电青 #00e5ff、毒绿 #39ff14；侧边栏是 Synthwave 透视网格日落，聊天窗口是赛博朋克全息终端。',
+      chips: ['赛博朋克 × Synthwave', '热粉 / 电青 / 毒绿', '全暗色主题', '用户 = 霓虹弹'],
+      headerName: '预览助手 · Theme 07', headerStatus: 'NEON_ABYSS.exe · ONLINE', headerExtra: 'cyber://spherse',
+      sidebarFoot: 'NEON_ABYSS v2.0',
+      source: 'skills/spherse-theme-pkg-01/references/theme-07.css',
+      footerNote: '本主题为全暗色设计，不随系统深浅色切换。',
+    },
+  ];
+
+  /* ================= 色板（var() 随主题自动更新） ================= */
+  const SWATCHES = [
+    ['--sp-background', 'background', 'bg'],
+    ['--sp-foreground', 'foreground', 'text', '--sp-background'],
+    ['--sp-card', 'card', 'bg'],
+    ['--sp-card-foreground', 'card-foreground', 'text', '--sp-card'],
+    ['--sp-popover', 'popover', 'bg'],
+    ['--sp-popover-foreground', 'popover-foreground', 'text', '--sp-popover'],
+    ['--sp-primary', 'primary', 'bg'],
+    ['--sp-primary-foreground', 'primary-foreground', 'text', '--sp-primary'],
+    ['--sp-secondary', 'secondary', 'bg'],
+    ['--sp-secondary-foreground', 'secondary-foreground', 'text', '--sp-secondary'],
+    ['--sp-accent', 'accent', 'bg'],
+    ['--sp-accent-foreground', 'accent-foreground', 'text', '--sp-accent'],
+    ['--sp-muted', 'muted', 'bg'],
+    ['--sp-muted-foreground', 'muted-foreground', 'text', '--sp-muted'],
+    ['--sp-border', 'border', 'bg'],
+    ['--sp-input', 'input', 'bg'],
+    ['--sp-ring', 'ring', 'bg'],
+    ['--sp-destructive', 'destructive', 'bg'],
+    ['--sp-success', 'success', 'bg'],
+    ['--sp-success-foreground', 'success-foreground', 'text', '--sp-success'],
+    ['--sp-warning', 'warning', 'bg'],
+    ['--sp-warning-foreground', 'warning-foreground', 'text', '--sp-warning'],
+    ['--sp-sidebar', 'sidebar', 'bg'],
+    ['--sp-sidebar-foreground', 'sidebar-foreground', 'text', '--sp-sidebar'],
+    ['--sp-sidebar-primary', 'sidebar-primary', 'bg'],
+    ['--sp-sidebar-primary-foreground', 'sidebar-primary-foreground', 'text', '--sp-sidebar-primary'],
+    ['--sp-sidebar-accent', 'sidebar-accent', 'bg'],
+    ['--sp-sidebar-accent-foreground', 'sidebar-accent-foreground', 'text', '--sp-sidebar-accent'],
+    ['--sp-sidebar-border', 'sidebar-border', 'bg'],
+  ];
+  document.getElementById('palette').innerHTML = SWATCHES.map(([v, name, type, bgVar]) => {
+    if (type === 'text') {
+      return `<div class="chip"><span class="swatch" style="background: var(${bgVar}, transparent); color: var(${v}, inherit);">Aa</span><span class="chip-name">${name}</span></div>`;
+    }
+    return `<div class="chip"><span class="swatch" style="background: var(${v}, transparent);"></span><span class="chip-name">${name}</span></div>`;
+  }).join('');
+
+  /* ================= 主题切换 ================= */
+  let idx = 0;
+  let linkEl = null;
+
+  const list = document.getElementById('sw-list');
+  list.innerHTML = THEMES.map((t, i) =>
+    `<button type="button" class="sw-chip" data-i="${i}" role="option"><span class="sw-num">${String(t.id).padStart(2, '0')}</span>${t.short}</button>`
+  ).join('');
+
+  function applyTheme(i, silent) {
+    idx = (i + THEMES.length) % THEMES.length;
+    const t = THEMES[idx];
+
+    // 换载主题 CSS（移除旧 link，插入新 link，主题规则在 base 之后 → 自然胜出）
+    if (linkEl) linkEl.remove();
+    linkEl = document.createElement('link');
+    linkEl.rel = 'stylesheet';
+    linkEl.href = t.file;
+    document.head.appendChild(linkEl);
+
+    // 按主题切换的微调类（theme-04 兜底色 / theme-05 头像兜底）
+    document.body.className = 'theme-' + String(t.id).padStart(2, '0');
+
+    // 更新文本
+    document.getElementById('theme-title').textContent = t.title;
+    document.getElementById('theme-sub').textContent = t.sub;
+    document.getElementById('theme-meta').innerHTML = t.chips.map(c => `<span class="meta-chip">${c}</span>`).join('');
+    document.getElementById('header-name').textContent = t.headerName;
+    document.getElementById('header-status').textContent = t.headerStatus;
+    document.getElementById('header-extra').textContent = t.headerExtra;
+    document.getElementById('sidebar-foot').textContent = t.sidebarFoot;
+    document.getElementById('project-avatar').textContent = String(t.id).padStart(2, '0');
+    document.getElementById('theme-count').textContent = (idx + 1) + ' / ' + THEMES.length;
+    document.getElementById('sw-label').textContent = t.title;
+    document.getElementById('footer-note').textContent = t.footerNote;
+    document.getElementById('source-btn').dataset.path = t.source;
+
+    // 展开列表中的高亮
+    list.querySelectorAll('.sw-chip').forEach(ch => ch.classList.toggle('active', +ch.dataset.i === idx));
+
+    // 淡出过渡
+    if (!silent) {
+      document.body.classList.add('switching');
+      clearTimeout(applyTheme._t);
+      applyTheme._t = setTimeout(() => document.body.classList.remove('switching'), 230);
+    }
+
+    try { localStorage.setItem('spherse-theme-preview-idx', String(idx)); } catch (e) {}
+  }
+
+  document.getElementById('prev').addEventListener('click', () => applyTheme(idx - 1));
+  document.getElementById('next').addEventListener('click', () => applyTheme(idx + 1));
+
+  const currentBtn = document.getElementById('sw-current');
+  currentBtn.addEventListener('click', () => {
+    const show = list.hidden;
+    list.hidden = !show;
+    currentBtn.setAttribute('aria-expanded', String(show));
+  });
+  list.addEventListener('click', (e) => {
+    const chip = e.target.closest('.sw-chip');
+    if (!chip) return;
+    applyTheme(+chip.dataset.i);
+    list.hidden = true;
+    currentBtn.setAttribute('aria-expanded', 'false');
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.sw-current-wrap') && !list.hidden) {
+      list.hidden = true;
+      currentBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowLeft') applyTheme(idx - 1);
+    if (e.key === 'ArrowRight') applyTheme(idx + 1);
+  });
+
+  /* ================= 查看源码 ================= */
+  const btn = document.getElementById('source-btn');
+  if (window.spherse && spherse.openFile) {
+    btn.addEventListener('click', () => spherse.openFile(btn.dataset.path));
+  } else {
+    btn.style.display = 'none';
+  }
+
+  /* ================= 初始化 ================= */
+  let initIdx = 0;
+  try {
+    const s = localStorage.getItem('spherse-theme-preview-idx');
+    if (s != null) initIdx = Number(s) || 0;
+  } catch (e) {}
+  applyTheme(initIdx, true);
+</script>
+</body>
+</html>

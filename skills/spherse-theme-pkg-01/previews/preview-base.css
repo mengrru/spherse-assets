@@ -1,0 +1,289 @@
+/* ============================================================
+   Spherse 主题预览 · 共用骨架
+   供 previews/theme-0x.html 使用，加载顺序：
+   preview-base.css 在前，主题 CSS 在后 → 主题规则自然胜出
+
+   两部分：
+   1) 页面布局与信息区（.preview-* 类，不被主题覆盖）
+   2) 模拟 Spherse 应用默认 UI（[data-*] 钩子，供主题 CSS 覆盖）
+   ============================================================ */
+
+:root { color-scheme: light dark; }
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #101018; /* 兜底；通常被 [data-app-root] 背景完全覆盖 */
+}
+
+/* ---------- 全页氛围层：主题背景 / 纹理 / 星点作用于此 ---------- */
+[data-app-root] {
+  position: relative;
+  min-height: 100vh;
+}
+
+.preview-content {
+  position: relative;
+  z-index: 1; /* 让内容盖在主题的 z-index:0 装饰层之上 */
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+/* ---------- 信息头部 ---------- */
+.preview-header {
+  padding: 18px 20px;
+  background: var(--sp-card);
+  color: var(--sp-card-foreground);
+  border: 1px solid var(--sp-border);
+  border-radius: calc(var(--sp-radius, 0.625rem) + 4px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+}
+.preview-title { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.3; }
+.preview-sub { margin: 6px 0 0; font-size: 13px; line-height: 1.7; color: var(--sp-muted-foreground); }
+.preview-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.meta-chip {
+  font-size: 12px; padding: 4px 12px; border-radius: 999px;
+  background: var(--sp-accent); color: var(--sp-accent-foreground);
+  border: 1px solid var(--sp-border);
+}
+
+/* ---------- App 模拟窗口 ---------- */
+.app-mock {
+  display: flex;
+  margin-top: 20px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--sp-border);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+/* 侧边栏（项目面板） */
+.sidebar {
+  width: 188px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 12px;
+  background: var(--sp-sidebar);
+  color: var(--sp-sidebar-foreground);
+}
+[data-project-avatar] {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px;
+  background: var(--sp-sidebar-primary, var(--sp-primary));
+  color: var(--sp-sidebar-primary-foreground, #fff);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px;
+  font-size: 13px;
+  color: var(--sp-sidebar-foreground);
+  cursor: default; user-select: none;
+}
+.nav-item:hover { background: var(--sp-sidebar-accent); }
+.nav-item.active {
+  background: var(--sp-sidebar-accent);
+  color: var(--sp-sidebar-accent-foreground);
+  font-weight: 600;
+}
+.nav-ico { font-size: 15px; line-height: 1; }
+.sidebar-foot { margin-top: auto; padding: 10px 6px 2px; font-size: 11px; opacity: 0.55; }
+
+/* 聊天窗口 */
+.chat-window {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  height: 480px;
+  background: var(--sp-background);
+  color: var(--sp-foreground);
+}
+[data-chat-header] {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--sp-background);
+  border-bottom: 1px solid var(--sp-border);
+}
+.header-avatar {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--sp-primary); color: var(--sp-primary-foreground);
+  font-size: 14px; font-weight: 600;
+}
+.header-info { flex: 1; min-width: 0; }
+.header-name { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+.header-status { font-size: 11px; color: var(--sp-muted-foreground); margin-top: 2px; }
+.header-extra { font-size: 11px; color: var(--sp-muted-foreground); }
+
+[data-chat-messages] { flex: 1; overflow-y: auto; padding: 16px; }
+[data-chat-messages]::-webkit-scrollbar { width: var(--sp-scrollbar-size, 8px); }
+[data-chat-messages]::-webkit-scrollbar-thumb {
+  background: var(--sp-scrollbar-thumb, rgba(128, 128, 128, 0.3));
+  border-radius: 999px;
+}
+[data-chat-messages]::-webkit-scrollbar-track { background: transparent; }
+
+[data-chat-message] { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 14px; }
+[data-chat-message][data-role="user"] { justify-content: flex-end; }
+
+[data-chat-bubble] {
+  max-width: 80%;
+  padding: 10px 14px;
+  font-size: 14px; line-height: 1.65;
+  background: var(--sp-card); color: var(--sp-card-foreground);
+  border: 1px solid var(--sp-border);
+  border-radius: 16px;
+}
+[data-chat-message][data-role="user"] [data-chat-bubble] {
+  background: var(--sp-primary); color: var(--sp-primary-foreground);
+  border-color: transparent;
+  border-bottom-right-radius: 4px;
+}
+[data-chat-message][data-role="assistant"] [data-chat-bubble] { border-bottom-left-radius: 4px; }
+[data-chat-bubble] p { margin: 0 0 6px; }
+[data-chat-bubble] p:last-child { margin-bottom: 0; }
+[data-chat-bubble] ul { margin: 4px 0; padding-left: 18px; }
+[data-chat-bubble] li { margin: 2px 0; }
+
+/* Markdown 默认样式（主题可覆盖；同时挂 data-md-* 与 data-chat-md-* 两个钩子） */
+[data-md-code] {
+  display: block; margin: 8px 0; padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--sp-border);
+  border-radius: 8px;
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Consolas, monospace;
+  font-size: 12.5px; line-height: 1.6;
+  overflow-x: auto; white-space: pre;
+  color: inherit;
+}
+[data-md-code-inline] {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.88em;
+  background: rgba(127, 127, 127, 0.16);
+  padding: 1px 6px; border-radius: 4px;
+}
+[data-md-quote] {
+  margin: 8px 0; padding: 6px 12px;
+  border-left: 3px solid var(--sp-border);
+  color: var(--sp-muted-foreground);
+  font-size: 13px;
+}
+
+/* 输入区 */
+[data-chat-composer] {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  background: var(--sp-background);
+  border-top: 1px solid var(--sp-border);
+}
+[data-chat-composer-input] {
+  flex: 1; display: flex; align-items: center;
+  padding: 2px 10px;
+  background: var(--sp-input, rgba(128, 128, 128, 0.08));
+  border: 1px solid var(--sp-border);
+  border-radius: 12px;
+}
+[data-chat-composer] textarea {
+  flex: 1; border: 0; outline: none; resize: none;
+  background: transparent;
+  color: var(--sp-foreground);
+  font: inherit; font-size: 13.5px; line-height: 1.5;
+  padding: 8px 4px;
+}
+[data-chat-composer] textarea::placeholder { color: var(--sp-muted-foreground); }
+.send-btn {
+  width: 34px; height: 34px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%;
+  background: var(--sp-primary); color: var(--sp-primary-foreground);
+  font-size: 14px; cursor: default;
+}
+
+/* ---------- 区块：色板 / 组件 ---------- */
+.section {
+  margin-top: 22px; padding: 18px 20px;
+  background: var(--sp-card); color: var(--sp-card-foreground);
+  border: 1px solid var(--sp-border);
+  border-radius: calc(var(--sp-radius, 0.625rem) + 4px);
+}
+.section-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--sp-foreground); }
+.section-desc { margin: 0 0 14px; font-size: 12.5px; color: var(--sp-muted-foreground); }
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px 10px;
+}
+.chip { display: flex; flex-direction: column; gap: 6px; }
+.swatch {
+  height: 44px; border-radius: 8px;
+  border: 1px solid rgba(128, 128, 128, 0.30);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+}
+.chip-name { font-size: 11px; color: var(--sp-muted-foreground); text-align: center; }
+
+.comp-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn {
+  padding: 8px 16px; font-size: 13px; font-weight: 500;
+  border: 1px solid transparent; border-radius: var(--sp-radius, 8px);
+  cursor: default; user-select: none;
+}
+.btn-primary { background: var(--sp-primary); color: var(--sp-primary-foreground); }
+.btn-secondary { background: var(--sp-secondary); color: var(--sp-secondary-foreground); border-color: var(--sp-border); }
+.btn-outline { background: transparent; color: var(--sp-foreground); border-color: var(--sp-border); }
+.btn-success { background: var(--sp-success); color: var(--sp-success-foreground, #fff); }
+.btn-warning { background: var(--sp-warning); color: var(--sp-warning-foreground, #fff); }
+.btn-danger { background: var(--sp-destructive); color: var(--sp-destructive-foreground, #fff); }
+.field {
+  display: inline-flex; align-items: center;
+  padding: 8px 12px; min-width: 220px;
+  background: var(--sp-input, transparent);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius, 8px);
+  color: var(--sp-muted-foreground); font-size: 13px;
+}
+.badge {
+  padding: 3px 12px; font-size: 12px; border-radius: 999px;
+  background: var(--sp-accent); color: var(--sp-accent-foreground);
+  border: 1px solid var(--sp-border);
+}
+.toast {
+  display: flex; gap: 10px; align-items: center;
+  padding: 10px 14px;
+  background: var(--sp-popover); color: var(--sp-popover-foreground);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius, 8px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+.toast-ico { color: var(--sp-success); font-size: 15px; }
+
+/* ---------- 页脚 ---------- */
+.preview-footer {
+  margin-top: 22px;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; flex-wrap: wrap;
+  font-size: 12px; color: var(--sp-muted-foreground);
+}
+.source-btn {
+  padding: 6px 14px; font-size: 12px;
+  background: transparent; color: var(--sp-foreground);
+  border: 1px solid var(--sp-border); border-radius: 8px;
+  cursor: pointer;
+}
+.source-btn:hover { background: var(--sp-accent); }
+
+/* ---------- 窄屏适配 ---------- */
+@media (max-width: 700px) {
+  .sidebar { width: 58px; padding: 12px 8px; align-items: center; }
+  .nav-item { justify-content: center; padding: 8px; }
+  .nav-label { display: none; }
+  .sidebar-foot { display: none; }
+  .preview-content { padding: 16px 12px 32px; }
+}

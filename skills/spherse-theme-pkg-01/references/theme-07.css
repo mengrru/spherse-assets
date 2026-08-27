@@ -1,0 +1,238 @@
+/* ============================================ */
+/*  「霓虹深渊 · 赛博朋克 × Synthwave」         */
+/*  Cyberpunk 2077 meets 1980s Miami            */
+/*  热粉 #ff2d95 | 电青 #00e5ff | 毒绿 #39ff14  */
+/* ============================================ */
+
+/* === 全模式统一：赛博朋克霓虹地狱 === */
+[data-app-root] {
+/*border: 5px solid #2d0040;*/
+}
+:root {
+    --sp-background: #050510;
+    --sp-foreground: #f0e8f0;
+    --sp-card: #0c0c1d;
+    --sp-card-foreground: #f0e8f0;
+    --sp-popover: #0f0f22;
+    --sp-popover-foreground: #f0e8f0;
+    --sp-primary: #ff2d95;
+    --sp-primary-foreground: #050510;
+    --sp-secondary: #111128;
+    --sp-secondary-foreground: #f0e8f0;
+    --sp-muted: #0a0a1c;
+    --sp-muted-foreground: #6e6488;
+    --sp-accent: #161636;
+    --sp-accent-foreground: #f0e8f0;
+    --sp-destructive: #ff4466;
+    --sp-success: #22c55e;
+    --sp-success-foreground: #052e16;
+    --sp-warning: #f97316;
+    --sp-warning-foreground: #1c1917;
+    --sp-diff-added: #22c55e;
+    --sp-border: #252545;
+    --sp-input: #2e2e55;
+    --sp-ring: #ff2d95;
+    --sp-sidebar: #060618;
+    --sp-sidebar-foreground: #f0e8f0;
+    --sp-sidebar-primary: #ff2d95;
+    --sp-sidebar-primary-foreground: #050510;
+    --sp-sidebar-accent: #111128;
+    --sp-sidebar-accent-foreground: #f0e8f0;
+    --sp-sidebar-border: #252545;
+    --sp-sidebar-ring: #ff2d95;
+    --sp-radius: 0.5rem;
+}
+
+/* ============================================ */
+/*  项目面板：Synthwave 透视网格 + 日落渐变     */
+/* ============================================ */
+[data-project-panel] {
+  background:
+    /* 扫描线 */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 45, 149, 0.02) 3px,
+      rgba(255, 45, 149, 0.02) 6px
+    ),
+    /* 日落渐变 */
+    linear-gradient(
+      180deg,
+      #0a0020 0%,
+      #1a0030 15%,
+      #2d0040 30%,
+      #1a0a30 50%,
+      #0d0d28 100%
+    );
+}
+
+/* === 内容浏览器：赛博深渊 === */
+[data-content-browser] {
+  background:
+    radial-gradient(ellipse at 20% 40%, rgba(255, 45, 149, 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 60%, rgba(0, 229, 255, 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse at 60% 20%, rgba(57, 255, 20, 0.02) 0%, transparent 50%),
+    #050510;
+}
+
+/* ============================================ */
+/*  全局聊天窗口 — 赛博朋克全息终端            */
+/* ============================================ */
+[data-chat-root] {
+  /* 深空背景 + 三色霓虹辉光 */
+  background:
+    radial-gradient(ellipse at 15% 25%, rgba(255, 45, 149, 0.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 70%, rgba(0, 229, 255, 0.05) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 90%, rgba(57, 255, 20, 0.03) 0%, transparent 50%),
+    linear-gradient(180deg, #050510 0%, #08081a 40%, #030310 100%);
+  color: #f0e8f0;
+
+  /* === Header：霓虹头梁 === */
+  [data-chat-header] {
+    color: #f0e8f0;
+    background: rgba(5, 5, 16, 0.96);
+    border-bottom: 2px solid rgba(255, 45, 149, 0.25);
+    box-shadow:
+      0 1px 30px rgba(255, 45, 149, 0.08),
+      0 1px 8px rgba(0, 229, 255, 0.05);
+  }
+
+  /* === 助手头像：赛博核心（热粉脉冲） === */
+  [data-chat-message][data-role="assistant"] {
+    position: relative;
+  }
+
+  [data-chat-message][data-role="assistant"]::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-right: 8px;
+    background: radial-gradient(circle at 40% 35%, #ff80b0 0%, #ff2d95 35%, #990055 100%);
+    box-shadow:
+      0 0 18px rgba(255, 45, 149, 0.5),
+      0 0 40px rgba(255, 45, 149, 0.15),
+      inset 0 -2px 5px rgba(0, 0, 0, 0.5);
+    border: 1.5px solid rgba(255, 45, 149, 0.4);
+  }
+
+  /* === 消息气泡 === */
+  /* 用户 → 热粉霓虹弹 */
+  [data-chat-message][data-role="user"] [data-chat-bubble] {
+    color: #050510;
+    background: linear-gradient(135deg, #ff2d95 0%, #cc0066 100%);
+    border-radius: 20px 20px 4px 20px;
+    box-shadow:
+      0 4px 24px rgba(255, 45, 149, 0.35),
+      0 0 50px rgba(255, 45, 149, 0.1);
+  }
+
+  /* 助手 → 黑曜石玻璃 */
+  [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    color: #f0e8f0;
+    background: rgba(14, 14, 32, 0.9);
+    border: 1px solid rgba(0, 229, 255, 0.1);
+    border-radius: 20px 20px 20px 4px;
+    box-shadow:
+      0 2px 16px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.015);
+  }
+
+  /* === 输入框：全息面板 === */
+  [data-chat-composer] {
+    background: rgba(5, 5, 16, 0.96);
+    border-top: 1px solid rgba(255, 45, 149, 0.12);
+  }
+
+  [data-chat-composer-input] {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 45, 149, 0.08);
+    border-radius: 12px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  [data-chat-composer-input]:focus-within {
+    border-color: rgba(255, 45, 149, 0.45);
+    box-shadow:
+      0 0 30px rgba(255, 45, 149, 0.12),
+      0 0 12px rgba(0, 229, 255, 0.06),
+      inset 0 0 20px rgba(255, 45, 149, 0.02);
+  }
+
+  [data-chat-composer] textarea {
+    color: #f0e8f0;
+  }
+
+  [data-chat-composer] textarea::placeholder {
+    color: #5a5070;
+  }
+
+  /* === 代码块：毒绿终端 === */
+  [data-md-code] {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(57, 255, 20, 0.15);
+    border-radius: 6px;
+    box-shadow:
+      0 0 20px rgba(57, 255, 20, 0.04),
+      inset 0 0 30px rgba(57, 255, 20, 0.02);
+  }
+
+  [data-md-code-inline] {
+    color: #39ff14;
+    background: rgba(57, 255, 20, 0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* === 引用块：霓虹公告栏 === */
+  [data-md-quote] {
+    border-left: 3px solid rgba(0, 229, 255, 0.5);
+    background: rgba(0, 229, 255, 0.04);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 16px;
+  }
+
+  /* === 水平分隔线：霓虹三色 === */
+  hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 45, 149, 0.3) 20%,
+      rgba(255, 45, 149, 0.15) 40%,
+      rgba(0, 229, 255, 0.15) 60%,
+      rgba(0, 229, 255, 0.3) 80%,
+      transparent 100%
+    );
+  }
+}
+
+/* === 文档视图 Markdown 增强 === */
+[data-content-doc] {
+  [data-md-code] {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(57, 255, 20, 0.15);
+    border-radius: 6px;
+    box-shadow:
+      0 0 20px rgba(57, 255, 20, 0.04),
+      inset 0 0 30px rgba(57, 255, 20, 0.02);
+  }
+
+  [data-md-code-inline] {
+    color: #39ff14;
+    background: rgba(57, 255, 20, 0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  [data-md-quote] {
+    border-left: 3px solid rgba(0, 229, 255, 0.5);
+    background: rgba(0, 229, 255, 0.04);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 16px;
+  }
+}

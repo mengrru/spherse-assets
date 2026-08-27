@@ -1,0 +1,467 @@
+/* ============================================================
+   MOMO TERMINAL — 复古终端主题（项目级 · 整个 App）
+   世界观联动：元素学院在线社区「MOMO 社区」的复古终端美学
+   基调：磷光绿字符 / CRT 扫描线 / 等宽字体 / 琥珀色热点点缀
+   ============================================================ */
+
+/* ---------- 深色模式（主视觉：CRT 终端） ---------- */
+:root {
+  /* 页面与容器 */
+  --sp-background: #0a0e0c;
+  --sp-foreground: #c9f2d9;
+  --sp-card: #0e1512;
+  --sp-card-foreground: #c9f2d9;
+
+  /* 弹出层 */
+  --sp-popover: #0e1512;
+  --sp-popover-foreground: #c9f2d9;
+
+  /* 交互元素 */
+  --sp-primary: #2fe38b;
+  --sp-primary-foreground: #04120a;
+  --sp-secondary: #111a15;
+  --sp-secondary-foreground: #c9f2d9;
+  --sp-accent: #132019;
+  --sp-accent-foreground: #d2f7e0;
+
+  /* 文字层级 */
+  --sp-muted: #111a15;
+  --sp-muted-foreground: #5f8a70;
+
+  /* 边框与输入 */
+  --sp-border: #1d2f24;
+  --sp-input: #1d2f24;
+  --sp-ring: rgba(47, 227, 139, 0.45);
+
+  /* 语义色（终端红 / 磷光绿 / 琥珀） */
+  --sp-destructive: #ff5f56;
+  --sp-success: #2fe38b;
+  --sp-success-foreground: #04120a;
+  --sp-warning: #ffb020;
+  --sp-warning-foreground: #1a1204;
+  --sp-diff-added: #2fe38b;
+
+  /* 圆角：终端更方正 */
+  --sp-radius: 0.375rem;
+
+  /* 滚动条：磷光绿 */
+  --sp-scrollbar-size: 10px;
+  --sp-scrollbar-thumb: rgba(47, 227, 139, 0.35);
+  --sp-scrollbar-thumb-hover: rgba(47, 227, 139, 0.6);
+  --sp-scrollbar-track: transparent;
+
+  /* 侧边栏 */
+  --sp-sidebar: #0b100d;
+  --sp-sidebar-foreground: #c9f2d9;
+  --sp-sidebar-primary: #2fe38b;
+  --sp-sidebar-primary-foreground: #04120a;
+  --sp-sidebar-accent: #132019;
+  --sp-sidebar-accent-foreground: #d2f7e0;
+  --sp-sidebar-border: #1d2f24;
+  --sp-sidebar-ring: rgba(47, 227, 139, 0.45);
+}
+
+/* ---------- 浅色模式（老式米纸终端） ---------- */
+@media (prefers-color-scheme: light) {
+  :root {
+    --sp-background: #efece0;
+    --sp-foreground: #14301f;
+    --sp-card: #f7f4ea;
+    --sp-card-foreground: #14301f;
+    --sp-popover: #f7f4ea;
+    --sp-popover-foreground: #14301f;
+    --sp-primary: #1e4d33;
+    --sp-primary-foreground: #eaf6ee;
+    --sp-secondary: #e5e0d0;
+    --sp-secondary-foreground: #14301f;
+    --sp-accent: #e0dcc8;
+    --sp-accent-foreground: #14301f;
+    --sp-muted: #e5e0d0;
+    --sp-muted-foreground: #6b7260;
+    --sp-border: #b8b09a;
+    --sp-input: #b8b09a;
+    --sp-ring: rgba(30, 77, 51, 0.35);
+    --sp-destructive: #b3261e;
+    --sp-success: #1e4d33;
+    --sp-success-foreground: #eaf6ee;
+    --sp-warning: #a05a00;
+    --sp-warning-foreground: #fff7e8;
+    --sp-diff-added: #1e4d33;
+    --sp-scrollbar-thumb: rgba(30, 77, 51, 0.35);
+    --sp-scrollbar-thumb-hover: rgba(30, 77, 51, 0.6);
+    --sp-sidebar: #e8e4d6;
+    --sp-sidebar-foreground: #14301f;
+    --sp-sidebar-primary: #1e4d33;
+    --sp-sidebar-primary-foreground: #eaf6ee;
+    --sp-sidebar-accent: #e0dcc8;
+    --sp-sidebar-accent-foreground: #14301f;
+    --sp-sidebar-border: #b8b09a;
+    --sp-sidebar-ring: rgba(30, 77, 51, 0.35);
+  }
+}
+
+/* ============================================================
+   全局装饰：CRT 屏幕
+   ============================================================ */
+
+/* 整窗背景：暗角 + 磷光晕 + 琥珀热区 */
+[data-app-root] {
+  background:
+    radial-gradient(ellipse at 18% 12%, rgba(47, 227, 139, 0.05) 0%, transparent 46%),
+    radial-gradient(ellipse at 85% 92%, rgba(255, 176, 32, 0.03) 0%, transparent 42%),
+    linear-gradient(180deg, #0a0e0c 0%, #0c1310 100%);
+}
+
+/* 扫描线（叠在内容之下，从半透明处透出） */
+[data-app-root]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 1px,
+    rgba(0, 0, 0, 0.16) 2px,
+    rgba(0, 0, 0, 0) 3px
+  );
+  pointer-events: none;
+}
+
+/* 荧光噪点 */
+[data-app-root]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0.12 0 0 0 0 0.35 0 0 0 0 0.2 0 0 0 0.35 0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* 浅色下整窗背景换为纸终端 */
+@media (prefers-color-scheme: light) {
+  [data-app-root] {
+    background:
+      radial-gradient(ellipse at 18% 12%, rgba(30, 77, 51, 0.05) 0%, transparent 46%),
+      linear-gradient(180deg, #efece0 0%, #e9e5d6 100%);
+  }
+}
+
+/* ============================================================
+   项目头像：终端光标方块
+   ============================================================ */
+[data-project-avatar] {
+  background: var(--sp-primary);
+  color: var(--sp-primary-foreground);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(47, 227, 139, 0.35);
+}
+[data-project-avatar][data-active] {
+  outline: 2px solid var(--sp-primary);
+}
+[data-project-avatar]:not([data-active]) {
+  opacity: 0.45;
+}
+
+/* ============================================================
+   文档视图：等宽字体 + 终端化代码/引用
+   ============================================================ */
+[data-content-doc] {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+[data-content-doc] [data-md-code] {
+  background: #070c09;
+  border: 1px solid #1d2f24;
+  border-radius: 6px;
+}
+[data-content-doc] [data-md-quote] {
+  border-left: 3px solid rgba(47, 227, 139, 0.5);
+  background: rgba(47, 227, 139, 0.05);
+  border-radius: 0 6px 6px 0;
+}
+
+/* ============================================================
+   全局 Toast：终端通知
+   ============================================================ */
+[data-toast-root] [data-sonner-toast] {
+  border: 1px solid var(--sp-border);
+  background: var(--sp-card);
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+[data-toast-root] [data-type="success"] {
+  border-color: rgba(47, 227, 139, 0.6);
+}
+[data-toast-root] [data-type="error"] {
+  border-color: rgba(255, 95, 86, 0.6);
+}
+[data-toast-root] [data-type="warning"] {
+  border-color: rgba(255, 176, 32, 0.6);
+}
+
+/* ============================================================
+   内容浏览器 / 项目面板：微调
+   ============================================================ */
+[data-content-browser] {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+/* ============================================================
+   MOMO TERMINAL — 聊天窗口皮肤（agent 级）
+   世界观联动：MOMO 社区 · 复古终端美学
+   消息即"终端会话"：用户 = 输入的指令，助手 = 程序输出
+   ============================================================ */
+
+[data-chat-root] {
+  /* 聊天窗口内的主题变量（覆盖项目级，仅作用于 chat） */
+  --sp-background: #0a0e0c;
+  --sp-foreground: #c9f2d9;
+  --sp-primary: #2fe38b;
+  --sp-primary-foreground: #04120a;
+  --sp-secondary: #111a15;
+  --sp-secondary-foreground: #c9f2d9;
+  --sp-accent: #132019;
+  --sp-accent-foreground: #d2f7e0;
+  --sp-muted: #111a15;
+  --sp-muted-foreground: #5f8a70;
+  --sp-border: #1d2f24;
+  --sp-input: #1d2f24;
+  --sp-ring: rgba(47, 227, 139, 0.45);
+  --sp-card: #0e1512;
+  --sp-card-foreground: #c9f2d9;
+  --sp-popover: #0e1512;
+  --sp-popover-foreground: #c9f2d9;
+  --sp-destructive: #ff5f56;
+  --sp-success: #2fe38b;
+  --sp-success-foreground: #04120a;
+  --sp-warning: #ffb020;
+  --sp-warning-foreground: #1a1204;
+  --sp-scrollbar-thumb: rgba(47, 227, 139, 0.35);
+  --sp-scrollbar-thumb-hover: rgba(47, 227, 139, 0.6);
+  --sp-scrollbar-track: transparent;
+
+  /* 聊天区背景：磷光晕 + 终端黑 */
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(47, 227, 139, 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0e0c 0%, #0b110e 100%);
+
+  /* 全聊天等宽字体 */
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* 聊天区内的 CRT 扫描线（内容之下） */
+  position: relative;
+}
+[data-chat-root]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 1px,
+    rgba(0, 0, 0, 0.12) 2px,
+    rgba(0, 0, 0, 0) 3px
+  );
+  pointer-events: none;
+}
+
+/* ---------- Header：终端标题栏 ---------- */
+[data-chat-header] {
+  background: rgba(10, 14, 12, 0.92);
+  border-bottom: 1px solid #1d2f24;
+  color: #c9f2d9;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ---------- 助手头像：终端光标块 ▮（贴消息行左下角） ---------- */
+[data-chat-message][data-role="assistant"] {
+  position: relative;
+  align-items: flex-end;
+}
+[data-chat-message][data-role="assistant"]::before {
+  content: '▮';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-right: 8px;
+  margin-top: auto;
+  align-self: flex-end;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: #0e1512;
+  border: 1px solid rgba(47, 227, 139, 0.55);
+  color: #2fe38b;
+  font-size: 14px;
+  box-shadow: 0 0 8px rgba(47, 227, 139, 0.25);
+}
+
+/* ---------- 消息气泡 ---------- */
+/* 用户 = 终端输入行（深绿底 + 磷光字 + 提示符） */
+[data-chat-message][data-role="user"] [data-chat-bubble] {
+  color: #b6ffd6;
+  background: rgba(13, 42, 27, 0.9);
+  border: 1px solid rgba(47, 227, 139, 0.35);
+  border-radius: 8px 8px 2px 8px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+[data-chat-message][data-role="user"] [data-chat-bubble]::before {
+  content: '❯ ';
+  color: #2fe38b;
+}
+
+/* 助手 = 程序输出（近黑底 + 灰绿字 + 细边框） */
+[data-chat-message][data-role="assistant"] [data-chat-bubble] {
+  color: #c9f2d9;
+  background: rgba(14, 21, 18, 0.92);
+  border: 1px solid rgba(47, 227, 139, 0.14);
+  border-radius: 8px 8px 8px 2px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ---------- 输入区：终端命令行 ---------- */
+[data-chat-composer] {
+  background: rgba(10, 14, 12, 0.92);
+  border-top: 1px solid #1d2f24;
+}
+[data-chat-composer-input] {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #1d2f24;
+  border-radius: 6px;
+}
+[data-chat-composer] textarea {
+  color: #c9f2d9;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+[data-chat-composer] textarea::placeholder {
+  color: #3f5c4a;
+}
+
+/* ---------- Markdown：代码 / 行内代码 / 引用 ---------- */
+[data-md-code] {
+  background: #070c09;
+  border: 1px solid #1d2f24;
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+[data-md-code-inline] {
+  background: rgba(47, 227, 139, 0.08);
+  border: 1px solid rgba(47, 227, 139, 0.2);
+  color: #7dffbe;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+[data-md-quote] {
+  border-left: 3px solid rgba(47, 227, 139, 0.5);
+  background: rgba(47, 227, 139, 0.04);
+  border-radius: 0 6px 6px 0;
+  padding: 8px 16px;
+  color: #8fb89d;
+}
+
+/* ---------- 浮动聊天窗 ---------- */
+[data-chat-float-root] {
+  border-radius: 10px;
+  border: 1px solid #1d2f24;
+  background: rgba(10, 14, 12, 0.96);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(47, 227, 139, 0.08);
+}
+[data-chat-float-titlebar] {
+  background: #0b100d;
+  color: #c9f2d9;
+  border-bottom: 1px solid #1d2f24;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+[data-chat-float-close]:hover {
+  background: #ff5f56;
+  color: #ffffff;
+}
+
+/* ---------- 浅色模式：纸终端 ---------- */
+@media (prefers-color-scheme: light) {
+  [data-chat-root] {
+    --sp-background: #efece0;
+    --sp-foreground: #14301f;
+    --sp-primary: #1e4d33;
+    --sp-primary-foreground: #eaf6ee;
+    --sp-secondary: #e5e0d0;
+    --sp-secondary-foreground: #14301f;
+    --sp-accent: #e0dcc8;
+    --sp-accent-foreground: #14301f;
+    --sp-muted: #e5e0d0;
+    --sp-muted-foreground: #6b7260;
+    --sp-border: #b8b09a;
+    --sp-input: #b8b09a;
+    --sp-ring: rgba(30, 77, 51, 0.35);
+    --sp-card: #f7f4ea;
+    --sp-card-foreground: #14301f;
+    --sp-popover: #f7f4ea;
+    --sp-popover-foreground: #14301f;
+    --sp-destructive: #b3261e;
+    --sp-success: #1e4d33;
+    --sp-success-foreground: #eaf6ee;
+    --sp-warning: #a05a00;
+    --sp-warning-foreground: #fff7e8;
+    --sp-scrollbar-thumb: rgba(30, 77, 51, 0.35);
+    --sp-scrollbar-thumb-hover: rgba(30, 77, 51, 0.6);
+
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(30, 77, 51, 0.05) 0%, transparent 50%),
+      linear-gradient(180deg, #efece0 0%, #e9e5d6 100%);
+
+    [data-chat-header] {
+      background: rgba(239, 236, 224, 0.92);
+      border-bottom-color: #b8b09a;
+      color: #14301f;
+    }
+    [data-chat-message][data-role="assistant"]::before {
+      background: #f7f4ea;
+      border-color: rgba(30, 77, 51, 0.5);
+      color: #1e4d33;
+    }
+    [data-chat-message][data-role="user"] [data-chat-bubble] {
+      color: #0c2b1a;
+      background: rgba(30, 77, 51, 0.14);
+      border-color: rgba(30, 77, 51, 0.4);
+    }
+    [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+      color: #14301f;
+      background: rgba(247, 244, 234, 0.92);
+      border-color: rgba(30, 77, 51, 0.16);
+    }
+    [data-chat-composer] {
+      background: rgba(239, 236, 224, 0.92);
+      border-top-color: #b8b09a;
+    }
+    [data-chat-composer] textarea {
+      color: #14301f;
+    }
+    [data-chat-composer] textarea::placeholder {
+      color: #8a8f7d;
+    }
+    [data-md-code] {
+      background: #e8e4d4;
+      border-color: #b8b09a;
+    }
+    [data-md-code-inline] {
+      background: rgba(30, 77, 51, 0.08);
+      border-color: rgba(30, 77, 51, 0.25);
+      color: #1e4d33;
+    }
+    [data-md-quote] {
+      border-left-color: rgba(30, 77, 51, 0.5);
+      background: rgba(30, 77, 51, 0.04);
+      color: #4a5c4e;
+    }
+    [data-chat-float-root] {
+      border-color: #b8b09a;
+      background: rgba(239, 236, 224, 0.97);
+    }
+    [data-chat-float-titlebar] {
+      background: #e8e4d6;
+      color: #14301f;
+      border-bottom-color: #b8b09a;
+    }
+  }
+}
