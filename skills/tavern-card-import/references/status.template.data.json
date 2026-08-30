@@ -1,0 +1,63 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "{角色名} 的状态档案：随剧情动态更新",
+    "queries": {
+      "getStatus": {
+        "desc": "查看角色当前全部状态",
+        "path": "status",
+        "defaultLimit": 1
+      },
+      "listHistory": {
+        "desc": "查看状态变更历史（按时间倒序）",
+        "path": "history",
+        "identity": "id",
+        "params": {
+          "sort": { "type": "field", "default": "createdAt" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "desc" }
+        },
+        "defaultLimit": 20
+      }
+    },
+    "mutations": {
+      "updateStatus": {
+        "desc": "更新角色当前状态（只传有变化的字段；按角色设定增删字段）",
+        "op": "set",
+        "path": "status",
+        "fields": {
+          "vitality": { "type": "number" },
+          "mood": { "type": "string" },
+          "trust": { "type": "number" },
+          "bond": { "type": "number" },
+          "location": { "type": "string" },
+          "inWorldTime": { "type": "string" },
+          "notes": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        }
+      },
+      "recordChange": {
+        "desc": "记录一次状态变化及原因",
+        "op": "append",
+        "path": "history",
+        "fields": {
+          "field": { "type": "string", "required": true },
+          "from": { "type": "string", "default": "" },
+          "to": { "type": "string", "required": true },
+          "reason": { "type": "string", "default": "" }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      }
+    }
+  },
+  "status": {
+    "vitality": 100,
+    "mood": "平静",
+    "trust": 10,
+    "bond": 0,
+    "location": "",
+    "inWorldTime": "",
+    "notes": "",
+    "updatedAt": ""
+  },
+  "history": []
+}
