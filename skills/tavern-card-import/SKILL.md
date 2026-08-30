@@ -1,7 +1,7 @@
 ---
 name: tavern-card-import
 description: 导入 SillyTavern 酒馆角色卡（PNG 内嵌卡 / JSON 卡），自动完成「解码角色数据 → 创建角色智能体 → 定制专属聊天主题 → 搭建记忆系统与状态系统」。当用户说「帮我导入这张角色卡 / 导入这个卡 / 把这张卡做成智能体」并提供卡片文件路径时使用。
-version: 1.0.0
+version: 1.1.0
 ---
 
 # 酒馆角色卡导入
