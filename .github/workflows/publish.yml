@@ -10,6 +10,7 @@ on:
         default: skills
         options:
           - skills
+          - projects
 
 permissions:
   contents: read
@@ -33,14 +34,20 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build publish artifacts
+      - name: Build skill publish artifacts
         if: inputs.resource == 'skills'
         env:
           OSS_PUBLIC_BASE_URL: ${{ vars.OSS_PUBLIC_BASE_URL }}
         run: node scripts/publish-skills.mjs
 
+      - name: Build project publish artifacts
+        if: inputs.resource == 'projects'
+        env:
+          OSS_PUBLIC_BASE_URL: ${{ vars.OSS_PUBLIC_BASE_URL }}
+        run: node scripts/publish-projects.mjs
+
       - name: Install ossutil
-        if: inputs.resource == 'skills'
+        if: inputs.resource == 'skills' || inputs.resource == 'projects'
         run: |
           curl -fsSL -o /tmp/ossutil https://gosspublic.alicdn.com/ossutil/1.7.18/ossutil64
           chmod +x /tmp/ossutil
@@ -62,7 +69,7 @@ jobs:
               --force -u
           done
 
-      - name: Upload manifest (last, keeps marketplace consistent)
+      - name: Upload skills manifest (last, keeps marketplace consistent)
         if: inputs.resource == 'skills'
         env:
           OSS_BUCKET: ${{ vars.OSS_BUCKET }}
@@ -71,6 +78,36 @@ jobs:
           OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
         run: |
           /tmp/ossutil cp dist/spherse/skills/manifest.json "oss://$OSS_BUCKET/spherse/skills/manifest.json" \
+            -e "$OSS_ENDPOINT" \
+            -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" \
+            --force -u
+
+      - name: Upload project zips
+        if: inputs.resource == 'projects'
+        env:
+          OSS_BUCKET: ${{ vars.OSS_BUCKET }}
+          OSS_ENDPOINT: ${{ vars.OSS_ENDPOINT }}
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        run: |
+          find dist/spherse/projects -type f -name '*.zip' | while read -r f; do
+            key="${f#dist/}"
+            echo "uploading $key"
+            /tmp/ossutil cp "$f" "oss://$OSS_BUCKET/$key" \
+              -e "$OSS_ENDPOINT" \
+              -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" \
+              --force -u
+          done
+
+      - name: Upload projects manifest (last, keeps marketplace consistent)
+        if: inputs.resource == 'projects'
+        env:
+          OSS_BUCKET: ${{ vars.OSS_BUCKET }}
+          OSS_ENDPOINT: ${{ vars.OSS_ENDPOINT }}
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        run: |
+          /tmp/ossutil cp dist/spherse/projects/manifest.json "oss://$OSS_BUCKET/spherse/projects/manifest.json" \
             -e "$OSS_ENDPOINT" \
             -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" \
             --force -u

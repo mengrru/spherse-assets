@@ -7,6 +7,7 @@ Spherse 官方静态资源发布仓库。资源源文件在此仓库中 git 管�
 | 类型 | 源目录 | OSS 路径 | 说明 |
 |---|---|---|---|
 | skills | `skills/` | `spherse/skills/` | 技能市场（Skill Marketplace） |
+| projects | `projects/` | `spherse/projects/` | 项目市场（Project Marketplace） |
 | samples | `samples/` | `spherse/sample/` | 预留：示例项目等，尚未接入发布脚本 |
 
 ## 技能源格式
@@ -29,6 +30,46 @@ version: 1.2.0
 - `version` 必须是合法 semver；**内容变更后必须提升 version，否则发布流水线不会识别**（diff 基于 version）
 - 目录下的其它文件（`references/`、`scripts/` 等）会作为 companion files 一起打包
 - 下架技能 = 删除对应目录，下次发布后 manifest 自动移除该条目（OSS 旧 zip 保留作不可变历史）
+
+## 项目源格式
+
+每个项目是一个目录：`projects/{project-name}/`，其中必须有 `meta.json`（元数据，**打包 zip 时会自动排除**）：
+
+```json
+{
+  "name": "my-world",
+  "description": "一句话描述项目",
+  "version": "1.2.0",
+  "category": "游戏"
+}
+```
+
+要求：
+
+- `name` 必须与目录名完全一致，且不含 `/ \ :`、不以 `.` 开头
+- `description`、`category` 必填非空；`category` 为自由字符串，客户端顶部分类菜单按其动态归并
+- `version` 必须是合法 semver；**内容变更后必须提升 version，否则发布流水线不会识别**（diff 基于 version）
+- 目录下其它内容任意（项目文件、嵌套的 meta.json 均保留），zip 顶层目录 = 项目名
+- 下架项目 = 删除对应目录，下次发布后 manifest 自动移除该条目（OSS 旧 zip 保留作不可变历史）
+
+## 发布流程（projects）
+
+1. 在 `projects/` 下添加或修改项目内容并提升 `version`，提交推送
+2. GitHub → Actions → 「Publish assets to OSS」→ Run workflow，选择 resource = `projects`
+3. 流水线逻辑（`scripts/publish-projects.mjs`）：
+   - 扫描并校验全部项目（name/description/version/category）
+   - 从仓库全量生成新 manifest
+   - 拉取 OSS 当前 manifest，diff 出新增或 version 变化的项目
+   - 仅将这些项目打包为 zip（顶层目录 = 项目名，排除顶层 meta.json）写入 `dist/`
+   - CI 用 ossutil 上传变更的 zip，最后覆盖上传 manifest
+
+本地 dry-run：
+
+```bash
+npm install
+npm test                 # 发布逻辑单测（skills + projects）
+OSS_PUBLIC_BASE_URL=https://example.com npm run publish:projects  # 本地生成 dist/（真实 fetch 远端 manifest；不会上传）
+```
 
 ## 发布流程（skills）
 
@@ -54,6 +95,8 @@ OSS_PUBLIC_BASE_URL=https://example.com npm run publish:skills   # 本地生成 
 ```
 spherse/skills/manifest.json                                ← 全量清单，每次发布覆盖
 spherse/skills/{name}/{version}/{name}-{version}.zip         ← 版本化 zip，不可变
+spherse/projects/manifest.json                               ← 全量清单，每次发布覆盖
+spherse/projects/{name}/{version}/{name}-{version}.zip       ← 版本化 zip，不可变
 ```
 
 客户端（Spherse）通过 manifest 中的 `zipUrl` 下载 zip，并校验其与 manifest 同源。

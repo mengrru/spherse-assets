@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "publish:skills": "node scripts/publish-skills.mjs",
-    "test": "node scripts/publish-skills.test.mjs"
+    "publish:projects": "node scripts/publish-projects.mjs",
+    "test": "node scripts/publish-skills.test.mjs && node scripts/publish-projects.test.mjs"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",

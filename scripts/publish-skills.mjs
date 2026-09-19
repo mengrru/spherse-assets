@@ -4,22 +4,21 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import AdmZip from "adm-zip";
 import matter from "gray-matter";
-
-const INVALID_SKILL_NAME_RE = /[/\\:]/;
-const SEMVER_RE =
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z.-]+))?$/;
+import {
+  backfillManifestFields,
+  checkEmptyPublish,
+  diffBy,
+  fetchRemoteManifest,
+  trimBaseUrl,
+  validateName,
+  validateSemver,
+} from "./lib/marketplace-publish.mjs";
 
 export function validateSkillName(name) {
-  const trimmed = name.trim();
-  if (!trimmed) return "skill name is required";
-  if (INVALID_SKILL_NAME_RE.test(trimmed)) return `skill name must not contain '/', '\\', or ':': ${name}`;
-  if (trimmed.startsWith(".")) return `skill name must not start with '.': ${name}`;
-  return null;
+  return validateName(name);
 }
 
-export function validateSemver(version) {
-  return typeof version === "string" && SEMVER_RE.test(version.trim());
-}
+export { validateSemver };
 
 export async function scanSkills(skillsDir) {
   const entries = fs.readdirSync(skillsDir, { withFileTypes: true }).filter((e) => e.isDirectory());
@@ -52,29 +51,11 @@ export async function scanSkills(skillsDir) {
 }
 
 export function zipUrlFor(baseUrl, name, version) {
-  return `${baseUrl.replace(/\/+$/, "")}/spherse/skills/${name}/${version}/${name}-${version}.zip`;
+  return `${trimBaseUrl(baseUrl)}/spherse/skills/${name}/${version}/${name}-${version}.zip`;
 }
 
 export function diffSkills(localSkills, remoteManifest) {
-  const remoteByName = new Map((remoteManifest?.skills ?? []).map((s) => [s.name, s]));
-  return localSkills.filter((skill) => {
-    const remote = remoteByName.get(skill.name);
-    return !remote || remote.version !== skill.version;
-  });
-}
-
-async function fetchRemoteManifest(manifestUrl, fetchFn) {
-  let res;
-  try {
-    res = await fetchFn(manifestUrl);
-  } catch (err) {
-    throw new Error(`failed to fetch current manifest at ${manifestUrl}: ${err.message}`);
-  }
-  if (res.status === 404) return null;
-  if (!res.ok) {
-    throw new Error(`current manifest at ${manifestUrl} responded HTTP ${res.status}`);
-  }
-  return res.json();
+  return diffBy("skills", localSkills, remoteManifest);
 }
 
 export async function publish(options) {
@@ -89,13 +70,12 @@ export async function publish(options) {
 
   const skills = await scanSkills(skillsDir);
   const remote = await fetchRemoteManifest(manifestUrl, fetchFn);
-  if (skills.length === 0) {
-    const remoteCount = remote?.skills?.length ?? 0;
-    if (remoteCount === 0) {
-      throw new Error(`no skills found under ${skillsDir} and the marketplace is already empty; nothing to publish`);
-    }
-    console.warn(`warning: skills directory is empty; publishing a manifest that removes ${remoteCount} marketplace entr${remoteCount === 1 ? "y" : "ies"}`);
-  }
+  checkEmptyPublish({
+    localCount: skills.length,
+    remoteCount: remote?.skills?.length ?? 0,
+    resourceLabel: "skills",
+    dirPath: skillsDir,
+  });
 
   const remoteByName = new Map((remote?.skills ?? []).map((s) => [s.name, s]));
   const toPublish = diffSkills(skills, remote);
@@ -119,18 +99,18 @@ export async function publish(options) {
   const manifest = {
     schemaVersion: 1,
     generatedAt: publishedAt,
-    skills: skills.map((skill) => {
-      const isPublished = sizes.has(skill.name);
-      const remoteEntry = remoteByName.get(skill.name);
-      return {
-        name: skill.name,
-        description: skill.description,
-        version: skill.version,
-        zipUrl: zipUrlFor(baseUrl, skill.name, skill.version),
-        size: isPublished ? sizes.get(skill.name) : (remoteEntry?.size ?? 0),
-        updatedAt: isPublished ? publishedAt : (remoteEntry?.updatedAt ?? publishedAt),
-      };
-    }),
+    skills: skills.map((skill) => ({
+      name: skill.name,
+      description: skill.description,
+      version: skill.version,
+      zipUrl: zipUrlFor(baseUrl, skill.name, skill.version),
+      ...backfillManifestFields({
+        isPublished: sizes.has(skill.name),
+        size: sizes.get(skill.name) ?? 0,
+        publishedAt,
+        remoteEntry: remoteByName.get(skill.name),
+      }),
+    })),
   };
   fs.writeFileSync(path.join(skillsDistRoot, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
 
@@ -145,7 +125,7 @@ async function main() {
   }
   const manifestUrl =
     process.env.SPHERSE_SKILLS_MANIFEST_URL ??
-    `${baseUrl.replace(/\/+$/, "")}/spherse/skills/manifest.json`;
+    `${trimBaseUrl(baseUrl)}/spherse/skills/manifest.json`;
   const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
   try {
     const result = await publish({
