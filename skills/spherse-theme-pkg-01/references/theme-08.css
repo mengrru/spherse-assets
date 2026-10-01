@@ -332,6 +332,56 @@
 }
 
 /* ============================================================
+   聊天浮窗（Floating Chat）：与内容 / 浏览器浮窗一致的「OS 窗口」
+   ============================================================ */
+[data-chat-float-root] {
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-chat-float-titlebar] {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-bottom: 1px solid #000000;
+}
+
+[data-chat-float-close] {
+  background: #d4d0c8;
+  color: #000000;
+  border: 1px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  border-radius: 0;
+}
+[data-chat-float-close]:hover {
+  background: #e8e4dd;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-float-root] {
+    background: #3a3a3a;
+    border-color: #7a7a7a #000000 #000000 #7a7a7a;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+  }
+  [data-chat-float-titlebar] {
+    background: linear-gradient(90deg, #04122e, #0d5c93);
+    border-bottom-color: #000000;
+  }
+  [data-chat-float-close] {
+    background: #3a3a3a;
+    color: #eaeaea;
+    border-color: #7a7a7a #101010 #101010 #7a7a7a;
+  }
+  [data-chat-float-close]:hover {
+    background: #4a4a4a;
+  }
+}
+
+/* ============================================================
    Activity Bar 项目头像：小桌面图标（直角 + 斜面）
    ============================================================ */
 [data-project-avatar] {

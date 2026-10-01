@@ -1,0 +1,619 @@
+/* ============================================================
+   Spherse 自定义主题 · Game Boy DMG（护眼柔和版）
+   保留 DMG 的结构语言：直角像素、点阵网格、等宽字、四阶绿的层次
+   但整体降饱和 + 压亮度，做成低刺激的"橄榄 / 鼠尾草绿"，久看不累
+   浅色 = 柔和橄榄纸感：浅鼠尾草底 + 深橄榄字
+   深色 = 暗橄榄夜屏：深橄榄底 + 柔光浅绿字
+   ============================================================ */
+
+/* ---------- 浅色模式：柔和橄榄 ---------- */
+:root {
+  /* 页面与容器（低饱和鼠尾草绿，亮度压下来不刺眼） */
+  --sp-background: #ccd4b0;
+  --sp-foreground: #2a3320;
+  --sp-card: #d7ddc0;
+  --sp-card-foreground: #2a3320;
+
+  /* 弹出层 */
+  --sp-popover: #dde2ca;
+  --sp-popover-foreground: #2a3320;
+
+  /* 交互元素（深橄榄 = 主操作 / 选中） */
+  --sp-primary: #4e5f3a;
+  --sp-primary-foreground: #eef1e2;
+  --sp-secondary: #c3cba4;
+  --sp-secondary-foreground: #2a3320;
+  --sp-accent: #b9c398;
+  --sp-accent-foreground: #2a3320;
+
+  /* 文字层级 */
+  --sp-muted: #c6cea8;
+  --sp-muted-foreground: #5a6448;
+
+  /* 边框与输入 */
+  --sp-border: #a7b187;
+  --sp-input: #a7b187;
+  --sp-ring: #4e5f3a;
+
+  /* 语义色（危险 = 柔和豆沙红） */
+  --sp-destructive: #9c4a5e;
+  --sp-success: #4e6b3a;
+  --sp-success-foreground: #eef1e2;
+  --sp-warning: #8a7a2e;
+  --sp-warning-foreground: #f4f1e2;
+  --sp-diff-added: #4e6b3a;
+
+  /* 直角：点阵屏没有圆角 */
+  --sp-radius: 0;
+
+  /* 滚动条：低对比方块滑块 */
+  --sp-scrollbar-size: 12px;
+  --sp-scrollbar-thumb: #7d8a5c;
+  --sp-scrollbar-thumb-hover: #5f6b45;
+  --sp-scrollbar-track: #c6cea8;
+
+  /* 侧边栏 */
+  --sp-sidebar: #c6cea8;
+  --sp-sidebar-foreground: #2a3320;
+  --sp-sidebar-primary: #4e5f3a;
+  --sp-sidebar-primary-foreground: #eef1e2;
+  --sp-sidebar-accent: #b9c398;
+  --sp-sidebar-accent-foreground: #2a3320;
+  --sp-sidebar-border: #a7b187;
+  --sp-sidebar-ring: #4e5f3a;
+}
+
+/* ---------- 深色模式：暗橄榄夜屏 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sp-background: #1e2417;
+    --sp-foreground: #cdd6b4;
+    --sp-card: #262d1d;
+    --sp-card-foreground: #cdd6b4;
+
+    --sp-popover: #2b331f;
+    --sp-popover-foreground: #cdd6b4;
+
+    --sp-primary: #9aae6e;
+    --sp-primary-foreground: #1a2013;
+    --sp-secondary: #333d24;
+    --sp-secondary-foreground: #cdd6b4;
+    --sp-accent: #3a4629;
+    --sp-accent-foreground: #dbe2c6;
+
+    --sp-muted: #2a3220;
+    --sp-muted-foreground: #8f9a76;
+
+    --sp-border: #3c4630;
+    --sp-input: #3c4630;
+    --sp-ring: #9aae6e;
+
+    --sp-destructive: #d98ba3;
+    --sp-success: #9aae6e;
+    --sp-success-foreground: #1a2013;
+    --sp-warning: #cbbf6a;
+    --sp-warning-foreground: #1a2013;
+    --sp-diff-added: #9aae6e;
+
+    --sp-scrollbar-thumb: #46512f;
+    --sp-scrollbar-thumb-hover: #5f6b45;
+    --sp-scrollbar-track: #1e2417;
+
+    --sp-sidebar: #1a1f12;
+    --sp-sidebar-foreground: #cdd6b4;
+    --sp-sidebar-primary: #9aae6e;
+    --sp-sidebar-primary-foreground: #1a2013;
+    --sp-sidebar-accent: #3a4629;
+    --sp-sidebar-accent-foreground: #dbe2c6;
+    --sp-sidebar-border: #3c4630;
+    --sp-sidebar-ring: #9aae6e;
+  }
+}
+
+/* ============================================================
+   字体：等宽 / 点阵像素感（CJK 回退系统字体）
+   ============================================================ */
+[data-app-root] {
+  font-family: ui-monospace, "SF Mono", "Menlo", "Consolas",
+    "Courier New", "PingFang SC", "Microsoft YaHei", monospace;
+}
+
+/* ============================================================
+   整窗背景：柔和橄榄底 + 轻景深（大幅收敛饱和度）
+   ============================================================ */
+[data-app-root] {
+  background:
+    radial-gradient(ellipse 130% 110% at 50% 46%, transparent 58%, rgba(70, 85, 50, 0.14) 100%),
+    linear-gradient(180deg, #d3dabb 0%, #ccd4b0 50%, #c4cca6 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root] {
+    background:
+      radial-gradient(ellipse 130% 110% at 50% 46%, transparent 58%, rgba(0, 0, 0, 0.30) 100%),
+      linear-gradient(180deg, #212817 0%, #1e2417 50%, #181d10 100%);
+  }
+}
+
+/* LCD 点阵网格：保留像素感，但透明度大幅调低 */
+[data-app-root]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(70, 85, 50, 0.05) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(70, 85, 50, 0.05) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root]::before {
+    background-image:
+      repeating-linear-gradient(90deg, rgba(205, 214, 180, 0.05) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(0deg, rgba(205, 214, 180, 0.05) 0 1px, transparent 1px 3px);
+  }
+}
+
+/* 屏幕内侧景深阴影（更柔、更淡） */
+[data-app-root]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 160px rgba(70, 85, 50, 0.16);
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root]::after {
+    box-shadow: inset 0 0 160px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ============================================================
+   方块滚动条
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: #c6cea8;
+}
+::-webkit-scrollbar-thumb {
+  background: #7d8a5c;
+  border: 1px solid #a7b187;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5f6b45;
+}
+::-webkit-scrollbar-corner {
+  background: #c6cea8;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #1e2417;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #46512f;
+    border-color: #5f6b45;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #5f6b45;
+  }
+  ::-webkit-scrollbar-corner {
+    background: #1e2417;
+  }
+}
+
+/* ============================================================
+   项目面板 / 内容区
+   ============================================================ */
+[data-project-panel] {
+  background: var(--sp-sidebar);
+  border-inline-end: 2px solid #a7b187;
+}
+
+[data-content-browser] {
+  background: var(--sp-background);
+}
+
+/* ============================================================
+   标签栏：像素选项卡（选中 = 深橄榄填充）
+   ============================================================ */
+[data-tab-bar] {
+  background: #ccd4b0;
+  border-bottom: 2px solid #a7b187;
+  gap: 2px;
+  padding: 3px 4px 0;
+}
+
+[data-tab] {
+  background: #d7ddc0;
+  color: #2a3320;
+  border: 1px solid #a7b187;
+  border-bottom: none;
+  border-radius: 0;
+}
+
+[data-tab][data-active="true"] {
+  background: #4e5f3a;
+  color: #eef1e2;
+  font-weight: 700;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-tab-bar] {
+    background: #1e2417;
+    border-bottom-color: #3c4630;
+  }
+  [data-tab] {
+    background: #262d1d;
+    color: #cdd6b4;
+    border-color: #3c4630;
+  }
+  [data-tab][data-active="true"] {
+    background: #9aae6e;
+    color: #1a2013;
+  }
+}
+
+/* ============================================================
+   右键菜单 / 下拉 / 选择器 / 弹出层：像素硬边菜单
+   ============================================================ */
+[role="menu"],
+[data-radix-context-menu-content],
+[data-radix-dropdown-menu-content],
+[data-radix-select-content],
+[data-radix-popover-content] {
+  background: #dde2ca !important;
+  border: 2px solid #4e5f3a !important;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 rgba(42, 51, 32, 0.25) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [role="menu"],
+  [data-radix-context-menu-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content],
+  [data-radix-popover-content] {
+    background: #2b331f !important;
+    border-color: #9aae6e !important;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45) !important;
+  }
+}
+
+/* ============================================================
+   浮窗内容浏览器 / 浮窗简易浏览器：DMG 窗口
+   ============================================================ */
+[data-content-float-root],
+[data-browser-float-root] {
+  background: #d7ddc0;
+  border: 2px solid #4e5f3a;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(42, 51, 32, 0.25);
+}
+
+[data-content-float-titlebar],
+[data-browser-float-titlebar] {
+  background: #4e5f3a;
+  color: #eef1e2;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-bottom: 2px solid #3f4d2f;
+}
+
+[data-content-float-close],
+[data-browser-float-close] {
+  background: #d7ddc0;
+  color: #2a3320;
+  border: 1px solid #4e5f3a;
+  border-radius: 0;
+}
+[data-content-float-close]:hover,
+[data-browser-float-close]:hover {
+  background: #4e5f3a;
+  color: #eef1e2;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-float-root],
+  [data-browser-float-root] {
+    background: #262d1d;
+    border-color: #9aae6e;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  }
+  [data-content-float-titlebar],
+  [data-browser-float-titlebar] {
+    background: #9aae6e;
+    color: #1a2013;
+    border-bottom-color: #7d8f56;
+  }
+  [data-content-float-close],
+  [data-browser-float-close] {
+    background: #333d24;
+    color: #cdd6b4;
+    border-color: #5f6b45;
+  }
+  [data-content-float-close]:hover,
+  [data-browser-float-close]:hover {
+    background: #9aae6e;
+    color: #1a2013;
+  }
+}
+
+/* ============================================================
+   聊天浮窗（Floating Chat）：与内容 / 浏览器浮窗一致的柔和绿窗口
+   ============================================================ */
+[data-chat-float-root] {
+  background: #d7ddc0;
+  border: 2px solid #4e5f3a;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(42, 51, 32, 0.25);
+}
+
+[data-chat-float-titlebar] {
+  background: #4e5f3a;
+  color: #eef1e2;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-bottom: 2px solid #3f4d2f;
+}
+
+[data-chat-float-close] {
+  background: #d7ddc0;
+  color: #2a3320;
+  border: 1px solid #4e5f3a;
+  border-radius: 0;
+}
+[data-chat-float-close]:hover {
+  background: #4e5f3a;
+  color: #eef1e2;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-float-root] {
+    background: #262d1d;
+    border-color: #9aae6e;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  }
+  [data-chat-float-titlebar] {
+    background: #9aae6e;
+    color: #1a2013;
+    border-bottom-color: #7d8f56;
+  }
+  [data-chat-float-close] {
+    background: #333d24;
+    color: #cdd6b4;
+    border-color: #5f6b45;
+  }
+  [data-chat-float-close]:hover {
+    background: #9aae6e;
+    color: #1a2013;
+  }
+}
+
+/* ============================================================
+   Activity Bar 项目头像：方块像素图标
+   ============================================================ */
+[data-project-avatar] {
+  border-radius: 0;
+  box-shadow:
+    inset 1px 1px 0 rgba(238, 241, 226, 0.6),
+    inset -1px -1px 0 rgba(42, 51, 32, 0.35);
+}
+
+/* ============================================================
+   全局 Toast：DMG 提示窗
+   ============================================================ */
+[data-toast-root] [data-sonner-toast] {
+  background: #dde2ca !important;
+  color: #2a3320 !important;
+  border: 2px solid #4e5f3a;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 rgba(42, 51, 32, 0.25) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-toast-root] [data-sonner-toast] {
+    background: #2b331f !important;
+    color: #cdd6b4 !important;
+    border-color: #9aae6e;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45) !important;
+  }
+}
+
+/* ============================================================
+   输入控件：明确的可编辑底色（避免看起来像 disabled）
+   --sp-input 只控边框色，背景由应用默认决定 → 偏灰像 disabled
+   覆盖：原生控件 + Radix/shadcn 按钮式控件（Select/Combobox）
+   ============================================================ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+textarea,
+select,
+[role="combobox"],
+[role="textbox"],
+[role="searchbox"],
+[data-radix-select-trigger],
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+button[aria-haspopup="listbox"] {
+  background-color: #b9d94a !important;
+  color: #2a3320;
+}
+
+/* 聊天输入框是"输入内容"容器，保持透明、沿用主题给它的专属样式 */
+[data-chat-composer] textarea {
+  background-color: transparent !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select,
+  [role="combobox"],
+  [role="textbox"],
+  [role="searchbox"],
+  [data-radix-select-trigger],
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"],
+  button[aria-haspopup="listbox"] {
+    background-color: #1f4e1f !important;
+    color: #cdd6b4;
+  }
+}
+
+/* ============================================================
+   聊天窗口：深橄榄标题条 + 点阵对话窗 + 柔和代码块
+   ============================================================ */
+[data-chat-root] [data-chat-header] {
+  background: #4e5f3a;
+  color: #eef1e2;
+  border-bottom: 2px solid #3f4d2f;
+}
+[data-chat-root] [data-chat-header] .header-name { color: #eef1e2; }
+[data-chat-root] [data-chat-header] .header-status,
+[data-chat-root] [data-chat-header] .header-extra { color: rgba(238, 241, 226, 0.78); }
+[data-chat-root] [data-chat-header] .header-avatar {
+  background: #d7ddc0;
+  color: #2a3320;
+  border-radius: 0;
+}
+
+/* 消息气泡：直角点阵（助手 = 浅橄榄窗，用户 = 深橄榄填充） */
+[data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+  border-radius: 0;
+  background: #d7ddc0;
+  color: #2a3320;
+  border: 1px solid #a7b187;
+}
+[data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+  border-radius: 0;
+  background: #4e5f3a;
+  color: #eef1e2;
+  border: 1px solid #3f4d2f;
+}
+
+/* 输入区：凹陷像素输入框 + 方块发送键 */
+[data-chat-root] [data-chat-composer] {
+  background: #c6cea8;
+  border-top: 2px solid #a7b187;
+}
+[data-chat-root] [data-chat-composer-input] {
+  background: #dde2ca;
+  border: 2px solid;
+  border-color: #7d8a5c #dde2ca #dde2ca #7d8a5c;
+  border-radius: 0;
+}
+[data-chat-root] [data-chat-composer] textarea { color: #2a3320; }
+[data-chat-root] [data-chat-composer] textarea::placeholder { color: #7d8a5c; }
+[data-chat-root] .send-btn {
+  border-radius: 0;
+  background: #4e5f3a;
+  color: #eef1e2;
+  border: 1px solid #3f4d2f;
+}
+
+/* 代码块：柔和深橄榄底 + 浅字；行内代码为浅橄榄小方块 */
+[data-chat-root] [data-md-code] {
+  background: #3a442c;
+  color: #dbe2c6;
+  border: 1px solid #2a3320;
+  border-radius: 0;
+}
+[data-chat-root] [data-md-code-inline] {
+  background: #b9c398;
+  color: #2a3320;
+  border: 1px solid #a7b187;
+  border-radius: 0;
+}
+[data-chat-root] [data-md-quote] {
+  border-left: 3px solid #7d8a5c;
+  color: #5a6448;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-root] [data-chat-header] {
+    background: #9aae6e;
+    color: #1a2013;
+    border-bottom-color: #7d8f56;
+  }
+  [data-chat-root] [data-chat-header] .header-name { color: #1a2013; }
+  [data-chat-root] [data-chat-header] .header-status,
+  [data-chat-root] [data-chat-header] .header-extra { color: rgba(26, 32, 19, 0.72); }
+  [data-chat-root] [data-chat-header] .header-avatar {
+    background: #1e2417;
+    color: #cdd6b4;
+  }
+  [data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    background: #262d1d;
+    color: #cdd6b4;
+    border-color: #3c4630;
+  }
+  [data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+    background: #9aae6e;
+    color: #1a2013;
+    border-color: #7d8f56;
+  }
+  [data-chat-root] [data-chat-composer] {
+    background: #1a1f12;
+    border-top-color: #3c4630;
+  }
+  [data-chat-root] [data-chat-composer-input] {
+    background: #262d1d;
+    border-color: #5f6b45 #262d1d #262d1d #5f6b45;
+  }
+  [data-chat-root] [data-chat-composer] textarea { color: #cdd6b4; }
+  [data-chat-root] [data-chat-composer] textarea::placeholder { color: #5f6b45; }
+  [data-chat-root] .send-btn {
+    background: #9aae6e;
+    color: #1a2013;
+    border-color: #7d8f56;
+  }
+  [data-chat-root] [data-md-code] {
+    background: #12170d;
+    color: #cdd6b4;
+    border-color: #3c4630;
+  }
+  [data-chat-root] [data-md-code-inline] {
+    background: #333d24;
+    color: #dbe2c6;
+    border-color: #5f6b45;
+  }
+  [data-chat-root] [data-md-quote] {
+    border-left-color: #7d8f56;
+    color: #8f9a76;
+  }
+}
+
+/* ============================================================
+   文档视图 Markdown：与聊天窗口一致的点阵屏质感
+   ============================================================ */
+[data-content-doc] [data-md-code] {
+  background: #3a442c;
+  color: #dbe2c6;
+  border: 1px solid #2a3320;
+  border-radius: 0;
+}
+[data-content-doc] [data-md-code-inline] {
+  background: #b9c398;
+  color: #2a3320;
+  border: 1px solid #a7b187;
+  border-radius: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-doc] [data-md-code] {
+    background: #12170d;
+    color: #cdd6b4;
+    border-color: #3c4630;
+  }
+  [data-content-doc] [data-md-code-inline] {
+    background: #333d24;
+    color: #dbe2c6;
+    border-color: #5f6b45;
+  }
+}

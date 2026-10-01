@@ -1,12 +1,12 @@
 ---
 name: spherse-theme-pkg-01
-description: Spherse 主题包，内置 9 款可一键应用的 UI 主题；当用户询问有哪些主题、想要查看主题预览或要求更换/应用某个主题时使用
-version: 0.1.3
+description: Spherse 主题包，内置 12 款可一键应用的 UI 主题；当用户询问有哪些主题、想要查看主题预览或要求更换/应用某个主题时使用
+version: 0.1.6
 ---
 
 # Spherse 主题包（spherse-theme-pkg-01）
 
-本 skill 是一个**项目级 UI 主题包**：内置 9 款主题，帮助用户一键应用到当前项目。主题作用于整个 App（UI 变量、全局背景、项目面板、聊天窗口默认样式等），应用后刷新页面即可生效。
+本 skill 是一个**项目级 UI 主题包**：内置 12 款主题，帮助用户一键应用到当前项目。主题作用于整个 App（UI 变量、全局背景、项目面板、聊天窗口默认样式等），应用后刷新页面即可生效。
 
 ## 目录结构
 
@@ -14,11 +14,11 @@ version: 0.1.3
 skills/spherse-theme-pkg-01/
 ├── SKILL.md
 ├── references/                 # 主题源文件（只读，勿改动）
-│   ├── theme-01.css … theme-09.css
+│   ├── theme-01.css … theme-12.css
 │   ├── theme-04-bg.png         # theme-04 配套背景图（CSS 内相对引用）
 │   └── theme-06-avatar.webp    # theme-06 配套头像（CSS 内相对引用）
 └── previews/                   # 主题预览
-    ├── index.html              # 聚合预览页：顶部切换 9 款主题
+    ├── index.html              # 聚合预览页：顶部切换 12 款主题
     └── preview-base.css        # 预览页共享骨架
 ```
 
@@ -35,6 +35,9 @@ skills/spherse-theme-pkg-01/
 | 07 | 霓虹深渊 | `references/theme-07.css` | 赛博朋克×Synthwave：热粉/电青/毒绿，全暗色主题 | — |
 | 08 | 千禧年复古操作系统 | `references/theme-08.css` | Win98/2000 风：青绿桌面×银灰窗口、深蓝标题条与选中高亮、直角立体凹凸边框、块状 3D 滚动条 | — |
 | 09 | Mac OS 9 铂金 | `references/theme-09.css` | Mac OS 8/9 Platinum：浅银灰面板、横纹（pinstripe）标题栏、淡紫蓝选中高亮、圆角按钮、椭圆滚动条滑块 | — |
+| 10 | Memphis 孟菲斯 | `references/theme-10.css` | 80s 后现代：撞色色块（红/黄/青）、粗黑描边、波点网格、硬投影、几何色带；含输入控件"可编辑底色"修正 | — |
+| 11 | Game Boy DMG | `references/theme-11.css` | 掌机点阵 LCD：四阶豌豆绿（**护眼柔和版**）、LCD 点阵网格、全直角、方块滚动条、等宽像素字；含输入控件"可编辑底色"修正 | — |
+| 12 | 雨夜驾驶 | `references/theme-12.css` | Blade Runner 风：霓虹雨夜、琥珀钠灯 × 青蓝霓虹、**下落雨丝动画**、霓虹外发光；含输入控件"可编辑底色"修正 | — |
 
 ## 触发场景
 
@@ -46,7 +49,7 @@ skills/spherse-theme-pkg-01/
 用户想看有哪些主题时，用 `render_card` 渲染聚合预览页：
 
 ```
-render_card(type: "html", file_path: "skills/spherse-theme-pkg-01/previews/index.html", title: "Spherse 主题预览 · 9 款主题")
+render_card(type: "html", file_path: "skills/spherse-theme-pkg-01/previews/index.html", title: "Spherse 主题预览 · 12 款主题")
 ```
 
 预览页顶部有主题切换器（左右箭头循环 + 展开列表直选），下方展示每款主题的聊天窗口、界面组件与色板；深色/浅色主题自动跟随系统。让用户在预览页中选定一款，确认后进入应用流程。
@@ -110,6 +113,9 @@ render_card(type: "html", file_path: "skills/spherse-theme-pkg-01/previews/index
 | `霓虹深渊` / `Synthwave` | 07 |
 | `千禧年复古操作系统` / `Win98` | 08 |
 | `Mac OS 9` / `铂金` / `Platinum` | 09 |
+| `Memphis` / `孟菲斯` | 10 |
+| `Game Boy` / `DMG` / `点阵绿屏` | 11 |
+| `雨夜驾驶` / `Blade Runner` | 12 |
 
 若都不匹配，说明是用户自定义或其它来源的主题，按通用备份流程处理即可（备份后正常覆盖）。
 

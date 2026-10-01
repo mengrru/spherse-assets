@@ -336,6 +336,60 @@
 }
 
 /* ============================================================
+   聊天浮窗（Floating Chat）：与内容 / 浏览器浮窗一致的「Mac 窗口」
+   ============================================================ */
+[data-chat-float-root] {
+  background: #dddddd;
+  border: 1px solid #7a7a7a;
+  border-radius: 8px;
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 #ffffff;
+  overflow: hidden;
+}
+
+[data-chat-float-titlebar] {
+  background: repeating-linear-gradient(180deg, #ffffff 0 1px, #d2d2d2 1px 2px);
+  color: #000000;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-bottom: 1px solid #9a9a9a;
+}
+
+[data-chat-float-close] {
+  background: linear-gradient(180deg, #f6f6f6, #d8d8d8);
+  color: #000000;
+  border: 1px solid #8a8a8a;
+  border-radius: 4px;
+}
+[data-chat-float-close]:hover {
+  background: linear-gradient(180deg, #ffffff, #e2e2e2);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-float-root] {
+    background: #3a3a3e;
+    border-color: #55555c;
+    box-shadow:
+      0 12px 34px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  [data-chat-float-titlebar] {
+    background: repeating-linear-gradient(180deg, #4a4a52 0 1px, #3a3a40 1px 2px);
+    color: #ececee;
+    border-bottom-color: #55555c;
+  }
+  [data-chat-float-close] {
+    background: linear-gradient(180deg, #5a5a62, #46464d);
+    color: #ececee;
+    border-color: #74747c;
+  }
+  [data-chat-float-close]:hover {
+    background: linear-gradient(180deg, #6a6a74, #55555c);
+  }
+}
+
+/* ============================================================
    Activity Bar 项目头像：柔和圆角 + 细斜面
    ============================================================ */
 [data-project-avatar] {

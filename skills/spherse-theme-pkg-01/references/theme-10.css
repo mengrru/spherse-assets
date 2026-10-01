@@ -1,0 +1,621 @@
+/* ============================================================
+   Spherse 自定义主题 · Memphis 孟菲斯（80s 后现代）
+   撞色色块 + 粗黑描边 + 波点网格 + 硬投影 + 几何色带
+   浅色 = 奶油底海报：奶油白 + 黑描边 + 红/黄/青撞色
+   深色 = 黑板孟菲斯：黑底 + 奶油白描边 + 同样鲜艳的撞色
+   标志元素：thick black outline、hard offset shadow、clashing colors、polka dots
+   ============================================================ */
+
+/* ---------- 浅色模式：奶油底海报 ---------- */
+:root {
+  /* 页面与容器（奶油白，透出一点底层波点与色块） */
+  --sp-background: rgba(253, 246, 227, 0.9);
+  --sp-foreground: #141414;
+  --sp-card: #fffdf5;
+  --sp-card-foreground: #141414;
+
+  /* 弹出层 */
+  --sp-popover: #ffffff;
+  --sp-popover-foreground: #141414;
+
+  /* 交互元素（孟菲斯撞色：红 / 黄 / 青） */
+  --sp-primary: #ff4b5c;
+  --sp-primary-foreground: #ffffff;
+  --sp-secondary: #ffe27a;
+  --sp-secondary-foreground: #141414;
+  --sp-accent: #4ecdc4;
+  --sp-accent-foreground: #10312e;
+
+  /* 文字层级 */
+  --sp-muted: #f0e6c8;
+  --sp-muted-foreground: #6b6250;
+
+  /* 边框与输入（粗黑描边） */
+  --sp-border: #141414;
+  --sp-input: #141414;
+  --sp-ring: #ff4b5c;
+
+  /* 语义色 */
+  --sp-destructive: #ff3b3b;
+  --sp-success: #12b886;
+  --sp-success-foreground: #ffffff;
+  --sp-warning: #f5a623;
+  --sp-warning-foreground: #1a1000;
+  --sp-diff-added: #12b886;
+
+  /* 圆角：几何但带一点俏皮 */
+  --sp-radius: 0.4rem;
+
+  /* 滚动条 */
+  --sp-scrollbar-size: 14px;
+  --sp-scrollbar-thumb: #141414;
+  --sp-scrollbar-thumb-hover: #ff4b5c;
+  --sp-scrollbar-track: #ffe27a;
+
+  /* 侧边栏 */
+  --sp-sidebar: rgba(253, 246, 227, 0.9);
+  --sp-sidebar-foreground: #141414;
+  --sp-sidebar-primary: #ff4b5c;
+  --sp-sidebar-primary-foreground: #ffffff;
+  --sp-sidebar-accent: #ffe27a;
+  --sp-sidebar-accent-foreground: #141414;
+  --sp-sidebar-border: #141414;
+  --sp-sidebar-ring: #ff4b5c;
+}
+
+/* ---------- 深色模式：黑板孟菲斯 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sp-background: rgba(26, 26, 26, 0.92);
+    --sp-foreground: #fdf6e3;
+    --sp-card: #222222;
+    --sp-card-foreground: #fdf6e3;
+
+    --sp-popover: #262626;
+    --sp-popover-foreground: #fdf6e3;
+
+    --sp-primary: #ff4b5c;
+    --sp-primary-foreground: #ffffff;
+    --sp-secondary: #ffe27a;
+    --sp-secondary-foreground: #141414;
+    --sp-accent: #4ecdc4;
+    --sp-accent-foreground: #10312e;
+
+    --sp-muted: #2e2e2e;
+    --sp-muted-foreground: #b8b09a;
+
+    --sp-border: #fdf6e3;
+    --sp-input: #fdf6e3;
+    --sp-ring: #ff4b5c;
+
+    --sp-destructive: #ff3b3b;
+    --sp-success: #12b886;
+    --sp-success-foreground: #ffffff;
+    --sp-warning: #f5a623;
+    --sp-warning-foreground: #1a1000;
+    --sp-diff-added: #12b886;
+
+    --sp-scrollbar-thumb: #fdf6e3;
+    --sp-scrollbar-thumb-hover: #ff4b5c;
+    --sp-scrollbar-track: #2a2a2a;
+
+    --sp-sidebar: rgba(26, 26, 26, 0.92);
+    --sp-sidebar-foreground: #fdf6e3;
+    --sp-sidebar-primary: #ff4b5c;
+    --sp-sidebar-primary-foreground: #ffffff;
+    --sp-sidebar-accent: #ffe27a;
+    --sp-sidebar-accent-foreground: #141414;
+    --sp-sidebar-border: #fdf6e3;
+    --sp-sidebar-ring: #ff4b5c;
+  }
+}
+
+/* ============================================================
+   字体：几何无衬线（Futura / Century Gothic 气质）
+   ============================================================ */
+[data-app-root] {
+  font-family: "Futura", "Century Gothic", "Avenir Next", "Poppins",
+    "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+
+/* ============================================================
+   整窗背景：奶油底 + 波点网格 + 大色圆（浅）/ 黑板（深）
+   ============================================================ */
+[data-app-root] {
+  background-color: #fdf6e3;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(20, 20, 20, 0.13) 1.4px, transparent 1.6px),
+    radial-gradient(circle at 88% 12%, #ffe27a 0 62px, transparent 64px),
+    radial-gradient(circle at 6% 84%, #4ecdc4 0 74px, transparent 76px),
+    radial-gradient(circle at 94% 90%, #ff5fa2 0 46px, transparent 48px);
+  background-size: 28px 28px, 100% 100%, 100% 100%, 100% 100%;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root] {
+    background-color: #1a1a1a;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(253, 246, 227, 0.1) 1.4px, transparent 1.6px),
+      radial-gradient(circle at 88% 12%, rgba(255, 226, 122, 0.9) 0 62px, transparent 64px),
+      radial-gradient(circle at 6% 84%, rgba(78, 205, 196, 0.85) 0 74px, transparent 76px),
+      radial-gradient(circle at 94% 90%, rgba(255, 95, 162, 0.85) 0 46px, transparent 48px);
+  }
+}
+
+/* 底部四色色带（孟菲斯色块） */
+[data-app-root]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  background: linear-gradient(90deg, #ff4b5c 0 25%, #ffe27a 25% 50%,
+    #4ecdc4 50% 75%, #141414 75% 100%);
+  z-index: 6;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root]::after {
+    background: linear-gradient(90deg, #ff4b5c 0 25%, #ffe27a 25% 50%,
+      #4ecdc4 50% 75%, #fdf6e3 75% 100%);
+  }
+}
+
+/* ============================================================
+   硬边色块滚动条
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+::-webkit-scrollbar-track {
+  background: #ffe27a;
+}
+::-webkit-scrollbar-thumb {
+  background: #141414;
+  border: 2px solid #ffe27a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff4b5c;
+}
+::-webkit-scrollbar-corner {
+  background: #ffe27a;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #2a2a2a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #fdf6e3;
+    border-color: #2a2a2a;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #ff4b5c;
+  }
+  ::-webkit-scrollbar-corner {
+    background: #2a2a2a;
+  }
+}
+
+/* ============================================================
+   项目面板 / 内容区
+   ============================================================ */
+[data-project-panel] {
+  background: var(--sp-sidebar);
+  border-inline-end: 3px solid #141414;
+}
+
+[data-content-browser] {
+  background: var(--sp-background);
+}
+
+/* ============================================================
+   标签栏：粗边彩色标签
+   ============================================================ */
+[data-tab-bar] {
+  background: #fdf6e3;
+  border-bottom: 3px solid #141414;
+  gap: 6px;
+  padding: 5px 8px 0;
+}
+
+[data-tab] {
+  background: #fffdf5;
+  color: #141414;
+  border: 2px solid #141414;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+}
+
+[data-tab][data-active="true"] {
+  background: #4ecdc4;
+  color: #141414;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-tab-bar] {
+    background: #1a1a1a;
+    border-bottom-color: #fdf6e3;
+  }
+  [data-tab] {
+    background: #222222;
+    color: #fdf6e3;
+    border-color: #fdf6e3;
+  }
+  [data-tab][data-active="true"] {
+    background: #4ecdc4;
+    color: #141414;
+  }
+}
+
+/* ============================================================
+   右键菜单 / 下拉 / 选择器 / 弹出层：粗黑边 + 硬投影
+   ============================================================ */
+[role="menu"],
+[data-radix-context-menu-content],
+[data-radix-dropdown-menu-content],
+[data-radix-select-content],
+[data-radix-popover-content] {
+  background: #ffffff !important;
+  border: 3px solid #141414 !important;
+  border-radius: 10px !important;
+  box-shadow: 5px 5px 0 rgba(20, 20, 20, 0.9) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [role="menu"],
+  [data-radix-context-menu-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content],
+  [data-radix-popover-content] {
+    background: #262626 !important;
+    border-color: #fdf6e3 !important;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.9) !important;
+  }
+}
+
+/* ============================================================
+   浮窗内容浏览器 / 浮窗简易浏览器：孟菲斯海报窗
+   ============================================================ */
+[data-content-float-root],
+[data-browser-float-root] {
+  background: #fffdf5;
+  border: 3px solid #141414;
+  border-radius: 12px;
+  box-shadow: 8px 8px 0 rgba(20, 20, 20, 0.85);
+  overflow: hidden;
+}
+
+[data-content-float-titlebar],
+[data-browser-float-titlebar] {
+  background: #ffe27a;
+  color: #141414;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-bottom: 3px solid #141414;
+}
+
+[data-content-float-close],
+[data-browser-float-close] {
+  background: #ff4b5c;
+  color: #ffffff;
+  border: 2px solid #141414;
+  border-radius: 6px;
+}
+[data-content-float-close]:hover,
+[data-browser-float-close]:hover {
+  background: #141414;
+  color: #ffe27a;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-float-root],
+  [data-browser-float-root] {
+    background: #222222;
+    border-color: #fdf6e3;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.85);
+  }
+  [data-content-float-titlebar],
+  [data-browser-float-titlebar] {
+    background: #4ecdc4;
+    color: #141414;
+    border-bottom-color: #fdf6e3;
+  }
+  [data-content-float-close],
+  [data-browser-float-close] {
+    border-color: #fdf6e3;
+  }
+}
+
+/* ============================================================
+   聊天浮窗（Floating Chat）：与内容 / 浏览器浮窗一致的孟菲斯窗口框
+   ============================================================ */
+[data-chat-float-root] {
+  background: #fffdf5;
+  border: 3px solid #141414;
+  border-radius: 12px;
+  box-shadow: 8px 8px 0 rgba(20, 20, 20, 0.85);
+  overflow: hidden;
+}
+
+[data-chat-float-titlebar] {
+  background: #ffe27a;
+  color: #141414;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-bottom: 3px solid #141414;
+}
+
+[data-chat-float-close] {
+  background: #ff4b5c;
+  color: #ffffff;
+  border: 2px solid #141414;
+  border-radius: 6px;
+}
+[data-chat-float-close]:hover {
+  background: #141414;
+  color: #ffe27a;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-float-root] {
+    background: #222222;
+    border-color: #fdf6e3;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.85);
+  }
+  [data-chat-float-titlebar] {
+    background: #4ecdc4;
+    color: #141414;
+    border-bottom-color: #fdf6e3;
+  }
+  [data-chat-float-close] {
+    border-color: #fdf6e3;
+  }
+}
+
+/* ============================================================
+   Activity Bar 项目头像：彩色方块 + 粗边
+   ============================================================ */
+[data-project-avatar] {
+  border-radius: 10px;
+  border: 2px solid #141414;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-project-avatar] {
+    border-color: #fdf6e3;
+  }
+}
+
+/* ============================================================
+   全局 Toast：孟菲斯提示贴
+   ============================================================ */
+[data-toast-root] [data-sonner-toast] {
+  background: #fffdf5 !important;
+  color: #141414 !important;
+  border: 3px solid #141414;
+  border-radius: 10px !important;
+  box-shadow: 5px 5px 0 rgba(20, 20, 20, 0.85) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-toast-root] [data-sonner-toast] {
+    background: #262626 !important;
+    color: #fdf6e3 !important;
+    border-color: #fdf6e3;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.85) !important;
+  }
+}
+
+/* ============================================================
+   输入控件：显式给一个"可编辑"的底色
+   --sp-input 只控边框色，背景由应用默认决定 → 偏灰像 disabled
+   覆盖：原生 input/textarea/select + Radix/shadcn 按钮式控件（Select/Combobox）
+   ============================================================ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+textarea,
+select,
+[role="combobox"],
+[role="textbox"],
+[role="searchbox"],
+[data-radix-select-trigger],
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+button[aria-haspopup="listbox"] {
+  background-color: #ffffff !important;
+  color: #141414;
+}
+
+/* 聊天输入框是"输入内容"容器，保持透明、沿用主题给它的专属样式 */
+[data-chat-composer] textarea {
+  background-color: transparent !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select,
+  [role="combobox"],
+  [role="textbox"],
+  [role="searchbox"],
+  [data-radix-select-trigger],
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"],
+  button[aria-haspopup="listbox"] {
+    background-color: #2f2f2f !important;
+    color: #fdf6e3;
+  }
+  [data-chat-composer] textarea {
+    background-color: transparent !important;
+  }
+}
+
+/* ============================================================
+   聊天窗口：撞色标题条 + 硬边气泡 + 黑底黄字代码
+   ============================================================ */
+[data-chat-root] [data-chat-header] {
+  background: #ff4b5c;
+  color: #ffffff;
+  border-bottom: 3px solid #141414;
+}
+[data-chat-root] [data-chat-header] .header-name { color: #ffffff; font-weight: 700; }
+[data-chat-root] [data-chat-header] .header-status,
+[data-chat-root] [data-chat-header] .header-extra { color: rgba(255, 255, 255, 0.85); }
+[data-chat-root] [data-chat-header] .header-avatar {
+  background: #ffe27a;
+  color: #141414;
+  border-radius: 50%;
+  border: 2px solid #141414;
+}
+
+/* 消息气泡：硬边 + 硬投影（助手 = 白卡，用户 = 黄卡） */
+[data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+  background: #fffdf5;
+  color: #141414;
+  border: 2px solid #141414;
+  border-radius: 14px 14px 14px 4px;
+  box-shadow: 3px 3px 0 #141414;
+}
+[data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+  background: #ffe27a;
+  color: #141414;
+  border: 2px solid #141414;
+  border-radius: 14px 14px 4px 14px;
+  box-shadow: 3px 3px 0 #141414;
+  font-weight: 500;
+}
+
+/* 输入区：硬边输入框 + 红色圆形发送键 */
+[data-chat-root] [data-chat-composer] {
+  background: #fdf6e3;
+  border-top: 3px solid #141414;
+}
+[data-chat-root] [data-chat-composer-input] {
+  background: #ffffff;
+  border: 2px solid #141414;
+  border-radius: 10px;
+}
+[data-chat-root] [data-chat-composer] textarea { color: #141414; }
+[data-chat-root] [data-chat-composer] textarea::placeholder { color: #9a8f76; }
+[data-chat-root] .send-btn {
+  border-radius: 50%;
+  background: #ff4b5c;
+  color: #ffffff;
+  border: 2px solid #141414;
+}
+
+/* 代码块：黑底黄字 + 青色描边；行内代码 = 浅青底 */
+[data-chat-root] [data-md-code] {
+  background: #141414;
+  color: #ffe27a;
+  border: 2px solid #4ecdc4;
+  border-radius: 8px;
+}
+[data-chat-root] [data-md-code-inline] {
+  background: #c9f5f0;
+  color: #0d3b38;
+  border: 1.5px solid #141414;
+  border-radius: 4px;
+}
+[data-chat-root] [data-md-quote] {
+  border-left: 4px solid #ff4b5c;
+  color: #4a4433;
+}
+
+/* 链接：红色粗下划线 */
+[data-chat-root] a,
+[data-content-doc] a {
+  color: #ff4b5c;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+[data-chat-root] a:hover,
+[data-content-doc] a:hover {
+  color: #141414;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-root] [data-chat-header] {
+    border-bottom-color: #fdf6e3;
+  }
+  [data-chat-root] [data-chat-header] .header-avatar {
+    border-color: #141414;
+  }
+  [data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    background: #222222;
+    color: #fdf6e3;
+    border-color: #fdf6e3;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  }
+  [data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+    border-color: #fdf6e3;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  }
+  [data-chat-root] [data-chat-composer] {
+    background: #1a1a1a;
+    border-top-color: #fdf6e3;
+  }
+  [data-chat-root] [data-chat-composer-input] {
+    background: #2f2f2f;
+    border-color: #fdf6e3;
+  }
+  [data-chat-root] [data-chat-composer] textarea { color: #fdf6e3; }
+  [data-chat-root] [data-chat-composer] textarea::placeholder { color: #8a8272; }
+  [data-chat-root] .send-btn {
+    border-color: #fdf6e3;
+  }
+  [data-chat-root] [data-md-code] {
+    background: #0f0f0f;
+    color: #ffe27a;
+    border-color: #4ecdc4;
+  }
+  [data-chat-root] [data-md-code-inline] {
+    background: #4ecdc4;
+    color: #10312e;
+    border-color: #fdf6e3;
+  }
+  [data-chat-root] [data-md-quote] {
+    border-left-color: #ff4b5c;
+    color: #b8b09a;
+  }
+  [data-chat-root] a,
+  [data-content-doc] a {
+    color: #ff7a88;
+  }
+}
+
+/* ============================================================
+   文档视图 Markdown：与聊天窗口一致
+   ============================================================ */
+[data-content-doc] [data-md-code] {
+  background: #141414;
+  color: #ffe27a;
+  border: 2px solid #4ecdc4;
+  border-radius: 8px;
+}
+[data-content-doc] [data-md-code-inline] {
+  background: #c9f5f0;
+  color: #0d3b38;
+  border: 1.5px solid #141414;
+  border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-doc] [data-md-code] {
+    background: #0f0f0f;
+    color: #ffe27a;
+    border-color: #4ecdc4;
+  }
+  [data-content-doc] [data-md-code-inline] {
+    background: #4ecdc4;
+    color: #10312e;
+    border-color: #fdf6e3;
+  }
+}

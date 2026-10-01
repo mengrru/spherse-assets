@@ -1,0 +1,445 @@
+/* ============================================================
+   Spherse 自定义主题 · 雨夜驾驶（Blade Runner）
+   霓虹雨夜 + 琥珀钠灯 + 青蓝阴影 —— 赛博黑色电影
+   默认 = 霓虹雨夜：墨蓝黑底 + 琥珀暖光 + 下落雨丝
+   深色 = 更深的夜：近黑底 + 更浓的霓虹辉光
+   标志元素：斜落雨丝(动画)、霓虹辉光(box-shadow)、琥珀×青蓝×洋红撞色、街面暖雾
+   ============================================================ */
+
+/* 雨丝下落动画（背景按纵向瓦片高度 200px 平移，首尾无缝衔接） */
+@keyframes sp-rain-fall {
+  from { background-position: 0 0; }
+  to { background-position: 0 200px; }
+}
+
+/* ---------- 默认（霓虹雨夜） ---------- */
+:root {
+  /* 页面与容器（墨蓝黑，略透出雨夜底色） */
+  --sp-background: rgba(10, 14, 20, 0.86);
+  --sp-foreground: #d7e0ea;
+  --sp-card: rgba(18, 22, 30, 0.9);
+  --sp-card-foreground: #d7e0ea;
+
+  /* 弹出层 */
+  --sp-popover: rgba(16, 20, 28, 0.96);
+  --sp-popover-foreground: #d7e0ea;
+
+  /* 交互元素（琥珀 = 钠灯主色；青蓝 = 霓虹高亮） */
+  --sp-primary: #ff9c3f;
+  --sp-primary-foreground: #1a0d00;
+  --sp-secondary: #1b2430;
+  --sp-secondary-foreground: #d7e0ea;
+  --sp-accent: #1d3b45;
+  --sp-accent-foreground: #cfeef2;
+
+  /* 文字层级 */
+  --sp-muted: #141a22;
+  --sp-muted-foreground: #7f8b99;
+
+  /* 边框与输入（青蓝霓虹描边） */
+  --sp-border: rgba(46, 230, 230, 0.22);
+  --sp-input: rgba(46, 230, 230, 0.28);
+  --sp-ring: #ff9c3f;
+
+  /* 语义色 */
+  --sp-destructive: #ff2d6f;
+  --sp-success: #2fbf8f;
+  --sp-success-foreground: #03231a;
+  --sp-warning: #ffb347;
+  --sp-warning-foreground: #241500;
+  --sp-diff-added: #2fbf8f;
+
+  /* 圆角 */
+  --sp-radius: 0.5rem;
+
+  /* 滚动条 */
+  --sp-scrollbar-size: 12px;
+  --sp-scrollbar-thumb: rgba(255, 156, 63, 0.4);
+  --sp-scrollbar-thumb-hover: rgba(255, 156, 63, 0.65);
+  --sp-scrollbar-track: transparent;
+
+  /* 侧边栏 */
+  --sp-sidebar: rgba(8, 11, 16, 0.88);
+  --sp-sidebar-foreground: #d7e0ea;
+  --sp-sidebar-primary: #ff9c3f;
+  --sp-sidebar-primary-foreground: #1a0d00;
+  --sp-sidebar-accent: #1d3b45;
+  --sp-sidebar-accent-foreground: #cfeef2;
+  --sp-sidebar-border: rgba(46, 230, 230, 0.18);
+  --sp-sidebar-ring: #ff9c3f;
+}
+
+/* ---------- 深色模式：更深的夜 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sp-background: rgba(6, 9, 13, 0.9);
+    --sp-foreground: #dde6f0;
+    --sp-card: rgba(12, 16, 22, 0.94);
+    --sp-card-foreground: #dde6f0;
+
+    --sp-popover: rgba(12, 16, 22, 0.97);
+    --sp-popover-foreground: #dde6f0;
+
+    --sp-primary: #ffab5c;
+    --sp-primary-foreground: #1a0d00;
+    --sp-secondary: #161d26;
+    --sp-secondary-foreground: #dde6f0;
+    --sp-accent: #16323b;
+    --sp-accent-foreground: #d5f3f7;
+
+    --sp-muted: #10151c;
+    --sp-muted-foreground: #7a8697;
+
+    --sp-border: rgba(46, 230, 230, 0.24);
+    --sp-input: rgba(46, 230, 230, 0.3);
+    --sp-ring: #ffab5c;
+
+    --sp-destructive: #ff3d7a;
+    --sp-success: #35d19c;
+    --sp-success-foreground: #03231a;
+    --sp-warning: #ffc060;
+    --sp-warning-foreground: #241500;
+    --sp-diff-added: #35d19c;
+
+    --sp-scrollbar-thumb: rgba(255, 171, 92, 0.42);
+    --sp-scrollbar-thumb-hover: rgba(255, 171, 92, 0.68);
+
+    --sp-sidebar: rgba(5, 8, 11, 0.92);
+    --sp-sidebar-foreground: #dde6f0;
+    --sp-sidebar-primary: #ffab5c;
+    --sp-sidebar-primary-foreground: #1a0d00;
+    --sp-sidebar-accent: #16323b;
+    --sp-sidebar-accent-foreground: #d5f3f7;
+    --sp-sidebar-border: rgba(46, 230, 230, 0.2);
+    --sp-sidebar-ring: #ffab5c;
+  }
+}
+
+/* ============================================================
+   字体：干净系统无衬线
+   ============================================================ */
+[data-app-root] {
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont,
+    "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+}
+
+/* ============================================================
+   整窗背景：雨夜城市（琥珀 / 洋红 / 青蓝辉光）+ 街面暖雾
+   ============================================================ */
+[data-app-root] {
+  background-color: #080c12;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 156, 63, 0.16), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 86% 18%, rgba(255, 45, 149, 0.13), transparent 62%),
+    radial-gradient(ellipse 55% 42% at 10% 28%, rgba(46, 230, 230, 0.11), transparent 62%),
+    radial-gradient(ellipse 100% 40% at 50% 116%, rgba(255, 120, 60, 0.12), transparent 66%),
+    linear-gradient(180deg, #0a1018 0%, #070b11 55%, #04070b 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root] {
+    background-color: #05080c;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 156, 63, 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 86% 18%, rgba(255, 45, 149, 0.15), transparent 62%),
+      radial-gradient(ellipse 55% 42% at 10% 28%, rgba(46, 230, 230, 0.12), transparent 62%),
+      radial-gradient(ellipse 100% 40% at 50% 116%, rgba(255, 120, 60, 0.13), transparent 66%),
+      linear-gradient(180deg, #070c12 0%, #05080c 55%, #020406 100%);
+  }
+}
+
+/* 雨丝：纵向椭圆「雨滴」按 130×200 瓦片平铺，背景纵向平移滚动（不产生溢出滚动条） */
+[data-app-root]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 8px at 22% 15%, rgba(190, 220, 255, 0.34), transparent 70%),
+    radial-gradient(1px 6px at 63% 44%, rgba(190, 220, 255, 0.26), transparent 70%),
+    radial-gradient(1.3px 11px at 84% 74%, rgba(190, 220, 255, 0.3), transparent 70%),
+    radial-gradient(1px 7px at 41% 88%, rgba(190, 220, 255, 0.22), transparent 70%);
+  background-size: 130px 200px;
+  background-repeat: repeat;
+  animation: sp-rain-fall 0.85s linear infinite;
+  pointer-events: none;
+}
+
+/* 街面暖雾（底部琥珀光雾） */
+[data-app-root]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 156, 63, 0.05) 55%,
+    rgba(255, 120, 60, 0.11) 100%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   霓虹滚动条
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 156, 63, 0.4);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 156, 63, 0.68);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ============================================================
+   输入控件：明确的可编辑底色（避免看起来像 disabled）
+   --sp-input 只控边框色，背景由应用默认决定 → 偏灰像 disabled
+   覆盖：原生控件 + Radix/shadcn 按钮式控件（Select/Combobox）
+   ============================================================ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+textarea,
+select,
+[role="combobox"],
+[role="textbox"],
+[role="searchbox"],
+[data-radix-select-trigger],
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+button[aria-haspopup="listbox"] {
+  background-color: #10161f !important;
+  color: #d7e0ea;
+}
+
+/* 聊天输入框是"输入内容"容器，保持透明、沿用主题给它的专属样式 */
+[data-chat-composer] textarea {
+  background-color: transparent !important;
+}
+
+/* ============================================================
+   项目面板 / 内容区
+   ============================================================ */
+[data-project-panel] {
+  background: var(--sp-sidebar);
+  border-inline-end: 1px solid rgba(46, 230, 230, 0.18);
+  box-shadow: inset -1px 0 0 rgba(255, 156, 63, 0.08);
+}
+
+[data-content-browser] {
+  background: var(--sp-background);
+}
+
+/* ============================================================
+   标签栏：暗底 + 霓虹下划线
+   ============================================================ */
+[data-tab-bar] {
+  background: rgba(8, 11, 16, 0.7);
+  border-bottom: 1px solid rgba(46, 230, 230, 0.2);
+  gap: 3px;
+  padding: 3px 4px 0;
+}
+
+[data-tab] {
+  background: transparent;
+  color: #98a4b3;
+  border: none;
+  border-radius: 6px 6px 0 0;
+}
+
+[data-tab][data-active="true"] {
+  background: rgba(255, 156, 63, 0.1);
+  color: #ffb463;
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 #ff9c3f, 0 2px 16px rgba(255, 156, 63, 0.25);
+}
+
+/* ============================================================
+   右键菜单 / 下拉 / 选择器 / 弹出层：霓虹玻璃菜单
+   ============================================================ */
+[role="menu"],
+[data-radix-context-menu-content],
+[data-radix-dropdown-menu-content],
+[data-radix-select-content],
+[data-radix-popover-content] {
+  background: rgba(12, 16, 22, 0.95) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(46, 230, 230, 0.35) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(46, 230, 230, 0.12) !important;
+}
+
+/* ============================================================
+   浮窗：内容 / 浏览器 / 聊天 —— 霓虹玻璃窗
+   ============================================================ */
+[data-content-float-root],
+[data-browser-float-root],
+[data-chat-float-root] {
+  background: rgba(10, 14, 20, 0.94);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(46, 230, 230, 0.35);
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65), 0 0 40px rgba(46, 230, 230, 0.1);
+  overflow: hidden;
+}
+
+[data-content-float-titlebar],
+[data-browser-float-titlebar],
+[data-chat-float-titlebar] {
+  background: linear-gradient(90deg, rgba(255, 156, 63, 0.16), rgba(46, 230, 230, 0.12));
+  color: #ffd9a0;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(46, 230, 230, 0.3);
+  text-shadow: 0 0 12px rgba(255, 156, 63, 0.5);
+}
+
+[data-content-float-close],
+[data-browser-float-close],
+[data-chat-float-close] {
+  background: rgba(255, 255, 255, 0.06);
+  color: #d7e0ea;
+  border: 1px solid rgba(46, 230, 230, 0.3);
+  border-radius: 6px;
+}
+[data-content-float-close]:hover,
+[data-browser-float-close]:hover,
+[data-chat-float-close]:hover {
+  background: #ff2d6f;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(255, 45, 111, 0.6);
+}
+
+/* ============================================================
+   Activity Bar 项目头像：霓虹光点
+   ============================================================ */
+[data-project-avatar] {
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(255, 156, 63, 0.5),
+    0 0 16px rgba(255, 156, 63, 0.35);
+}
+
+/* ============================================================
+   全局 Toast：霓虹提示窗
+   ============================================================ */
+[data-toast-root] [data-sonner-toast] {
+  background: rgba(12, 16, 22, 0.96) !important;
+  color: #d7e0ea !important;
+  border: 1px solid rgba(46, 230, 230, 0.35);
+  border-radius: 10px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(46, 230, 230, 0.12) !important;
+}
+
+/* ============================================================
+   聊天窗口：霓虹标题 + 玻璃气泡 + 琥珀发光
+   ============================================================ */
+[data-chat-root] [data-chat-header] {
+  background: rgba(8, 12, 18, 0.92);
+  color: #e8eef5;
+  border-bottom: 1px solid rgba(46, 230, 230, 0.35);
+  box-shadow: 0 1px 24px rgba(46, 230, 230, 0.14), inset 0 -1px 0 rgba(255, 156, 63, 0.22);
+}
+[data-chat-root] [data-chat-header] .header-name {
+  color: #ffb463;
+  text-shadow: 0 0 14px rgba(255, 156, 63, 0.55);
+}
+[data-chat-root] [data-chat-header] .header-status,
+[data-chat-root] [data-chat-header] .header-extra { color: #7f8b99; }
+[data-chat-root] [data-chat-header] .header-avatar {
+  background: radial-gradient(circle at 38% 32%, #ffcf8a, #ff9c3f 45%, #b35a12);
+  color: #1a0d00;
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(255, 156, 63, 0.5), inset 0 -2px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* 消息气泡（助手 = 青边玻璃，用户 = 琥珀发光） */
+[data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+  background: rgba(16, 21, 29, 0.9);
+  color: #d7e0ea;
+  border: 1px solid rgba(46, 230, 230, 0.18);
+  border-radius: 14px 14px 14px 3px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+[data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+  background: linear-gradient(135deg, #ff9c3f, #ff6a2b);
+  color: #1a0d00;
+  border: 1px solid rgba(255, 200, 120, 0.5);
+  border-radius: 14px 14px 3px 14px;
+  box-shadow: 0 2px 24px rgba(255, 130, 40, 0.35);
+}
+
+/* 输入区：暗玻璃 + 琥珀发光发送键 */
+[data-chat-root] [data-chat-composer] {
+  background: rgba(8, 12, 18, 0.9);
+  border-top: 1px solid rgba(46, 230, 230, 0.2);
+}
+[data-chat-root] [data-chat-composer-input] {
+  background: rgba(16, 22, 31, 0.9);
+  border: 1px solid rgba(46, 230, 230, 0.3);
+  border-radius: 12px;
+  box-shadow: inset 0 0 18px rgba(46, 230, 230, 0.05);
+}
+[data-chat-root] [data-chat-composer] textarea { color: #d7e0ea; }
+[data-chat-root] [data-chat-composer] textarea::placeholder { color: #66707e; }
+[data-chat-root] .send-btn {
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9c3f, #ff6a2b);
+  color: #1a0d00;
+  border: none;
+  box-shadow: 0 0 18px rgba(255, 140, 50, 0.55);
+}
+
+/* 代码块：黑底暖字 + 青边；行内代码青蓝 */
+[data-chat-root] [data-md-code] {
+  background: #05080c;
+  color: #ffd9a0;
+  border: 1px solid rgba(46, 230, 230, 0.22);
+  border-radius: 8px;
+}
+[data-chat-root] [data-md-code-inline] {
+  background: rgba(46, 230, 230, 0.1);
+  color: #6ff0f0;
+  border: 1px solid rgba(46, 230, 230, 0.25);
+  border-radius: 5px;
+}
+[data-chat-root] [data-md-quote] {
+  border-left: 3px solid rgba(255, 156, 63, 0.6);
+  color: #9aa5b3;
+}
+
+/* 链接：青蓝霓虹 */
+[data-chat-root] a,
+[data-content-doc] a {
+  color: #4fe3e3;
+  text-decoration: none;
+  text-shadow: 0 0 10px rgba(46, 230, 230, 0.35);
+}
+[data-chat-root] a:hover,
+[data-content-doc] a:hover {
+  color: #ffb463;
+}
+
+/* ============================================================
+   文档视图 Markdown：与聊天窗口一致
+   ============================================================ */
+[data-content-doc] [data-md-code] {
+  background: #05080c;
+  color: #ffd9a0;
+  border: 1px solid rgba(46, 230, 230, 0.22);
+  border-radius: 8px;
+}
+[data-content-doc] [data-md-code-inline] {
+  background: rgba(46, 230, 230, 0.1);
+  color: #6ff0f0;
+  border: 1px solid rgba(46, 230, 230, 0.25);
+  border-radius: 5px;
+}
