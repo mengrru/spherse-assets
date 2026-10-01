@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>侧边面板</title>
+<style>
+  :root{
+    /* 面板底色刻意对齐项目主题里 --sp-sidebar 的取值，让它融进侧边栏而不是浮在里面 */
+    --bg:#eeede8;
+    --hover:rgba(29,27,23,.045);
+    --active:rgba(63,49,112,.11);
+    --line:rgba(29,27,23,.10);
+    --ink:#1d1b17;
+    --ink-2:#57534a;
+    --ink-3:#8d867a;
+    --accent:#3f3170;
+    --badge:rgba(29,27,23,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1b1a22;
+      --hover:rgba(255,255,255,.055);
+      --active:rgba(140,124,224,.18);
+      --line:rgba(255,255,255,.10);
+      --ink:#ece9e2;
+      --ink-2:#c4bfb6;
+      --ink-3:#a29b8f;
+      --accent:#8c7ce0;
+      --badge:rgba(255,255,255,.08);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+
+  html,body{ height:100%; }
+
+  body{
+    margin:0;
+    padding:0;
+    overflow-y:auto;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:12.5px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:color-mix(in srgb,var(--accent) 22%,transparent); }
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:rgba(128,128,128,.35); border-radius:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+
+  /* 整条侧边栏：满高、满宽、无外框、内容靠左 */
+  .panel{
+    display:flex;
+    flex-direction:column;
+    min-height:100%;
+    width:100%;
+    padding:8px 0 6px;
+  }
+  .inner{ width:100%; max-width:420px; }
+
+  /* 头部 */
+  .p-head{
+    display:flex; align-items:center; gap:6px;
+    padding:2px 10px 8px;
+  }
+  .p-title{
+    flex:1 1 auto; min-width:0;
+    font-size:11px; font-weight:700;
+    letter-spacing:.14em;
+    color:var(--ink-3);
+    text-transform:uppercase;
+  }
+  .ic{
+    width:22px; height:22px; flex:0 0 auto;
+    display:grid; place-items:center;
+    font:inherit; font-size:11.5px; line-height:1;
+    color:var(--ink-3); background:transparent;
+    border:0; border-radius:5px; cursor:pointer;
+  }
+  .ic:hover{ background:var(--hover); color:var(--ink); }
+
+  /* 分组标签 + 导航列表 */
+  .sec{
+    padding:10px 10px 5px;
+    font-size:10px; font-weight:700;
+    letter-spacing:.14em;
+    color:var(--ink-3);
+  }
+  .sec:first-child{ padding-top:2px; }
+  .group{ display:flex; flex-direction:column; gap:1px; padding:0 6px; }
+
+  .item{
+    position:relative;
+    display:flex; align-items:center;
+    border-radius:6px;
+    transition:background-color .12s ease;
+  }
+  .item:hover{ background:var(--hover); }
+  .item[data-active="true"]{
+    background:var(--active);
+    box-shadow:inset 2px 0 0 var(--accent);
+  }
+
+  .open{
+    flex:1 1 auto; min-width:0;
+    display:flex; align-items:center; gap:8px;
+    height:32px;
+    padding:0 6px 0 8px;
+    text-align:left;
+    font:inherit; color:inherit;
+    background:transparent; border:0; border-radius:6px;
+    cursor:pointer;
+  }
+  .open:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .emoji{
+    flex:0 0 auto;
+    width:16px; text-align:center;
+    font-size:13px; line-height:1;
+  }
+  .lbl{
+    flex:1 1 auto; min-width:0;
+    font-size:12.5px;
+    color:var(--ink-2);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .item:hover .lbl{ color:var(--ink); }
+  .item[data-active="true"] .lbl{ color:var(--accent); font-weight:600; }
+
+  /* 尾巴上的计数徽章：只有"有事等着"才出现 */
+  .badge{
+    flex:0 0 auto;
+    min-width:18px; height:16px;
+    padding:0 5px;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:10.5px; font-weight:600;
+    font-variant-numeric:tabular-nums;
+    color:var(--c,var(--ink-2));
+    background:color-mix(in srgb,var(--c,var(--ink-3)) 16%,transparent);
+    border-radius:99px;
+  }
+
+  /* 浮窗：静息时不出现，悬停/聚焦才露出 */
+  .pin{
+    flex:0 0 auto;
+    width:22px; height:22px;
+    margin-right:4px;
+    display:grid; place-items:center;
+    font:inherit; font-size:11px; line-height:1;
+    color:var(--ink-3); background:transparent;
+    border:0; border-radius:5px; cursor:pointer;
+    opacity:0;
+    transition:opacity .12s ease, background-color .12s ease;
+  }
+  .item:hover .pin,
+  .pin:focus-visible{ opacity:1; }
+  .pin:hover{ background:var(--badge); color:var(--ink); }
+  @media (hover:none){ .pin{ opacity:.5; } }
+
+  /* 底部状态：贴到面板底部 */
+  .p-foot{
+    margin-top:auto;
+    padding:14px 10px 4px;
+    display:flex; align-items:center; gap:6px;
+    font-size:10.5px;
+    color:var(--ink-3);
+  }
+  .dot{
+    width:6px; height:6px; flex:0 0 auto;
+    border-radius:50%;
+    background:#3fa06d;
+    opacity:.85;
+  }
+  .dot.off{ background:var(--ink-3); }
+  .dot.err{ background:#b3384a; }
+
+  .notice{
+    margin:8px 6px 0;
+    padding:12px 10px;
+    font-size:11px; line-height:1.7;
+    text-align:center;
+    color:var(--ink-3);
+    border:1px dashed var(--line);
+    border-radius:8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="inner">
+    <div class="p-head">
+      <span class="p-title">工作台</span>
+      <button class="ic" id="refresh" title="刷新计数">⟳</button>
+    </div>
+
+    <nav class="nav" id="nav"></nav>
+
+    <div class="notice" id="notice" hidden></div>
+  </div>
+
+  <div class="p-foot" id="foot">
+    <span class="dot" id="dot"></span>
+    <span id="sync">同步中…</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SDK = window.spherse;
+
+  /* 「小助手」会话入口：默认不绑定会话，首次点击新建并记住，之后复用。
+     会话 id 记在浏览器本地 —— 它是每个用户自己的东西，不该写进要发布的项目数据文件里 */
+  var SESSION_KEY = "workspace:assistantSession";
+  /* 新建会话必须指明 Agent（不传会被拒）。默认运行时从 api.agents.list 里挑（优先「小助手」），
+     这样发布到别的环境也能用；也可以用下面常量钉死一个 Agent id（UUID）兜底，留空即不钉 */
+  var SESSION_AGENT_ID = "";
+
+  var APPS = [
+    {
+      key: "todo",
+      emoji: "⚡",
+      name: "事务簿",
+      path: "todo/事务簿.html",
+      file: "todo/todo.data.json",
+      keys: ["todos"],
+      color: "#3f3170",
+      stat: function (d) {
+        var t = (d && d.todos) || [];
+        var doing = t.filter(function (x) { return x.status === "doing"; }).length;
+        var todo = t.filter(function (x) { return !x.status || x.status === "todo"; }).length;
+        return { badge: doing || 0, tip: "进行中 " + doing + " · 未开始 " + todo };
+      }
+    },
+    {
+      key: "inbox",
+      emoji: "🗂",
+      name: "收件箱分流器",
+      path: "inbox/收件箱分流器.html",
+      file: "inbox/inbox.data.json",
+      keys: ["items"],
+      color: "#2f7d5b",
+      stat: function (d) {
+        var t = (d && d.items) || [];
+        var pend = t.filter(function (x) { return (x.status || "new") === "new"; }).length;
+        var filed = t.filter(function (x) { return x.status === "filed"; }).length;
+        return { badge: pend || 0, tip: "待分流 " + pend + " · 已落地 " + filed };
+      }
+    },
+    {
+      key: "backlog",
+      emoji: "🎬",
+      name: "待看与在追",
+      path: "backlog/待看与在追.html",
+      file: "backlog/backlog.data.json",
+      keys: ["items"],
+      color: "#3a6ea5",
+      stat: function (d) {
+        var t = (d && d.items) || [];
+        var doing = t.filter(function (x) { return x.status === "doing"; }).length;
+        var wish = t.filter(function (x) { return (x.status || "wish") === "wish"; }).length;
+        return { badge: doing || 0, tip: "在追 " + doing + " · 待看 " + wish };
+      }
+    },
+    {
+      key: "storage",
+      emoji: "📦",
+      name: "收纳地图",
+      path: "storage/收纳地图.html",
+      file: "storage/storage.data.json",
+      keys: ["places", "items"],
+      color: "#8a5a2b",
+      stat: function (d) {
+        var p = (d && d.places) || [];
+        var i = (d && d.items) || [];
+        return { badge: 0, tip: p.length + " 个位置 · " + i.length + " 件物品" };
+      }
+    },
+    {
+      key: "ledger",
+      emoji: "💰",
+      name: "日常账本",
+      path: "ledger/账本.html",
+      file: "ledger/ledger.data.json",
+      keys: ["transactions"],
+      color: "#a1711a",
+      stat: function (d) {
+        var t = (d && d.transactions) || [];
+        var n = new Date();
+        var m = n.getFullYear() + "-" + (n.getMonth() + 1 < 10 ? "0" : "") + (n.getMonth() + 1);
+        var month = t.filter(function (x) { return x.month === m; });
+        var spent = month.reduce(function (s, x) {
+          return x.kind === "income" ? s : s + (Number(x.amountCents) || 0);
+        }, 0);
+        var yuan = (spent / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return { badge: month.length, tip: "本月 " + month.length + " 笔 · 支出 ¥" + yuan };
+      }
+    }
+  ];
+
+  /* 快捷会话：点条目打开「小助手」会话，⧉ 以浮窗打开。
+     默认不绑定会话 —— 首次点击时新建一个并记住，之后都打开它 */
+  var SESSIONS = [
+    {
+      group: "session",
+      key: "sess-assistant",
+      emoji: "🤖",
+      name: "小助手",
+      tip: "打开小助手的会话（首次点击会新建）"
+    }
+  ];
+
+  /* 文档：只是文件，点开在主面板预览（md 会按文档渲染），不读数据也没有徽章 */
+  var DOCS = [
+    {
+      group: "doc",
+      key: "doc-manual",
+      emoji: "📖",
+      name: "使用手册",
+      path: "README.md",
+      tip: "怎么用这个项目 · 含「怎么清空数据」"
+    }
+  ];
+
+  var state = { data: {}, view: null, sessionId: null };
+
+  var el = {
+    nav: document.getElementById("nav"),
+    refresh: document.getElementById("refresh"),
+    sync: document.getElementById("sync"),
+    dot: document.getElementById("dot"),
+    foot: document.getElementById("foot"),
+    notice: document.getElementById("notice")
+  };
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  /* 当前主视图由 navigate 事件推送；据此判断哪一项该亮起，跟随页面 URL 而非「最近点击」 */
+  function normPath(p) {
+    return String(p == null ? "" : p).replace(/^\.\//, "");
+  }
+  function isActive(item) {
+    var v = state.view;
+    if (!v) return false;
+    if (item.group === "session") return v.kind === "chat" && !!state.sessionId && v.sessionId === state.sessionId;
+    return v.kind === "file" && normPath(v.path) === normPath(item.path);
+  }
+
+  function loadApp(app) {
+    return Promise.all(app.keys.map(function (k) {
+      return SDK.data.get({ file: app.file, key: k }).then(function (v) { return [k, v]; }, function () { return [k, null]; });
+    })).then(function (pairs) {
+      var d = {};
+      pairs.forEach(function (p) { d[p[0]] = p[1]; });
+      return d;
+    });
+  }
+
+  function findItem(key) {
+    var hit = null;
+    APPS.concat(SESSIONS, DOCS).forEach(function (it) { if (it.key === key) hit = it; });
+    return hit;
+  }
+
+  function renderGroup(label, list) {
+    var rows = list.map(function (item) {
+      var s = { badge: 0, tip: item.tip || "" };
+      if (item.stat && state.data[item.key]) {
+        try { s = item.stat(state.data[item.key]) || s; } catch (e) {}
+      }
+      var active = isActive(item);
+      var title = item.name + (s.tip ? " —— " + s.tip : "");
+      return '<div class="item"' + (active ? ' data-active="true"' : "") + ">"
+        + '<button class="open" data-key="' + esc(item.key) + '" data-mode="open" title="' + esc(title) + '">'
+        + '<span class="emoji">' + item.emoji + "</span>"
+        + '<span class="lbl">' + esc(item.name) + "</span>"
+        + (s.badge ? '<span class="badge" style="--c:' + (item.color || "#3f3170") + '">' + s.badge + "</span>" : "")
+        + "</button>"
+        /* 会话条目额外挂一个「遗忘」按钮：清掉记住的会话 id，下次点击重新新建 */
+        + (item.group === "session"
+            ? '<button class="pin" data-key="' + esc(item.key) + '" data-mode="forget" title="清除记住的会话（下次点击会新建）">⌫</button>'
+            : "")
+        + '<button class="pin" data-key="' + esc(item.key) + '" data-mode="float" title="以浮窗打开">⧉</button>'
+        + "</div>";
+    }).join("");
+    return '<div class="sec">' + esc(label) + "</div>"
+      + '<div class="group">' + rows + "</div>";
+  }
+
+  function render() {
+    var html = renderGroup("应用", APPS);
+    if (SESSIONS.length) html += renderGroup("会话", SESSIONS);
+    if (DOCS.length) html += renderGroup("帮助", DOCS);
+    el.nav.innerHTML = html;
+  }
+
+  /* 底部状态：静息时不占位，只在「同步中 / 出错」时才露面 */
+  function setFoot(kind, text) {
+    if (kind === "idle") { el.foot.hidden = true; return; }
+    el.foot.hidden = false;
+    el.dot.className = "dot" + (kind === "busy" ? " off" : kind === "error" ? " err" : "");
+    el.sync.textContent = text;
+  }
+
+  function refresh() {
+    if (!SDK || !SDK.data) return;
+    Promise.all(APPS.map(loadApp)).then(function (results) {
+      results.forEach(function (d, i) { state.data[APPS[i].key] = d; });
+      render();
+      setFoot("idle");
+    }, function () {
+      render();
+      setFoot("error", "读取失败");
+    });
+  }
+
+  el.refresh.addEventListener("click", function () {
+    setFoot("busy", "同步中…");
+    refresh();
+  });
+
+  /* ── 「小助手」会话：没记住就新建一个并记住，之后直接打开 ── */
+
+  function readStoredSession() {
+    try { return window.localStorage.getItem(SESSION_KEY) || null; } catch (e) { return null; }
+  }
+  function storeSession(id) {
+    state.sessionId = id;
+    try { window.localStorage.setItem(SESSION_KEY, id); } catch (e) {}
+  }
+  /* 清空记住的会话 id：只解除「自动打开」的绑定，会话本身不会被删除。
+     下次点击「小助手」会新建一个并重新记住 */
+  function clearSession() {
+    var had = !!readStoredSession();
+    try { window.localStorage.removeItem(SESSION_KEY); } catch (e) {}
+    state.sessionId = null;
+    render();
+    if (SDK && SDK.toast) {
+      SDK.toast({
+        message: had ? "已清除记住的会话" : "没有记住的会话",
+        description: had ? "会话仍在，只是不再自动打开；下次点击会新建一个" : "点击「小助手」会新建并记住一个"
+      });
+    }
+  }
+  /* 找一个 Agent：优先名为「小助手」的，其次 slug 以 assistant 开头的，否则第一个 */
+  function pickAgentId() {
+    if (SESSION_AGENT_ID) return Promise.resolve(SESSION_AGENT_ID);
+    if (!SDK || !SDK.api || !SDK.api.agents || !SDK.api.agents.list) return Promise.resolve(null);
+    return SDK.api.agents.list().then(function (list) {
+      var arr = (list || []).filter(function (a) { return a && a.id; });
+      if (!arr.length) return null;
+      var hit = arr.filter(function (a) {
+        return String(a.name || "").indexOf("小助手") >= 0 ||
+               String(a.slug || "").indexOf("assistant") === 0;
+      })[0];
+      return (hit || arr[0]).id;
+    }, function () { return null; });
+  }
+
+  function failToast(err) {
+    var why = (err && err.message) ? "createSession 返回 " + err.message : "新建会话失败，稍后再试";
+    if (SDK && SDK.toast) SDK.toast({ variant: "error", message: "打不开会话", description: why });
+  }
+
+  function openSessionItem(item, mode) {
+    /* 已经记住了就直接打开 */
+    if (state.sessionId) {
+      if (mode === "float") SDK.floatSession(state.sessionId);
+      else SDK.openSession(state.sessionId);
+      return;
+    }
+    /* 还没记住：新建一个。用默认的「创建即打开」一步完成 ——
+       先静默创建(open:false)再单独 openSession，主视图可能拿不到 active session */
+    if (!SDK || !SDK.createSession) { failToast(new Error("no_sdk")); return; }
+    pickAgentId().then(function (agentId) {
+      var args = { name: (item && item.name) || "小助手" };
+      if (agentId) args.agentId = agentId;
+      if (mode === "float") args.float = true;
+      return SDK.createSession(args);
+    }).then(function (r) {
+      var id = r && r.sessionId;
+      if (!id) throw new Error("create_failed");
+      storeSession(id);
+    }, failToast);
+  }
+
+  function openTarget(key, mode) {
+    var item = findItem(key);
+    if (!item) return;
+    /* 会话走 openSession / floatSession；页面走 openFile */
+    if (item.group === "session") { openSessionItem(item, mode); return; }
+    var dest = item.target || item.path;
+    if (mode === "float") SDK.openFile({ path: dest, float: true });
+    else SDK.openFile(dest);
+  }
+
+  el.nav.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-key]");
+    if (!btn) return;
+    var mode = btn.dataset.mode || "open";
+    /* ⌫ 遗忘：只清会话绑定，不打开任何东西 */
+    if (mode === "forget") { clearSession(); return; }
+    openTarget(btn.dataset.key, mode);
+  });
+
+  function boot() {
+    if (!SDK || !SDK.data) {
+      el.nav.hidden = true;
+      el.notice.hidden = false;
+      el.notice.innerHTML = "未检测到 Spherse 运行环境。<br>请在 Spherse 中打开本页面。";
+      setFoot("error", "不可用");
+      return;
+    }
+
+    state.sessionId = readStoredSession();
+    render();
+    refresh();
+
+    if (SDK.events && SDK.events.on) {
+      /* 跟随主视图跳转计算 active（订阅即回放当前页面状态） */
+      SDK.events.on("navigate", function (e) {
+        state.view = e || null;
+        render();
+      });
+
+      APPS.forEach(function (app) {
+        SDK.events.on("file:update", { path: app.file }, function () {
+          setFoot("busy", "同步中…");
+          refresh();
+        });
+      });
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

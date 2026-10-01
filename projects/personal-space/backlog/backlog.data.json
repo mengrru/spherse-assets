@@ -1,0 +1,575 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "观影/游戏/阅读 backlog：待看清单、在追进度、看完评分与弃坑记录。口味画像存在顶层 profile 键（read_data 用 key=\"profile\" 读，setProfile 写）；每日一条的书影剧游推荐存在顶层 recommendations 键（addRecommendation 写，latestRecommendation / listRecommendations 读）",
+    "queries": {
+      "listBacklog": {
+        "desc": "按状态/类型筛选作品，可按字段排序分页。status 取 wish（待看）/doing（在追）/done（看完）/dropped（弃了）",
+        "path": "items",
+        "identity": "id",
+        "params": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "wish",
+              "doing",
+              "done",
+              "dropped"
+            ]
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "movie",
+              "series",
+              "game",
+              "book"
+            ]
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 30
+      },
+      "listInProgress": {
+        "desc": "只看在追的作品（含 progress 百分比与 notes 里的集数/进度说明）",
+        "path": "items",
+        "identity": "id",
+        "params": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "wish",
+              "doing",
+              "done",
+              "dropped"
+            ],
+            "default": "doing"
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "movie",
+              "series",
+              "game",
+              "book"
+            ]
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 30
+      },
+      "listRated": {
+        "desc": "只看已评分的作品（rating 1-10，含看完与弃掉的 —— 弃坑同样反映口味），分析偏好时用这个",
+        "path": "items",
+        "identity": "id",
+        "params": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "done",
+              "dropped"
+            ]
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "movie",
+              "series",
+              "game",
+              "book"
+            ]
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 50
+      },
+      "getItem": {
+        "desc": "按 ID 获取单条作品",
+        "path": "items",
+        "identity": "id",
+        "defaultLimit": 1
+      },
+      "listRecommendations": {
+        "desc": "按日期倒序查看每日推荐日志（写新推荐前用它避免重复、回顾推荐过什么），可按 kind 过滤",
+        "path": "recommendations",
+        "identity": "id",
+        "params": {
+          "kind": {
+            "type": "enum",
+            "values": [
+              "movie",
+              "series",
+              "game",
+              "book"
+            ]
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 30
+      },
+      "latestRecommendation": {
+        "desc": "取最新的一条每日推荐（date 最新的），用于仪表盘的「今日推荐」",
+        "path": "recommendations",
+        "identity": "id",
+        "params": {
+          "date": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 1
+      }
+    },
+    "mutations": {
+      "addItem": {
+        "desc": "加入一部作品（自己加的或推荐进来的）。推荐时把 source 写「小助手推荐」，reason 写一句为什么推荐给这个人",
+        "op": "append",
+        "path": "items",
+        "fields": {
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "movie",
+              "series",
+              "game",
+              "book"
+            ],
+            "required": true
+          },
+          "status": {
+            "type": "enum",
+            "values": [
+              "wish",
+              "doing",
+              "done",
+              "dropped"
+            ],
+            "default": "wish"
+          },
+          "year": {
+            "type": "string"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer",
+            "default": 0
+          },
+          "rating": {
+            "type": "integer"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "default": "手动"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "setStatus": {
+        "desc": "改状态：开始看（doing）/看完（done）/弃了（dropped）/退回待看（wish）。看完时可同时把 progress 传 100",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "wish",
+              "doing",
+              "done",
+              "dropped"
+            ],
+            "required": true
+          },
+          "progress": {
+            "type": "integer"
+          }
+        }
+      },
+      "setProgress": {
+        "desc": "更新在追作品的进度百分比（0-100 整数）",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "progress": {
+            "type": "integer",
+            "required": true
+          }
+        }
+      },
+      "setRating": {
+        "desc": "打分（1-10 整数）；看完和弃掉的作品都值得打分",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "rating": {
+            "type": "integer",
+            "required": true
+          }
+        }
+      },
+      "updateItem": {
+        "desc": "改作品信息：标题、类型、年份、题材、备注、来源、推荐理由",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "title": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "movie",
+              "series",
+              "game",
+              "book"
+            ]
+          },
+          "year": {
+            "type": "string"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "removeItem": {
+        "desc": "从 backlog 删除一条",
+        "op": "remove",
+        "path": "items",
+        "match": "id"
+      },
+      "setProfile": {
+        "desc": "写入口味画像：summary 一句话概括偏好（要具体），likes 反复喜欢的元素，dislikes 倾向弃掉的东西",
+        "op": "set",
+        "path": "profile",
+        "fields": {
+          "summary": {
+            "type": "string"
+          },
+          "likes": {
+            "type": "string"
+          },
+          "dislikes": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "updatedAt": "nowIso"
+        }
+      },
+      "addRecommendation": {
+        "desc": "记一条每日推荐。date 是这条推荐归属的那天（YYYY-MM-DD，用当天的本地日期）；kind 取 movie/series/game/book；reason 写一句为什么贴合口味画像或某条历史记录。约定每天只保留一条（换推荐时先 removeRecommendation 删旧的）",
+        "op": "append",
+        "path": "recommendations",
+        "fields": {
+          "date": {
+            "type": "string",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "movie",
+              "series",
+              "game",
+              "book"
+            ],
+            "required": true
+          },
+          "year": {
+            "type": "string"
+          },
+          "genre": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "default": "小助手"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "removeRecommendation": {
+        "desc": "删掉一条每日推荐（写重复了、或要「换一条」时先删旧的）",
+        "op": "remove",
+        "path": "recommendations",
+        "match": "id"
+      }
+    }
+  },
+  "profile": {
+    "summary": "偏好「信息密度高 + 需要自己拼出真相」的作品，不怕慢节奏，怕的是没有方向感。",
+    "likes": "叙事驱动的 RPG、氛围向科幻、双线群像剧、手绘美术",
+    "dislikes": "任务清单式的开放世界、纯刷子玩法、无主线动力的沙盒",
+    "updatedAt": "2026-09-28T19:36:54.441Z"
+  },
+  "recommendations": [
+    {
+      "date": "2026-10-01",
+      "title": "人生切割术",
+      "kind": "series",
+      "year": "2022",
+      "genre": "科幻,悬疑,剧情",
+      "reason": "你怕的从来不是慢，而是「没有方向感」——这部把谜面藏进公司的每条规章里，信息密度高、全靠你自己拼出真相；氛围向科幻加上内外我近乎双线的群像，正对上《降临》和《漫长的季节》让你高分的那套。",
+      "source": "小助手",
+      "id": "05dfa1f0-b824-4e12-a03d-8e968c477c1c",
+      "createdAt": "2026-10-01T11:50:08.851Z"
+    },
+    {
+      "date": "2026-10-02",
+      "title": "海伯利安",
+      "kind": "book",
+      "year": "1989",
+      "genre": "科幻,群像",
+      "reason": "你爱的是「信息密度高 + 自己拼出真相」，也不怕慢——这部让七位朝圣者各讲一段身世，像《漫长的季节》那样把真相拆碎在几条线里，而氛围向的科幻又接住《降临》给你的那口气。读完你会发现拼图才刚开始。",
+      "source": "小助手",
+      "id": "ca801be1-0afe-4885-95f4-639a0fcfcb85",
+      "createdAt": "2026-10-01T16:01:00.119Z"
+    }
+  ],
+  "items": [
+    {
+      "id": "item-1",
+      "title": "降临",
+      "kind": "movie",
+      "status": "done",
+      "year": "2016",
+      "genre": "科幻",
+      "progress": 100,
+      "rating": 9,
+      "notes": "语言与时间的那层结构，看第二遍才真懂。",
+      "source": "手动",
+      "createdAt": "2026-03-12T21:10:00.000Z"
+    },
+    {
+      "id": "item-2",
+      "title": "环形物语",
+      "kind": "series",
+      "status": "doing",
+      "year": "2020",
+      "genre": "科幻,家庭",
+      "progress": 40,
+      "notes": "S1E4 / 共 8 集",
+      "source": "手动",
+      "createdAt": "2026-08-20T22:30:00.000Z"
+    },
+    {
+      "id": "item-3",
+      "title": "极乐迪斯科",
+      "kind": "game",
+      "status": "done",
+      "year": "2019",
+      "genre": "RPG,叙事",
+      "progress": 100,
+      "rating": 10,
+      "notes": "通关一次，还想再来一遍。",
+      "source": "手动",
+      "createdAt": "2026-04-02T20:00:00.000Z"
+    },
+    {
+      "id": "item-4",
+      "title": "漫长的季节",
+      "kind": "series",
+      "status": "done",
+      "year": "2023",
+      "genre": "悬疑,群像",
+      "progress": 100,
+      "rating": 10,
+      "notes": "三条时间线缝得极稳，结尾不躲。",
+      "source": "手动",
+      "createdAt": "2026-06-18T21:40:00.000Z"
+    },
+    {
+      "id": "item-5",
+      "title": "塞尔达传说：王国之泪",
+      "kind": "game",
+      "status": "dropped",
+      "year": "2023",
+      "genre": "开放世界",
+      "progress": 15,
+      "rating": 6,
+      "notes": "玩了 12 小时弃了 —— 太开放，找不到主线动力。",
+      "source": "手动",
+      "createdAt": "2026-05-10T19:20:00.000Z"
+    },
+    {
+      "id": "item-6",
+      "title": "蜘蛛侠：纵横宇宙",
+      "kind": "movie",
+      "status": "wish",
+      "year": "2023",
+      "genre": "动画,超英",
+      "progress": 0,
+      "source": "手动",
+      "createdAt": "2026-09-20T10:05:00.000Z"
+    },
+    {
+      "id": "item-7",
+      "title": "星际拓荒",
+      "kind": "game",
+      "status": "wish",
+      "year": "2019",
+      "genre": "探索,解谜",
+      "progress": 0,
+      "source": "小助手推荐",
+      "reason": "你的记录里反复出现「自己拼出真相」的偏好，这部全程没有任务指引，全靠好奇心推进。",
+      "createdAt": "2026-09-24T09:15:00.000Z"
+    },
+    {
+      "id": "item-8",
+      "title": "空洞骑士：丝之歌",
+      "kind": "game",
+      "status": "wish",
+      "year": "2025",
+      "genre": "银河恶魔城",
+      "progress": 0,
+      "source": "小助手推荐",
+      "reason": "你要的是高难度 + 手绘美术 + 不给地图的探索感，这部几乎就是按这三条做的。",
+      "createdAt": "2026-09-26T09:40:00.000Z"
+    },
+    {
+      "id": "item-9",
+      "title": "仿生人会梦见电子羊吗",
+      "kind": "book",
+      "status": "wish",
+      "year": "1968",
+      "genre": "科幻",
+      "progress": 0,
+      "source": "手动",
+      "createdAt": "2026-09-22T23:00:00.000Z"
+    },
+    {
+      "id": "item-10",
+      "title": "幕府将军",
+      "kind": "series",
+      "status": "doing",
+      "year": "2024",
+      "genre": "历史,剧情",
+      "progress": 85,
+      "notes": "S1E8 / 共 10 集",
+      "source": "手动",
+      "createdAt": "2026-07-05T21:00:00.000Z",
+      "rating": 10
+    },
+    {
+      "title": "Linux是怎样工作的",
+      "kind": "book",
+      "status": "wish",
+      "progress": 0,
+      "source": "手动",
+      "id": "8f70d3ab-dee2-4b17-9ee5-1ad14164bc27",
+      "createdAt": "2026-09-28T19:42:45.579Z"
+    },
+    {
+      "title": "Pentiment",
+      "kind": "game",
+      "status": "wish",
+      "year": "2022",
+      "genre": "叙事,历史,解谜",
+      "progress": 0,
+      "source": "小助手推荐",
+      "reason": "你给《极乐迪斯科》打了满分、又偏爱「自己拼出真相」——这部全程靠阅读与推理推进，没有任务清单，手抄本式的美术也正踩你对手绘的偏好。",
+      "id": "365720f1-fb27-4da9-93a4-8b8c2ad29e4d",
+      "createdAt": "2026-10-01T11:49:40.178Z"
+    },
+    {
+      "title": "人生切割术",
+      "kind": "series",
+      "status": "wish",
+      "year": "2022",
+      "genre": "科幻,悬疑,剧情",
+      "progress": 0,
+      "source": "小助手推荐",
+      "reason": "你怕的从来不是慢，而是「没有方向感」——这部把谜面藏进公司的每条规章里，信息密度高、全靠你自己拼出真相；氛围向科幻加上内外我近乎双线的群像，正对上《降临》和《漫长的季节》让你高分的那套。",
+      "id": "fdc7c3ef-2515-42b6-b065-f756a0e5276e",
+      "createdAt": "2026-10-01T16:00:45.278Z"
+    }
+  ]
+}

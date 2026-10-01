@@ -1,0 +1,296 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "日常账本：一笔一笔记账，按月份与分类汇总。金额一律用整数「分」存储（¥38.50 = 3850），避免浮点误差；month 必须是 date 的前 7 位（YYYY-MM），用于按整月查询",
+    "queries": {
+      "listByMonth": {
+        "desc": "取某个月的流水（先传 month，如 2026-09），可按类型 kind（expense/income）、分类 category 或支付方式 account 过滤并排序分页。本能力没有 sum 入口，汇总请自行加总 amountCents",
+        "path": "transactions",
+        "identity": "id",
+        "params": {
+          "month": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "expense",
+              "income"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 30
+      },
+      "listByCategory": {
+        "desc": "查某分类在某个的支出明细（month + category 都传），用于回答「这个月餐饮花了多少」",
+        "path": "transactions",
+        "identity": "id",
+        "params": {
+          "month": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "expense",
+              "income"
+            ]
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 50
+      },
+      "getTransaction": {
+        "desc": "按 ID 取单笔",
+        "path": "transactions",
+        "identity": "id",
+        "defaultLimit": 1
+      }
+    },
+    "mutations": {
+      "addTransaction": {
+        "desc": "记一笔。amountCents 是整数分（¥38.50 传 3850）；kind 默认 expense（支出），income 为收入；date 用 YYYY-MM-DD、month 用 YYYY-MM 且必须是 date 的前 7 位",
+        "op": "append",
+        "path": "transactions",
+        "fields": {
+          "amountCents": {
+            "type": "integer",
+            "required": true
+          },
+          "date": {
+            "type": "string",
+            "required": true
+          },
+          "month": {
+            "type": "string",
+            "required": true
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "expense",
+              "income"
+            ],
+            "default": "expense"
+          },
+          "category": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updateTransaction": {
+        "desc": "改一笔的金额、日期、类型、分类、备注或支付方式；改 date 时必须同时改 month 保持一致",
+        "op": "update",
+        "path": "transactions",
+        "match": "id",
+        "fields": {
+          "amountCents": {
+            "type": "integer"
+          },
+          "date": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "expense",
+              "income"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          }
+        }
+      },
+      "removeTransaction": {
+        "desc": "删掉一笔",
+        "op": "remove",
+        "path": "transactions",
+        "match": "id"
+      }
+    }
+  },
+  "transactions": [
+    {
+      "id": "tx-1",
+      "amountCents": 3850,
+      "kind": "expense",
+      "category": "餐饮",
+      "note": "楼下那家",
+      "date": "2026-09-28",
+      "month": "2026-09",
+      "account": "微信",
+      "createdAt": "2026-09-28T12:10:00.000Z"
+    },
+    {
+      "id": "tx-2",
+      "amountCents": 400,
+      "kind": "expense",
+      "category": "交通",
+      "note": "",
+      "date": "2026-09-28",
+      "month": "2026-09",
+      "account": "交通卡",
+      "createdAt": "2026-09-28T08:40:00.000Z"
+    },
+    {
+      "id": "tx-3",
+      "amountCents": 12650,
+      "kind": "expense",
+      "category": "日用",
+      "note": "纸巾、洗衣液",
+      "date": "2026-09-27",
+      "month": "2026-09",
+      "account": "支付宝",
+      "createdAt": "2026-09-27T19:05:00.000Z"
+    },
+    {
+      "id": "tx-4",
+      "amountCents": 2800,
+      "kind": "expense",
+      "category": "餐饮",
+      "note": "和同事",
+      "date": "2026-09-26",
+      "month": "2026-09",
+      "account": "微信",
+      "createdAt": "2026-09-26T15:20:00.000Z"
+    },
+    {
+      "id": "tx-5",
+      "amountCents": 9000,
+      "kind": "expense",
+      "category": "娱乐",
+      "note": "一张电影票",
+      "date": "2026-09-25",
+      "month": "2026-09",
+      "account": "",
+      "createdAt": "2026-09-25T21:00:00.000Z"
+    },
+    {
+      "id": "tx-6",
+      "amountCents": 3260,
+      "kind": "expense",
+      "category": "交通",
+      "note": "下雨打车",
+      "date": "2026-09-24",
+      "month": "2026-09",
+      "account": "支付宝",
+      "createdAt": "2026-09-24T22:30:00.000Z"
+    },
+    {
+      "id": "tx-7",
+      "amountCents": 4560,
+      "kind": "expense",
+      "category": "医疗",
+      "note": "感冒药",
+      "date": "2026-09-22",
+      "month": "2026-09",
+      "account": "",
+      "createdAt": "2026-09-22T11:15:00.000Z"
+    },
+    {
+      "id": "tx-8",
+      "amountCents": 1500000,
+      "kind": "income",
+      "category": "工资",
+      "note": "",
+      "date": "2026-09-20",
+      "month": "2026-09",
+      "account": "银行卡",
+      "createdAt": "2026-09-20T09:00:00.000Z"
+    },
+    {
+      "id": "tx-9",
+      "amountCents": 18600,
+      "kind": "expense",
+      "category": "水电",
+      "note": "上月的账单",
+      "date": "2026-09-15",
+      "month": "2026-09",
+      "account": "支付宝",
+      "createdAt": "2026-09-15T10:00:00.000Z"
+    },
+    {
+      "id": "tx-10",
+      "amountCents": 320000,
+      "kind": "expense",
+      "category": "房租",
+      "note": "",
+      "date": "2026-09-12",
+      "month": "2026-09",
+      "account": "银行卡",
+      "createdAt": "2026-09-12T09:30:00.000Z"
+    },
+    {
+      "id": "tx-11",
+      "amountCents": 5600,
+      "kind": "expense",
+      "category": "餐饮",
+      "note": "外卖",
+      "date": "2026-09-12",
+      "month": "2026-09",
+      "account": "微信",
+      "createdAt": "2026-09-12T19:40:00.000Z"
+    },
+    {
+      "amountCents": 1000,
+      "date": "2026-10-01",
+      "month": "2026-10",
+      "kind": "expense",
+      "category": "餐饮",
+      "note": "",
+      "account": "微信",
+      "id": "1e9942f2-4ae5-45d5-9efb-e5929262eb23",
+      "createdAt": "2026-09-30T18:40:32.306Z"
+    }
+  ]
+}

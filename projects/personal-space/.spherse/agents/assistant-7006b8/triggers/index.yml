@@ -1,0 +1,45 @@
+- id: H7d7K6LqpxiQ33YCB-SHW
+  name: 每日书影剧游推荐
+  enabled: true
+  type: time
+  cron: 0 8 * * *
+  mode: reusable_session
+  message: |-
+    【每日推荐 · 今天是 {{date}}（{{weekday}}）】
+    为 Mengru 挑今天的一条书/影/剧/游推荐，并写进数据。步骤：
+    1) read_data backlog/backlog.data.json 先看 outline。
+    2) 了解口味并查重：读 key="profile" 的口味画像；query_data listRated（她已评分/弃坑的，最能反映口味）、listBacklog（已收录/在追，避免撞车）、listRecommendations（最近推荐过什么，避免重复）。
+    3) 挑 1 部最贴合画像的作品（movie / series / game / book 都可），优先她还没接触过、当下能获取到的；拿不准某部是否值得推荐时可用 web_search 查证。
+    4) 写一条：mutate_data addRecommendation，args = { date: "{{date}}", kind, title, year, genre, reason }；reason 用一句话说清「为什么贴她的口味」，要引用具体偏好或某条历史记录。
+    约束：每天只保留一条 —— 若已存在 date 为 "{{date}}" 的推荐，先用 removeRecommendation 删掉旧的再写新的（这样「换一个」才生效）。只写一条，写完不必回复。
+  notify: true
+  notificationMessage: 今日推荐已就绪
+  createdAt: 1790845890650
+  updatedAt: 1790845890650
+- id: KWtMCwAqec_S-q8fKo5Mg
+  name: 换一条推荐
+  enabled: true
+  type: event
+  eventName: daily-recommendation
+  mode: reusable_session
+  message: >-
+    【换一条推荐 · 今天是 {{date}}（{{weekday}}）】{{payload}}
+
+    Mengru 点了仪表盘上的「换一个」。请照常为她另挑一条书/影/剧/游推荐并写进数据：
+
+    1) read_data backlog/backlog.data.json 看 outline。
+
+    2) 读 key="profile" 口味画像；query_data listRated / listBacklog /
+    listRecommendations 了解口味并避免与已推荐、已收录的重复。
+
+    3) 挑 1 部和当前这条不同的、更贴合画像的作品；必要时 web_search 查证。
+
+    4) 先用 query_data latestRecommendation 找到今天已有的那条，用 removeRecommendation
+    删掉它（保证每天只剩一条），再 mutate_data addRecommendation 写入新的：args = { date:
+    "{{date}}", kind, title, year, genre, reason }。
+
+    只写一条，写完不必回复。
+  notify: false
+  createdAt: 1790845893018
+  updatedAt: 1790855394950
+  boundSessionId: 3166b927-78de-47ae-99d3-a08affff6c61

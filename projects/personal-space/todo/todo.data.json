@@ -1,0 +1,364 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "魔法事务清单：条目、类别标签、优先级、完成状态与描述",
+    "queries": {
+      "listTodos": {
+        "desc": "按状态/优先级/类别筛选待办，可按字段排序并分页。注意：按优先级排序应逐个用 priority 参数取（high→medium→low），sort=priority 只是字典序",
+        "path": "todos",
+        "identity": "id",
+        "params": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "todo",
+              "doing",
+              "done"
+            ]
+          },
+          "priority": {
+            "type": "enum",
+            "values": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "tag": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 20
+      },
+      "getTodo": {
+        "desc": "按 ID 获取单条待办",
+        "path": "todos",
+        "identity": "id",
+        "defaultLimit": 1
+      },
+      "listOpenTodos": {
+        "desc": "查看未完成的事务（未开始/进行中），可按 priority 逐个取；sort=priority 为字典序，不能代表优先级高低",
+        "path": "todos",
+        "identity": "id",
+        "params": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "todo",
+              "doing"
+            ]
+          },
+          "priority": {
+            "type": "enum",
+            "values": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 20
+      }
+    },
+    "mutations": {
+      "addTodo": {
+        "desc": "新增一条待办事务；tag 可选，不传就不设类别（没有默认标签）",
+        "op": "append",
+        "path": "todos",
+        "fields": {
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "tag": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "enum",
+            "values": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "default": "medium"
+          },
+          "status": {
+            "type": "enum",
+            "values": [
+              "todo",
+              "doing",
+              "done"
+            ],
+            "default": "todo"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updateTodo": {
+        "desc": "修改待办的标题、类别、优先级、状态或描述",
+        "op": "update",
+        "path": "todos",
+        "match": "id",
+        "fields": {
+          "title": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "enum",
+            "values": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "status": {
+            "type": "enum",
+            "values": [
+              "todo",
+              "doing",
+              "done"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "setTodoStatus": {
+        "desc": "设置待办的完成状态（未开始/进行中/已完成）",
+        "op": "update",
+        "path": "todos",
+        "match": "id",
+        "fields": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "todo",
+              "doing",
+              "done"
+            ],
+            "required": true
+          }
+        }
+      },
+      "setTodoPriority": {
+        "desc": "设置待办的优先级",
+        "op": "update",
+        "path": "todos",
+        "match": "id",
+        "fields": {
+          "priority": {
+            "type": "enum",
+            "values": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "required": true
+          }
+        }
+      },
+      "removeTodo": {
+        "desc": "删除一条待办",
+        "op": "remove",
+        "path": "todos",
+        "match": "id"
+      }
+    }
+  },
+  "todos": [
+    {
+      "title": "debug tool：显示 session 压缩内容",
+      "tag": "开发工具",
+      "priority": "high",
+      "status": "done",
+      "notes": "需要一个能把 session 压缩过程/压缩后内容展示出来的调试面板。",
+      "id": "8954d01e-547a-4552-8b99-2fe70f64b624",
+      "createdAt": "2026-09-28T12:51:34.237Z"
+    },
+    {
+      "title": "世界书（参考资料）",
+      "tag": "功能",
+      "priority": "high",
+      "status": "todo",
+      "notes": "",
+      "id": "641b79f6-c11d-47b7-b04e-dff46389dba6",
+      "createdAt": "2026-09-28T12:51:34.238Z"
+    },
+    {
+      "title": "LLM 可读写 .spherse 配置文件",
+      "tag": "模型能力",
+      "priority": "high",
+      "status": "todo",
+      "notes": "允许读写，但写入前必须做合法性检查（schema 校验 / 拒绝非法字段）。",
+      "id": "66dc6e95-5ecd-4fd9-bba3-05f8a1c11c68",
+      "createdAt": "2026-09-28T12:51:34.239Z"
+    },
+    {
+      "title": "聊天输入框移动端适配",
+      "tag": "移动端",
+      "priority": "high",
+      "status": "done",
+      "notes": "",
+      "id": "6d9ef4bd-f82c-481b-a15c-615f7907728b",
+      "createdAt": "2026-09-28T12:51:34.241Z"
+    },
+    {
+      "title": "skill 上下文优化",
+      "tag": "稳定性",
+      "priority": "medium",
+      "status": "todo",
+      "notes": "偶发 skill 内调用文件路径错误。",
+      "id": "bb980e75-043e-4d0a-b7db-5468dedbf595",
+      "createdAt": "2026-09-28T12:51:34.242Z"
+    },
+    {
+      "title": "mcp 修复",
+      "tag": "稳定性",
+      "priority": "high",
+      "status": "done",
+      "notes": "",
+      "id": "e8b487b6-bbf8-4640-89d8-4e04dbe9b206",
+      "createdAt": "2026-09-28T12:51:34.242Z"
+    },
+    {
+      "title": "内建 memory",
+      "tag": "模型能力",
+      "priority": "high",
+      "status": "done",
+      "notes": "清单中原标记为 🚧，记为进行中。",
+      "id": "6f5224ba-3eba-4b74-94ff-1a6c1edcc3a2",
+      "createdAt": "2026-09-28T12:51:34.243Z"
+    },
+    {
+      "title": "eval",
+      "tag": "开发工具",
+      "priority": "medium",
+      "status": "todo",
+      "notes": "",
+      "id": "808c95c6-f8af-4e80-9745-cb03acea5e0a",
+      "createdAt": "2026-09-28T12:51:34.244Z"
+    },
+    {
+      "title": "问题面板移动端布局",
+      "tag": "移动端",
+      "priority": "high",
+      "status": "done",
+      "notes": "",
+      "id": "ae78fac8-2ff0-450c-9f77-e123d3c7447b",
+      "createdAt": "2026-09-28T12:51:34.245Z"
+    },
+    {
+      "title": "云部署",
+      "tag": "基础设施",
+      "priority": "medium",
+      "status": "todo",
+      "notes": "",
+      "id": "ab988d9b-8b36-4aaa-bc6e-5a85c3486c24",
+      "createdAt": "2026-09-28T12:51:34.247Z"
+    },
+    {
+      "title": "开场白",
+      "tag": "功能",
+      "priority": "medium",
+      "status": "todo",
+      "notes": "",
+      "id": "f7316b2a-7d50-4a7b-afc2-1d33ed5b587d",
+      "createdAt": "2026-09-28T12:51:34.248Z"
+    },
+    {
+      "title": "sandbox",
+      "tag": "基础设施",
+      "priority": "high",
+      "status": "todo",
+      "notes": "",
+      "id": "89a954e6-8f54-458d-9f35-075ed788171b",
+      "createdAt": "2026-09-28T12:51:34.249Z"
+    },
+    {
+      "title": "语音模型支持",
+      "tag": "模型能力",
+      "priority": "medium",
+      "status": "todo",
+      "notes": "",
+      "id": "ad599bd7-0be9-418c-8f59-f2c3398b8e6d",
+      "createdAt": "2026-09-28T12:51:34.250Z"
+    },
+    {
+      "title": "智能体圆桌",
+      "tag": "功能",
+      "priority": "low",
+      "status": "todo",
+      "notes": "",
+      "id": "21244ef9-3343-49fe-a5c3-0940bbab4086",
+      "createdAt": "2026-09-28T12:51:34.251Z"
+    },
+    {
+      "title": "PWA消息推送",
+      "tag": "体验增强",
+      "priority": "high",
+      "status": "doing",
+      "notes": "",
+      "id": "fd4b148d-825c-4638-a61b-24b6c4ef1c60",
+      "createdAt": "2026-09-28T12:52:42.103Z"
+    },
+    {
+      "title": "core继续优化，可以考虑把store拆出来",
+      "tag": "重构",
+      "priority": "high",
+      "status": "todo",
+      "notes": "",
+      "id": "ae246d6a-17f2-4259-9c35-675b552a3ecc",
+      "createdAt": "2026-09-28T13:09:25.985Z"
+    },
+    {
+      "title": "优化移动端扫码/手动登录体验",
+      "tag": "体验增强",
+      "priority": "high",
+      "status": "done",
+      "notes": "",
+      "id": "0636b365-3503-447e-91cd-c8cd697d5b2d",
+      "createdAt": "2026-09-28T15:33:42.851Z"
+    },
+    {
+      "title": "onboarding page打开示例项目导航到项目市场，移除内置sample",
+      "tag": "体验增强",
+      "priority": "high",
+      "status": "done",
+      "notes": "",
+      "id": "c295d1b4-a834-49ca-a382-23e496f24d40",
+      "createdAt": "2026-09-29T08:30:05.940Z"
+    }
+  ]
+}

@@ -1,0 +1,308 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "收件箱分流器：随手捕捉的碎片，经人工或 agent 判定去向（待办/笔记/参考/丢掉）后落地",
+    "queries": {
+      "listUntriaged": {
+        "desc": "取出还没有去向建议的条目（status=new 且 triaged=false），按创建时间从早到晚 —— 分流时逐个 triage",
+        "path": "items",
+        "identity": "id",
+        "params": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "new",
+              "filed"
+            ],
+            "default": "new"
+          },
+          "triaged": {
+            "type": "boolean",
+            "default": false
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 20
+      },
+      "listInbox": {
+        "desc": "按状态/最终去向/是否已给建议筛选条目，默认按创建时间倒序分页",
+        "path": "items",
+        "identity": "id",
+        "params": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "new",
+              "filed"
+            ]
+          },
+          "route": {
+            "type": "enum",
+            "values": [
+              "todo",
+              "note",
+              "ref",
+              "trash"
+            ]
+          },
+          "triaged": {
+            "type": "boolean"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 20
+      },
+      "getItem": {
+        "desc": "按 ID 获取单条收件箱条目（含正文、建议与最终去向）",
+        "path": "items",
+        "identity": "id",
+        "defaultLimit": 1
+      }
+    },
+    "mutations": {
+      "capture": {
+        "desc": "往收件箱丢一条碎片，只记原文、不判定去向",
+        "op": "append",
+        "path": "items",
+        "fields": {
+          "body": {
+            "type": "string",
+            "required": true
+          },
+          "source": {
+            "type": "string",
+            "default": "手动"
+          },
+          "status": {
+            "type": "enum",
+            "values": [
+              "new",
+              "filed"
+            ],
+            "default": "new"
+          },
+          "triaged": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "triage": {
+        "desc": "为一条碎片提出去向建议（不改变 status，等人确认）：proposedRoute 必填，proposedReason 写判断依据",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "proposedRoute": {
+            "type": "enum",
+            "values": [
+              "todo",
+              "note",
+              "ref",
+              "trash"
+            ],
+            "required": true
+          },
+          "proposedReason": {
+            "type": "string"
+          },
+          "proposedTitle": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "enum",
+            "values": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "triagedBy": {
+            "type": "string",
+            "default": "小助手"
+          },
+          "triaged": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "file": {
+        "desc": "确认落地：写入最终去向并置 status=filed。decision=accept（采纳建议）/override（人工改判）/self（无人建议时自行判定）",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "route": {
+            "type": "enum",
+            "values": [
+              "todo",
+              "note",
+              "ref",
+              "trash"
+            ],
+            "required": true
+          },
+          "status": {
+            "type": "enum",
+            "values": [
+              "new",
+              "filed"
+            ],
+            "default": "filed"
+          },
+          "decision": {
+            "type": "enum",
+            "values": [
+              "accept",
+              "override",
+              "self"
+            ],
+            "default": "accept"
+          },
+          "triaged": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "restore": {
+        "desc": "把已落地的条目退回待分流队列",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "new",
+              "filed"
+            ],
+            "default": "new"
+          }
+        }
+      },
+      "editItem": {
+        "desc": "修改碎片原文",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "body": {
+            "type": "string",
+            "required": true
+          }
+        }
+      },
+      "markSent": {
+        "desc": "标记该条已送去「事务簿」，避免重复投递",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "sentToTodo": {
+            "type": "boolean",
+            "required": true
+          }
+        }
+      },
+      "removeItem": {
+        "desc": "删除一条收件箱条目",
+        "op": "remove",
+        "path": "items",
+        "match": "id"
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "seed-inbox-1",
+      "body": "https://www.anthropic.com/engineering/building-effective-agents",
+      "source": "剪贴板",
+      "status": "filed",
+      "triaged": true,
+      "createdAt": "2026-09-29T21:40:00.000Z",
+      "route": "ref",
+      "decision": "self"
+    },
+    {
+      "id": "seed-inbox-6",
+      "body": "台灯闪了好几天，周六下楼去五金店换个灯泡，顺手把窗帘滑轨量一下尺寸。",
+      "source": "随手记",
+      "status": "new",
+      "triaged": true,
+      "triagedBy": "小助手",
+      "proposedRoute": "todo",
+      "proposedReason": "两件都要出门动手办，可以并到周末一起做。",
+      "proposedTitle": "换台灯灯泡 + 量窗帘滑轨",
+      "tags": "生活",
+      "priority": "medium",
+      "createdAt": "2026-09-30T11:05:00.000Z"
+    },
+    {
+      "id": "seed-inbox-12",
+      "body": "朋友推荐的纪录片《最大的小小农场》，说把「耐心」拍得很具体。",
+      "source": "聊天",
+      "status": "new",
+      "triaged": true,
+      "triagedBy": "小助手",
+      "proposedRoute": "trash",
+      "proposedReason": "像是随口一提的私人推荐，没看到要留存的信息。",
+      "route": "ref",
+      "decision": "override",
+      "createdAt": "2026-09-30T13:05:00.000Z"
+    },
+    {
+      "id": "seed-inbox-14",
+      "body": "快递柜取件码 3920，今晚 8 点前取；下班顺路。",
+      "source": "短信",
+      "status": "filed",
+      "triaged": true,
+      "triagedBy": "小助手",
+      "proposedRoute": "todo",
+      "proposedReason": "有明确动作和时限，今晚就得做。",
+      "proposedTitle": "取快递（今晚 8 点前）",
+      "tags": "生活",
+      "priority": "high",
+      "route": "todo",
+      "decision": "accept",
+      "sentToTodo": true,
+      "createdAt": "2026-10-01T08:20:00.000Z"
+    },
+    {
+      "body": "明天去吃麻辣烫",
+      "source": "手动",
+      "status": "new",
+      "triaged": false,
+      "id": "bcaf82d8-833e-429e-8d76-3c84ca93e827",
+      "createdAt": "2026-10-01T14:58:37.660Z"
+    }
+  ]
+}

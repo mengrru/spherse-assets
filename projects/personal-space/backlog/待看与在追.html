@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>待看与在追</title>
+<style>
+  :root{
+    --bg:#f6f5f1;
+    --card:#ffffff;
+    --track:#eeede8;
+    --line:#e5e2d9;
+    --line-2:#d4d0c5;
+    --ink:#1d1b17;
+    --ink-2:#57534a;
+    --ink-3:#8d867a;
+    --accent:#3f3170;
+    --accent-fg:#ffffff;
+    --star:#bf8417;
+    --drop:#8d867a;
+    --danger:#b3384a;
+    --k-movie:#3f3170;
+    --k-series:#3a6ea5;
+    --k-game:#2f7d5b;
+    --k-book:#8a5a2b;
+    --r:10px;
+    --sh:0 1px 2px rgba(29,27,23,.06),0 1px 1px rgba(29,27,23,.04);
+    --sh-2:0 6px 16px rgba(29,27,23,.10),0 1px 2px rgba(29,27,23,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#17161c;
+      --card:#1f1e26;
+      --track:#262530;
+      --line:#32313c;
+      --line-2:#3d3c48;
+      --ink:#ece9e2;
+      --ink-2:#c4bfb6;
+      --ink-3:#a29b8f;
+      --accent:#8c7ce0;
+      --accent-fg:#16151b;
+      --star:#dda43a;
+      --drop:#a29b8f;
+      --danger:#e0616f;
+      --k-movie:#8c7ce0;
+      --k-series:#6ea8dc;
+      --k-game:#55b98a;
+      --k-book:#d0a06a;
+      --sh:0 1px 2px rgba(0,0,0,.3);
+      --sh-2:0 8px 20px rgba(0,0,0,.4);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+
+  body{
+    margin:0;
+    padding:0 0 26px;
+    overflow-y:auto;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:13.5px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:color-mix(in srgb,var(--accent) 22%,transparent); }
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line-2); border-radius:9px; border:2px solid var(--bg); }
+  ::-webkit-scrollbar-track{ background:transparent; }
+
+  .wrap{ max-width:820px; margin:0 auto; }
+
+  /* ── 顶部 ── */
+  .top{
+    position:sticky; top:0; z-index:6;
+    padding:12px 14px 10px;
+    background:linear-gradient(180deg,var(--bg) 80%,color-mix(in srgb,var(--bg) 85%,transparent));
+    backdrop-filter:saturate(1.1) blur(3px);
+    border-bottom:1px solid var(--line);
+  }
+  .head-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .brand{ font-size:14.5px; font-weight:700; letter-spacing:-.01em; }
+  .stat{ font-size:12px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+  .stat b{ color:var(--ink-2); }
+  .spacer{ flex:1 1 auto; }
+
+  /* 输入 */
+  .capture{
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    margin-top:9px; padding:5px 6px 5px 10px;
+    background:var(--card);
+    border:1px solid var(--line-2);
+    border-radius:12px;
+    box-shadow:var(--sh);
+    transition:box-shadow .16s ease,border-color .16s ease;
+  }
+  .capture:focus-within{ border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent); }
+  .capture input{
+    flex:1 1 130px; min-width:0;
+    padding:6px 0;
+    font:inherit; font-size:13.5px; color:var(--ink);
+    background:transparent; border:0; outline:0;
+  }
+  .capture input::placeholder{ color:var(--ink-3); }
+  .kinds{ display:flex; gap:3px; flex:0 0 auto; }
+  .kinds button{
+    padding:4px 8px;
+    font:inherit; font-size:11.5px;
+    color:var(--ink-2); background:var(--track);
+    border:1px solid transparent; border-radius:7px; cursor:pointer;
+  }
+  .kinds button:hover{ background:var(--card); border-color:var(--line-2); }
+  .kinds button[aria-pressed="true"]{ color:var(--accent-fg); background:var(--accent); }
+
+  .btn{
+    flex:0 0 auto;
+    padding:6px 13px;
+    font:inherit; font-size:12.5px; font-weight:600;
+    color:var(--accent-fg); background:var(--accent);
+    border:0; border-radius:9px; cursor:pointer;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:disabled{ opacity:.55; cursor:progress; }
+  .btn.ghost{ color:var(--ink-2); background:var(--card); border:1px solid var(--line-2); font-weight:500; }
+  .btn.ghost:hover{ border-color:var(--ink-3); color:var(--ink); }
+
+  .chips{ display:flex; gap:5px; flex-wrap:wrap; margin-top:9px; }
+  .chip{
+    padding:3px 9px;
+    font:inherit; font-size:11.5px;
+    color:var(--ink-2); background:var(--card);
+    border:1px solid var(--line-2); border-radius:99px; cursor:pointer;
+  }
+  .chip:hover{ border-color:var(--ink-3); color:var(--ink); }
+  .chip[aria-pressed="true"]{ color:var(--accent-fg); background:var(--accent); border-color:var(--accent); }
+  .chip .n{ opacity:.75; margin-left:4px; }
+
+  /* ── 区块 ── */
+  .sec{ padding:16px 14px 0; }
+  .sec-head{ display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin-bottom:9px; }
+  .sec-head h2{
+    margin:0; font-size:11.5px; font-weight:700;
+    letter-spacing:.1em; color:var(--ink-2); text-transform:uppercase;
+  }
+  .sec-head .n{ font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+  .sec-head .hint{ font-size:11.5px; color:var(--ink-3); }
+
+  .kbadge{
+    display:inline-flex; align-items:center;
+    padding:1px 7px;
+    font-size:10.5px; font-weight:600;
+    color:var(--c,var(--ink-2));
+    background:color-mix(in srgb,var(--c,var(--ink-3)) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--c,var(--ink-3)) 32%,transparent);
+    border-radius:99px;
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+  .k-movie{ --c:var(--k-movie); }
+  .k-series{ --c:var(--k-series); }
+  .k-game{ --c:var(--k-game); }
+  .k-book{ --c:var(--k-book); }
+
+  /* ── 在追卡片 ── */
+  .now{
+    margin-bottom:9px; padding:10px 11px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--c,var(--accent));
+    border-radius:var(--r);
+    box-shadow:var(--sh);
+    transition:box-shadow .16s ease;
+  }
+  .now:hover{ box-shadow:var(--sh-2); }
+  .now-head{ display:flex; align-items:center; gap:7px; }
+  .now-title{ flex:1 1 auto; min-width:0; font-size:13.5px; font-weight:600; word-break:break-word; }
+  .now-pct{ font-size:12px; font-weight:700; color:var(--c,var(--accent)); font-variant-numeric:tabular-nums; }
+  .pbar{
+    height:6px; margin-top:8px;
+    border-radius:99px;
+    background:var(--track);
+    overflow:hidden;
+  }
+  .pbar i{
+    display:block; height:100%; width:0%;
+    border-radius:99px;
+    background:var(--c,var(--accent));
+    transition:width .4s cubic-bezier(.2,.7,.3,1);
+  }
+  .now-sub{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:7px; font-size:11.5px; color:var(--ink-3); }
+  .now-actions{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:8px; }
+
+  .mini{
+    padding:3px 9px;
+    font:inherit; font-size:11.5px;
+    color:var(--ink-2); background:var(--track);
+    border:1px solid transparent; border-radius:7px; cursor:pointer;
+  }
+  .mini:hover{ background:var(--card); border-color:var(--line-2); color:var(--ink); }
+  .mini.on{ color:var(--accent-fg); background:var(--accent); }
+  .mini.ic{ width:22px; height:22px; padding:0; display:grid; place-items:center; font-size:11.5px; }
+  .mini.danger{ color:var(--danger); }
+  .mini.danger.armed{ color:#fff; background:var(--danger); border-color:var(--danger); }
+
+  /* 评分 */
+  .stars{ display:inline-flex; gap:1px; }
+  .stars button{
+    padding:0 1px;
+    font:inherit; font-size:13px; line-height:1;
+    color:var(--line-2); background:transparent; border:0; cursor:pointer;
+  }
+  .stars button.on{ color:var(--star); }
+  .stars button:hover{ color:var(--star); transform:scale(1.12); }
+  .rnum{ font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums; margin-left:5px; }
+
+  /* ── 列表行（待看 / 看完 · 弃掉）── */
+  .row{
+    display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap;
+    margin-bottom:7px; padding:9px 10px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    box-shadow:var(--sh);
+  }
+  .row:hover{ border-color:var(--line-2); }
+  .row-main{ flex:1 1 200px; min-width:0; }
+  .row-title{ font-size:13px; line-height:1.5; word-break:break-word; }
+  .row.is-dropped .row-title{ color:var(--ink-3); }
+  .row-sub{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px; font-size:11px; color:var(--ink-3); }
+  .row-notes{ margin-top:4px; font-size:11.5px; color:var(--ink-2); line-height:1.55; }
+  .why{
+    margin-top:5px; padding:6px 8px;
+    font-size:11.5px; color:var(--ink-2); line-height:1.6;
+    background:var(--track);
+    border-left:2px solid color-mix(in srgb,var(--accent) 45%,transparent);
+    border-radius:0 7px 7px 0;
+  }
+  .why em{ font-style:normal; color:var(--ink-3); margin-right:5px; }
+  .row-actions{ flex:0 0 auto; display:flex; gap:4px; align-items:center; flex-wrap:wrap; justify-content:flex-end; max-width:240px; }
+
+  /* 编辑表单 */
+  .edit{ flex:1 1 100%; display:flex; flex-direction:column; gap:6px; }
+  .edit .line{ display:flex; gap:6px; }
+  .edit .line > *{ flex:1 1 0; min-width:0; }
+  .edit input,.edit select,.edit textarea{
+    width:100%;
+    padding:7px 9px;
+    font:inherit; font-size:12.5px; color:var(--ink);
+    background:var(--bg);
+    border:1px solid var(--line-2); border-radius:8px; outline:0;
+  }
+  .edit textarea{ min-height:60px; resize:vertical; line-height:1.6; }
+  .edit input:focus,.edit select:focus,.edit textarea:focus{ border-color:var(--accent); }
+  .edit .save-row{ display:flex; gap:6px; justify-content:flex-end; }
+
+  .empty{
+    padding:20px 16px;
+    text-align:center;
+    background:var(--card);
+    border:1px dashed var(--line-2);
+    border-radius:var(--r);
+    color:var(--ink-3);
+    font-size:12.5px;
+    line-height:1.85;
+  }
+  .empty b{ display:block; margin-bottom:4px; color:var(--ink); font-size:13px; font-weight:600; }
+
+  .foot{
+    display:flex; gap:14px; flex-wrap:wrap;
+    margin:18px 14px 0; padding-top:10px;
+    border-top:1px solid var(--line);
+    font-size:11.5px; color:var(--ink-3);
+  }
+
+  @media (max-width:640px){
+    .top{ padding:10px 10px 8px; }
+    .sec{ padding:14px 10px 0; }
+    .foot{ margin-left:10px; margin-right:10px; }
+    .row-actions{ max-width:none; justify-content:flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="head-row">
+      <span class="brand">🎬 待看与在追</span>
+      <span class="stat" id="stat">— 部作品</span>
+    </div>
+
+    <div class="capture">
+      <input id="new-title" placeholder="加入一部电影 / 剧集 / 游戏 / 书… 回车" autocomplete="off">
+      <div class="kinds" id="kinds">
+        <button data-kind="movie">电影</button>
+        <button data-kind="series">剧集</button>
+        <button data-kind="game">游戏</button>
+        <button data-kind="book">书</button>
+      </div>
+      <button class="btn" id="add-btn">加入</button>
+    </div>
+
+    <div class="chips" id="kind-chips"></div>
+  </div>
+
+  <section class="sec">
+    <div class="sec-head">
+      <h2>在追</h2>
+      <span class="n" id="now-n"></span>
+      <span class="hint">推一下进度，或者干脆弃掉 —— 弃了也算一种结论</span>
+    </div>
+    <div id="now"></div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <h2>待看</h2>
+      <span class="n" id="wish-n"></span>
+    </div>
+    <div id="wish"></div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <h2>看完 · 弃掉</h2>
+      <span class="n" id="end-n"></span>
+      <span class="hint">打分越高越靠前</span>
+    </div>
+    <div id="end"></div>
+  </section>
+
+  <div class="foot">
+    <span>数据：backlog/backlog.data.json</span>
+    <span>对小助手说「按我看过的推荐几部」也可以</span>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA_FILE = "backlog/backlog.data.json";
+  var SDK = window.spherse;
+
+  var KINDS = {
+    movie:  { label: "电影", cls: "k-movie" },
+    series: { label: "剧集", cls: "k-series" },
+    game:   { label: "游戏", cls: "k-game" },
+    book:   { label: "书",   cls: "k-book" }
+  };
+  var KIND_ORDER = ["movie", "series", "game", "book"];
+  var STATUS_LABEL = { wish: "待看", doing: "在追", done: "看完", dropped: "弃了" };
+
+  var state = {
+    items: [],
+    filter: "all",
+    kind: "movie",
+    editing: null,
+    armed: null
+  };
+
+  var timerArm = null;
+
+  var el = {
+    input: document.getElementById("new-title"),
+    kinds: document.getElementById("kinds"),
+    addBtn: document.getElementById("add-btn"),
+    stat: document.getElementById("stat"),
+    kindChips: document.getElementById("kind-chips"),
+    now: document.getElementById("now"),
+    nowN: document.getElementById("now-n"),
+    wish: document.getElementById("wish"),
+    wishN: document.getElementById("wish-n"),
+    end: document.getElementById("end"),
+    endN: document.getElementById("end-n")
+  };
+
+  /* ───────── 工具 ───────── */
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function toast(variant, message, description) {
+    if (!SDK || !SDK.toast) return;
+    try { SDK.toast({ variant: variant, message: message, description: description }); } catch (e) {}
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return legacyCopy(text); });
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+
+  function legacyCopy(text) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "-1000px";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  function uidKey() { return "backlog:" + Date.now() + ":" + Math.random().toString(36).slice(2, 8); }
+
+  function find(id) {
+    var hit = null;
+    state.items.forEach(function (t) { if (t.id === id) hit = t; });
+    return hit;
+  }
+
+  function kindMeta(k) { return KINDS[k] || KINDS.movie; }
+
+  function itemToText(t) {
+    var lines = ["《" + (t.title || "") + "》" + (t.year ? "（" + t.year + "）" : "")
+      + " · " + kindMeta(t.kind).label + " · " + (STATUS_LABEL[t.status] || "待看")];
+    if (t.genre) lines.push("题材：" + t.genre);
+    if (t.rating) lines.push("评分：" + t.rating + "/10");
+    if (t.progress && t.status === "doing") lines.push("进度：" + t.progress + "%" + (t.notes ? "（" + t.notes + "）" : ""));
+    else if (t.notes) lines.push("备注：" + t.notes);
+    if (t.reason) lines.push("推荐理由：" + t.reason);
+    return lines.join("\n");
+  }
+
+  /* ───────── 数据 ───────── */
+
+  function load() {
+    if (!SDK || !SDK.data) return Promise.resolve();
+    return SDK.data.get({ file: DATA_FILE, key: "items" }).then(function (items) {
+      state.items = Array.isArray(items) ? items : [];
+    }, function () {
+      state.items = [];
+    });
+  }
+
+  function mutate(name, args) {
+    if (!SDK || !SDK.data) {
+      toast("error", "未连接到 Spherse 数据服务", "请在 Spherse 中打开本页面");
+      return Promise.reject(new Error("no_sdk"));
+    }
+    return SDK.data.mutate({ file: DATA_FILE, name: name, args: args, idempotencyKey: uidKey() });
+  }
+
+  function upsert(item) {
+    var found = false;
+    state.items = state.items.map(function (t) {
+      if (t.id === item.id) { found = true; return item; }
+      return t;
+    });
+    if (!found) state.items.push(item);
+  }
+
+  function refresh() {
+    return load().then(render, render);
+  }
+
+  /* ───────── 视图数据 ───────── */
+
+  function scoped() {
+    return state.items.filter(function (t) {
+      return state.filter === "all" || t.kind === state.filter;
+    });
+  }
+
+  function nowItems() {
+    return scoped().filter(function (t) { return t.status === "doing"; })
+      .sort(function (a, b) { return (Number(b.progress) || 0) - (Number(a.progress) || 0); });
+  }
+
+  function wishItems() {
+    return scoped().filter(function (t) { return (t.status || "wish") === "wish"; })
+      .sort(function (a, b) {
+        var ra = a.source === "小助手推荐" ? 1 : 0;
+        var rb = b.source === "小助手推荐" ? 1 : 0;
+        if (ra !== rb) return rb - ra;
+        return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+      });
+  }
+
+  function endItems() {
+    var rank = { done: 0, dropped: 1 };
+    return scoped().filter(function (t) { return t.status === "done" || t.status === "dropped"; })
+      .sort(function (a, b) {
+        var d = (Number(b.rating) || 0) - (Number(a.rating) || 0);
+        if (d) return d;
+        if (rank[a.status] !== rank[b.status]) return rank[a.status] - rank[b.status];
+        return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+      });
+  }
+
+  /* ───────── 渲染 ───────── */
+
+  function renderStats() {
+    var by = function (s) { return state.items.filter(function (t) { return t.status === s; }).length; };
+    var rated = state.items.filter(function (t) { return Number(t.rating) > 0; });
+    var avg = rated.length
+      ? (rated.reduce(function (n, t) { return n + Number(t.rating); }, 0) / rated.length).toFixed(1)
+      : "—";
+    el.stat.innerHTML = "待看 <b>" + by("wish") + "</b> · 在追 <b>" + by("doing") + "</b> · 看完 <b>" + by("done")
+      + "</b> · 弃了 <b>" + by("dropped") + "</b> · 平均 <b>★" + avg + "</b>";
+  }
+
+  function renderFilterChips() {
+    var counts = { all: state.items.length };
+    KIND_ORDER.forEach(function (k) {
+      counts[k] = state.items.filter(function (t) { return t.kind === k; }).length;
+    });
+    var html = '<button class="chip" data-filter="all" aria-pressed="' + (state.filter === "all") + '">全部<span class="n">' + counts.all + "</span></button>";
+    html += KIND_ORDER.filter(function (k) { return counts[k]; }).map(function (k) {
+      return '<button class="chip" data-filter="' + k + '" aria-pressed="' + (state.filter === k) + '">'
+        + esc(kindMeta(k).label) + '<span class="n">' + counts[k] + "</span></button>";
+    }).join("");
+    el.kindChips.innerHTML = html;
+  }
+
+  function renderKindPicker() {
+    Array.prototype.forEach.call(el.kinds.querySelectorAll("button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.kind === state.kind));
+    });
+  }
+
+  function stars(rating) {
+    var r = Number(rating) || 0;
+    var filled = Math.round(r / 2);
+    var out = "";
+    for (var i = 1; i <= 5; i++) out += i <= filled ? "★" : "☆";
+    return out;
+  }
+
+  function starEditor(item) {
+    var r = Number(item.rating) || 0;
+    var filled = Math.round(r / 2);
+    var html = '<span class="stars">';
+    for (var i = 1; i <= 5; i++) {
+      html += '<button class="' + (i <= filled ? "on" : "") + '" data-act="rate" data-score="' + (i * 2)
+        + '" title="打 ' + (i * 2) + ' 分">' + (i <= filled ? "★" : "☆") + "</button>";
+    }
+    html += "</span>";
+    if (r) html += '<span class="rnum">' + r + "/10</span>";
+    return html;
+  }
+
+  function editForm(item) {
+    var k = item.kind || "movie";
+    return '<div class="edit">'
+      + '<input class="e-title" value="' + esc(item.title || "") + '" placeholder="标题">'
+      + '<div class="line">'
+      + '<select class="e-kind">'
+      + KIND_ORDER.map(function (x) {
+          return '<option value="' + x + '"' + (k === x ? " selected" : "") + ">" + esc(kindMeta(x).label) + "</option>";
+        }).join("")
+      + "</select>"
+      + '<input class="e-year" value="' + esc(item.year || "") + '" placeholder="年份">'
+      + "</div>"
+      + '<input class="e-genre" value="' + esc(item.genre || "") + '" placeholder="题材，如：科幻,悬疑">'
+      + '<textarea class="e-notes" placeholder="备注 / 进度说明 / 弃坑原因…">' + esc(item.notes || "") + "</textarea>"
+      + '<div class="save-row">'
+      + '<button class="mini" data-act="cancel-edit">取消</button>'
+      + '<button class="mini on" data-act="save-edit">保存</button>'
+      + "</div></div>";
+  }
+
+  function deleteBtn(id, cls) {
+    var armed = state.armed === "item:" + id;
+    return '<button class="' + (cls || "mini ic") + " danger" + (armed ? " armed" : "")
+      + '" data-act="del" title="删除">' + (armed ? "确认" : "✕") + "</button>";
+  }
+
+  function renderNow() {
+    var list = nowItems();
+    el.nowN.textContent = list.length ? list.length + " 部" : "";
+    if (!list.length) {
+      el.now.innerHTML = '<div class="empty"><b>手上没有在追的</b>'
+        + "在「待看」里点一部「开始追」，它就会出现在这里，并带一条进度条。</div>";
+      return;
+    }
+
+    el.now.innerHTML = list.map(function (t) {
+      var km = kindMeta(t.kind);
+      var pct = Math.max(0, Math.min(100, Number(t.progress) || 0));
+      var isMovie = t.kind === "movie";
+
+      var html = '<article class="now ' + km.cls + '" data-id="' + esc(t.id) + '">';
+      if (state.editing === t.id) { html += editForm(t) + "</article>"; return html; }
+
+      html += '<div class="now-head">'
+        + '<span class="kbadge ' + km.cls + '">' + esc(km.label) + "</span>"
+        + '<span class="now-title">' + esc(t.title || "") + "</span>"
+        + (isMovie ? "" : '<span class="now-pct">' + pct + "%</span>")
+        + "</div>";
+
+      if (!isMovie) html += '<div class="pbar"><i style="width:' + pct + '%"></i></div>';
+
+      html += '<div class="now-sub">'
+        + (t.notes ? "<span>" + esc(t.notes) + "</span>" : "")
+        + (t.genre ? "<span>" + esc(t.genre) + "</span>" : "")
+        + '<span class="spacer"></span>'
+        + starEditor(t)
+        + "</div>";
+
+      html += '<div class="now-actions">'
+        + (isMovie ? "" : '<button class="mini" data-act="plus10">+10%</button>')
+        + '<button class="mini on" data-act="finish">看完了</button>'
+        + '<button class="mini" data-act="drop">弃了</button>'
+        + '<span class="spacer"></span>'
+        + '<button class="mini ic" data-act="edit" title="编辑">✎</button>'
+        + deleteBtn(t.id)
+        + "</div>";
+
+      html += "</article>";
+      return html;
+    }).join("");
+  }
+
+  function renderWish() {
+    var list = wishItems();
+    el.wishN.textContent = list.length ? list.length + " 部" : "";
+    if (!list.length) {
+      el.wish.innerHTML = '<div class="empty"><b>待看是空的</b>'
+        + "在上面加一部，或者点右上角让小助手按你的口味推荐几部。</div>";
+      return;
+    }
+
+    el.wish.innerHTML = list.map(function (t) {
+      var km = kindMeta(t.kind);
+      var html = '<article class="row ' + km.cls + '" data-id="' + esc(t.id) + '">';
+      if (state.editing === t.id) { html += editForm(t) + "</article>"; return html; }
+
+      html += '<span class="kbadge ' + km.cls + '">' + esc(km.label) + "</span>"
+        + '<div class="row-main">'
+        + '<div class="row-title">《' + esc(t.title || "") + "》"
+        + (t.year ? '<span style="color:var(--ink-3)"> · ' + esc(t.year) + "</span>" : "")
+        + "</div>"
+        + '<div class="row-sub">'
+        + (t.source === "小助手推荐" ? '<span class="kbadge ' + km.cls + '">推荐</span>' : "")
+        + (t.genre ? "<span>" + esc(t.genre) + "</span>" : "")
+        + "</div>"
+        + (t.reason ? '<div class="why"><em>为什么推荐给我</em>' + esc(t.reason) + "</div>" : "")
+        + "</div>"
+        + '<div class="row-actions">'
+        + '<button class="mini on" data-act="start">开始追</button>'
+        + '<button class="mini ic" data-act="edit" title="编辑">✎</button>'
+        + deleteBtn(t.id)
+        + "</div>";
+      html += "</article>";
+      return html;
+    }).join("");
+  }
+
+  function renderEnd() {
+    var list = endItems();
+    el.endN.textContent = list.length ? list.length + " 部" : "";
+    if (!list.length) {
+      el.end.innerHTML = '<div class="empty"><b>还没有看完或弃掉的作品</b>打分记录越多，小助手越懂你的口味。</div>';
+      return;
+    }
+
+    el.end.innerHTML = list.map(function (t) {
+      var km = kindMeta(t.kind);
+      var dropped = t.status === "dropped";
+      var html = '<article class="row ' + (dropped ? "is-dropped " : "") + km.cls + '" data-id="' + esc(t.id) + '">';
+      if (state.editing === t.id) { html += editForm(t) + "</article>"; return html; }
+
+      html += '<span class="kbadge ' + km.cls + '">' + (dropped ? "弃了" : "看完") + "</span>"
+        + '<div class="row-main">'
+        + '<div class="row-title">《' + esc(t.title || "") + "》"
+        + (t.year ? '<span style="color:var(--ink-3)"> · ' + esc(t.year) + "</span>" : "")
+        + "</div>"
+        + '<div class="row-sub">' + starEditor(t)
+        + (t.genre ? "<span>" + esc(t.genre) + "</span>" : "")
+        + "</div>"
+        + (t.notes ? '<div class="row-notes">' + esc(t.notes) + "</div>" : "")
+        + "</div>"
+        + '<div class="row-actions">'
+        + '<button class="mini" data-act="pickup">重新拾起</button>'
+        + '<button class="mini ic" data-act="copy" title="复制信息">⧉</button>'
+        + '<button class="mini ic" data-act="edit" title="编辑">✎</button>'
+        + deleteBtn(t.id)
+        + "</div>";
+      html += "</article>";
+      return html;
+    }).join("");
+  }
+
+  function render() {
+    renderStats();
+    renderKindPicker();
+    renderFilterChips();
+    renderNow();
+    renderWish();
+    renderEnd();
+  }
+
+  /* ───────── 动作 ───────── */
+
+  function resetArm() {
+    if (timerArm) { clearTimeout(timerArm); timerArm = null; }
+    state.armed = null;
+  }
+
+  function applyMutation(name, args) {
+    return mutate(name, args).then(function (item) {
+      upsert(item);
+      resetArm();
+      render();
+      return item;
+    }, function () {});
+  }
+
+  function addItem() {
+    var title = el.input.value.replace(/\s+/g, " ").trim();
+    if (!title) { el.input.focus(); return; }
+    el.addBtn.disabled = true;
+    mutate("addItem", { title: title, kind: state.kind, status: "wish", progress: 0 })
+      .then(function (item) {
+        upsert(item);
+        el.input.value = "";
+        render();
+        el.input.focus();
+        toast("success", "已加入待看", kindMeta(state.kind).label + " · " + title);
+      }, function () {})
+      .then(function () { el.addBtn.disabled = false; });
+  }
+
+  function saveEdit(card, item) {
+    var title = card.querySelector(".e-title").value.trim();
+    if (!title) { toast("warning", "标题不能为空"); return; }
+    applyMutation("updateItem", {
+      id: item.id,
+      title: title,
+      kind: card.querySelector(".e-kind").value,
+      year: card.querySelector(".e-year").value.trim(),
+      genre: card.querySelector(".e-genre").value.trim(),
+      notes: card.querySelector(".e-notes").value.trim()
+    }).then(function () { state.editing = null; render(); });
+  }
+
+  function handleAction(btn, card, item) {
+    var act = btn.dataset.act;
+    var id = item.id;
+
+    if (act === "start") { applyMutation("setStatus", { id: id, status: "doing" }); return; }
+    if (act === "finish") {
+      applyMutation("setStatus", { id: id, status: "done", progress: 100 }).then(function () {
+        toast("success", "看完了", "去「看完 · 弃掉」给它打个分 —— 分越高，口味画像越准");
+      });
+      return;
+    }
+    if (act === "drop") { applyMutation("setStatus", { id: id, status: "dropped" }); return; }
+    if (act === "pickup") { applyMutation("setStatus", { id: id, status: "wish" }); return; }
+    if (act === "plus10") {
+      var next = Math.min(100, (Number(item.progress) || 0) + 10);
+      if (next >= 100) {
+        applyMutation("setStatus", { id: id, status: "done", progress: 100 }).then(function () {
+          toast("success", "到 100% 了，已记作看完", item.title);
+        });
+        return;
+      }
+      applyMutation("setProgress", { id: id, progress: next });
+      return;
+    }
+    if (act === "rate") { applyMutation("setRating", { id: id, rating: Number(btn.dataset.score) }); return; }
+    if (act === "copy") {
+      copyText(itemToText(item)).then(function (ok) {
+        toast(ok ? "success" : "error", ok ? "已复制" : "复制失败");
+      });
+      return;
+    }
+    if (act === "edit") { state.editing = id; resetArm(); render(); return; }
+    if (act === "cancel-edit") { state.editing = null; render(); return; }
+    if (act === "save-edit") { saveEdit(card, item); return; }
+    if (act === "del") {
+      if (state.armed !== "item:" + id) {
+        state.armed = "item:" + id;
+        render();
+        timerArm = setTimeout(function () { timerArm = null; state.armed = null; render(); }, 3200);
+        return;
+      }
+      resetArm();
+      mutate("removeItem", { id: id }).then(function () {
+        state.items = state.items.filter(function (x) { return x.id !== id; });
+        render();
+      }, function () {});
+      return;
+    }
+  }
+
+  /* ───────── 事件 ───────── */
+
+  el.addBtn.addEventListener("click", addItem);
+  el.input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); addItem(); }
+  });
+
+  el.kinds.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-kind]");
+    if (!b) return;
+    state.kind = b.dataset.kind;
+    renderKindPicker();
+    el.input.focus();
+  });
+
+  el.kindChips.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-filter]");
+    if (!b) return;
+    state.filter = b.dataset.filter;
+    resetArm();
+    render();
+  });
+
+  [el.now, el.wish, el.end].forEach(function (host) {
+    host.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      var card = btn.closest("[data-id]");
+      if (!card) return;
+      var item = find(card.dataset.id);
+      if (!item) return;
+      handleAction(btn, card, item);
+    });
+  });
+
+  /* ───────── 启动 ───────── */
+
+  function boot() {
+    if (!SDK || !SDK.data) {
+      el.now.innerHTML = '<div class="empty"><b>无法连接数据服务</b>'
+        + "未检测到 Spherse 运行环境，请在 Spherse 中打开本页面。</div>";
+      return;
+    }
+
+    refresh();
+
+    if (SDK.events && SDK.events.on) {
+      SDK.events.on("file:update", { path: DATA_FILE }, function () {
+        if (state.editing) return;
+        refresh();
+      });
+    }
+
+    el.input.focus();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

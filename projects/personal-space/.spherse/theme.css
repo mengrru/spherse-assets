@@ -1,0 +1,203 @@
+/* ============================================================
+   墨与靛 · Ink & Indigo
+   项目主题 —— 取自「事务簿」看板的配色：
+     暖白纸底 #f6f5f1 / 深靛蓝 #3f3170 / 栗红 #b3384a
+     琥珀 #bf8417 / 钢蓝 #3a6ea5 / 墨绿 #2f7d5b
+   浅色为一等公民，深色按同族推导（同一靛蓝提亮、中性色转暖灰）
+   ============================================================ */
+
+:root {
+  /* ── 页面与容器 ── */
+  --sp-background: #f6f5f1;
+  --sp-foreground: #1d1b17;
+  --sp-card: #ffffff;
+  --sp-card-foreground: #1d1b17;
+
+  /* ── 弹出层 ── */
+  --sp-popover: #ffffff;
+  --sp-popover-foreground: #1d1b17;
+
+  /* ── 交互元素 ── */
+  --sp-primary: #3f3170;
+  --sp-primary-foreground: #ffffff;
+  --sp-secondary: #eeede8;
+  --sp-secondary-foreground: #3a3630;
+  --sp-accent: #eeede8;
+  --sp-accent-foreground: #1d1b17;
+
+  /* ── 文字层级 ── */
+  --sp-muted: #eeede8;
+  --sp-muted-foreground: #8d867a;
+
+  /* ── 边框与输入 ── */
+  --sp-border: #e5e2d9;
+  --sp-input: #d4d0c5;
+  --sp-ring: #6d5bb8;
+
+  /* ── 语义色 ── */
+  --sp-destructive: #b3384a;
+  --sp-success: #2f7d5b;
+  --sp-success-foreground: #ffffff;
+  --sp-warning: #bf8417;
+  --sp-warning-foreground: #ffffff;
+  --sp-diff-added: #2f7d5b;
+
+  /* ── 圆角（看板卡片 10px + 列容器 14px 的中间值） ── */
+  --sp-radius: 0.625rem;
+
+  /* ── 滚动条：与纸底同调的暖灰，弱存在感 ── */
+  --sp-scrollbar-size: 9px;
+  --sp-scrollbar-thumb: rgba(141, 134, 122, 0.35);
+  --sp-scrollbar-thumb-hover: rgba(141, 134, 122, 0.6);
+  --sp-scrollbar-track: transparent;
+
+  /* ── 侧边栏：用看板「列轨道」的暖灰，形成 轨道 / 卡片 两层 ── */
+  --sp-sidebar: #eeede8;
+  --sp-sidebar-foreground: #1d1b17;
+  --sp-sidebar-primary: #3f3170;
+  --sp-sidebar-primary-foreground: #ffffff;
+  --sp-sidebar-accent: #e5e2d9;
+  --sp-sidebar-accent-foreground: #1d1b17;
+  --sp-sidebar-border: #e2dfd5;
+  --sp-sidebar-ring: #6d5bb8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sp-background: #17161c;
+    --sp-foreground: #ece9e2;
+    --sp-card: #1f1e26;
+    --sp-card-foreground: #ece9e2;
+    --sp-popover: #23222b;
+    --sp-popover-foreground: #ece9e2;
+
+    /* 深底上把靛蓝提亮，保证对比度 */
+    --sp-primary: #8c7ce0;
+    --sp-primary-foreground: #16151b;
+    --sp-secondary: #2a2934;
+    --sp-secondary-foreground: #ded9d0;
+    --sp-accent: #2a2934;
+    --sp-accent-foreground: #ece9e2;
+
+    --sp-muted: #262530;
+    --sp-muted-foreground: #a29b8f;
+
+    --sp-border: #32313c;
+    --sp-input: #3d3c48;
+    --sp-ring: #8c7ce0;
+
+    --sp-destructive: #e0616f;
+    --sp-success: #55b98a;
+    --sp-success-foreground: #101a14;
+    --sp-warning: #dda43a;
+    --sp-warning-foreground: #1a1405;
+    --sp-diff-added: #55b98a;
+
+    --sp-scrollbar-thumb: rgba(162, 155, 143, 0.35);
+    --sp-scrollbar-thumb-hover: rgba(162, 155, 143, 0.6);
+
+    --sp-sidebar: #1b1a22;
+    --sp-sidebar-foreground: #ece9e2;
+    --sp-sidebar-primary: #8c7ce0;
+    --sp-sidebar-primary-foreground: #16151b;
+    --sp-sidebar-accent: #2a2934;
+    --sp-sidebar-accent-foreground: #ece9e2;
+    --sp-sidebar-border: #2e2d38;
+    --sp-sidebar-ring: #8c7ce0;
+  }
+}
+
+/* ============================================================
+   标签栏：跟随纸底 / 卡片的两层关系
+   ============================================================ */
+
+[data-tab-bar] {
+  background: var(--sp-background);
+  border-bottom-color: var(--sp-border);
+}
+
+[data-tab][data-active="true"] {
+  background: var(--sp-card);
+  color: var(--sp-foreground);
+}
+
+/* ============================================================
+   Toast：与卡片同款描边与圆角
+   ============================================================ */
+
+[data-toast-root] [data-sonner-toast] {
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  background: var(--sp-popover);
+  color: var(--sp-popover-foreground);
+  box-shadow: 0 6px 16px rgba(29, 27, 23, 0.1);
+}
+
+[data-toast-root] [data-description] {
+  color: var(--sp-muted-foreground);
+}
+
+/* ============================================================
+   全局聊天窗口默认样式（作用于所有 agent 的 inline / floating 聊天）
+   统一的都是变量，浅深色自动跟随
+   ============================================================ */
+
+[data-chat-root] {
+  [data-chat-header] {
+    background: var(--sp-background);
+    border-bottom: 1px solid var(--sp-border);
+  }
+
+  /* 用户气泡：深靛蓝实底，右下收角 */
+  [data-chat-message][data-role="user"] [data-chat-bubble] {
+    color: var(--sp-primary-foreground);
+    background: var(--sp-primary);
+    border: 1px solid var(--sp-primary);
+    border-radius: 12px 12px 3px 12px;
+  }
+
+  /* 助手气泡：白卡 + 发丝描边，左下收角 */
+  [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    color: var(--sp-card-foreground);
+    background: var(--sp-card);
+    border: 1px solid var(--sp-border);
+    border-radius: 12px 12px 12px 3px;
+  }
+
+  [data-chat-composer] {
+    background: var(--sp-background);
+    border-top: 1px solid var(--sp-border);
+  }
+
+  [data-chat-composer-input] {
+    background: var(--sp-card);
+    border-color: var(--sp-input);
+    border-radius: var(--sp-radius);
+  }
+
+  [data-chat-composer] textarea {
+    color: var(--sp-foreground);
+  }
+
+  [data-chat-composer] textarea::placeholder {
+    color: var(--sp-muted-foreground);
+  }
+
+  /* 代码块 / 引用：与纸底同调 */
+  [data-md-code] {
+    background: var(--sp-muted);
+    border: 1px solid var(--sp-border);
+    border-radius: 0.5rem;
+  }
+
+  [data-md-code-inline] {
+    background: var(--sp-muted);
+    border-radius: 0.25rem;
+  }
+
+  [data-md-quote] {
+    border-left: 3px solid var(--sp-primary);
+    background: color-mix(in srgb, var(--sp-primary) 6%, transparent);
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+}

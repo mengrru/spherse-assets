@@ -1,0 +1,514 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "收纳地图：家里每个位置（柜子/箱子/抽屉）装了什么，用来回答「这东西放哪儿了」",
+    "queries": {
+      "listPlaces": {
+        "desc": "列出所有收纳位置，可按房间（room）筛选",
+        "path": "places",
+        "identity": "id",
+        "params": {
+          "room": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 50
+      },
+      "listItemsInPlace": {
+        "desc": "看某个位置里装了哪些东西（placeId 必传）",
+        "path": "items",
+        "identity": "id",
+        "params": {
+          "placeId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 100
+      },
+      "listItems": {
+        "desc": "按标签或名称筛选物品（找东西时用）",
+        "path": "items",
+        "identity": "id",
+        "params": {
+          "tags": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "placeId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 100
+      },
+      "getPlace": {
+        "desc": "按 ID 取单个位置",
+        "path": "places",
+        "identity": "id",
+        "defaultLimit": 1
+      }
+    },
+    "mutations": {
+      "addPlace": {
+        "desc": "新建一个收纳位置（柜子、箱子、抽屉、某个角落都可）",
+        "op": "append",
+        "path": "places",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "room": {
+            "type": "string",
+            "default": "未指定"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updatePlace": {
+        "desc": "改位置的名称、房间或备注",
+        "op": "update",
+        "path": "places",
+        "match": "id",
+        "fields": {
+          "name": {
+            "type": "string"
+          },
+          "room": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "removePlace": {
+        "desc": "删除位置；其下物品不会自动删除，调用方应先用 listItemsInPlace 把里面的东西清空或挪走",
+        "op": "remove",
+        "path": "places",
+        "match": "id"
+      },
+      "addItem": {
+        "desc": "往某个位置放一件东西（placeId 必传，qty 默认 1）",
+        "op": "append",
+        "path": "items",
+        "fields": {
+          "placeId": {
+            "type": "string",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "qty": {
+            "type": "integer",
+            "default": 1
+          },
+          "tags": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updateItem": {
+        "desc": "改物品的名称、数量、标签或备注（换位置请用 moveItem）",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "name": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "integer"
+          },
+          "tags": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "moveItem": {
+        "desc": "把一件东西挪到另一个位置（收纳换地方后更新）",
+        "op": "update",
+        "path": "items",
+        "match": "id",
+        "fields": {
+          "placeId": {
+            "type": "string",
+            "required": true
+          }
+        }
+      },
+      "removeItem": {
+        "desc": "删掉一条物品记录",
+        "op": "remove",
+        "path": "items",
+        "match": "id"
+      }
+    }
+  },
+  "places": [
+    {
+      "id": "place-1",
+      "name": "换季衣物箱",
+      "room": "储物间",
+      "note": "床底下两个大号真空袋",
+      "createdAt": "2026-03-05T10:00:00.000Z"
+    },
+    {
+      "id": "place-2",
+      "name": "主卧衣柜上层",
+      "room": "卧室",
+      "note": "要踩凳子才够得到",
+      "createdAt": "2026-03-05T10:05:00.000Z"
+    },
+    {
+      "id": "place-3",
+      "name": "书桌第二个抽屉",
+      "room": "书房",
+      "note": "证件与杂工具都在这儿",
+      "createdAt": "2026-04-11T20:30:00.000Z"
+    },
+    {
+      "id": "place-4",
+      "name": "书柜底层",
+      "room": "书房",
+      "note": "",
+      "createdAt": "2026-04-11T20:35:00.000Z"
+    },
+    {
+      "id": "place-5",
+      "name": "厨房吊柜左侧",
+      "room": "厨房",
+      "note": "不常用的餐具",
+      "createdAt": "2026-05-02T09:15:00.000Z"
+    },
+    {
+      "id": "place-6",
+      "name": "玄关鞋柜顶层",
+      "room": "客厅",
+      "note": "",
+      "createdAt": "2026-06-18T18:40:00.000Z"
+    },
+    {
+      "id": "place-7",
+      "name": "药箱",
+      "room": "客厅",
+      "note": "电视机下面那个白盒子",
+      "createdAt": "2026-06-18T18:45:00.000Z"
+    }
+  ],
+  "items": [
+    {
+      "id": "it-1",
+      "placeId": "place-1",
+      "name": "羽绒服",
+      "qty": 2,
+      "tags": "冬装",
+      "note": "一长一短",
+      "createdAt": "2026-03-05T10:02:00.000Z"
+    },
+    {
+      "id": "it-2",
+      "placeId": "place-1",
+      "name": "毛衣",
+      "qty": 5,
+      "tags": "冬装",
+      "note": "",
+      "createdAt": "2026-03-05T10:02:30.000Z"
+    },
+    {
+      "id": "it-3",
+      "placeId": "place-1",
+      "name": "厚袜子",
+      "qty": 8,
+      "tags": "冬装",
+      "note": "成对装袋",
+      "createdAt": "2026-03-05T10:03:00.000Z"
+    },
+    {
+      "id": "it-4",
+      "placeId": "place-1",
+      "name": "凉席",
+      "qty": 1,
+      "tags": "夏用",
+      "note": "",
+      "createdAt": "2026-03-05T10:03:30.000Z"
+    },
+    {
+      "id": "it-5",
+      "placeId": "place-2",
+      "name": "围巾",
+      "qty": 4,
+      "tags": "冬装",
+      "note": "",
+      "createdAt": "2026-03-05T10:06:00.000Z"
+    },
+    {
+      "id": "it-6",
+      "placeId": "place-2",
+      "name": "手套",
+      "qty": 2,
+      "tags": "冬装",
+      "note": "一双骑行用",
+      "createdAt": "2026-03-05T10:06:30.000Z"
+    },
+    {
+      "id": "it-7",
+      "placeId": "place-2",
+      "name": "旧枕套",
+      "qty": 3,
+      "tags": "家纺",
+      "note": "",
+      "createdAt": "2026-03-05T10:07:00.000Z"
+    },
+    {
+      "id": "it-8",
+      "placeId": "place-3",
+      "name": "护照",
+      "qty": 2,
+      "tags": "证件",
+      "note": "2028 年到期",
+      "createdAt": "2026-04-11T20:31:00.000Z"
+    },
+    {
+      "id": "it-9",
+      "placeId": "place-3",
+      "name": "身份证复印件",
+      "qty": 3,
+      "tags": "证件",
+      "note": "",
+      "createdAt": "2026-04-11T20:31:30.000Z"
+    },
+    {
+      "id": "it-10",
+      "placeId": "place-3",
+      "name": "备用钥匙",
+      "qty": 2,
+      "tags": "工具",
+      "note": "一把大门一把信箱",
+      "createdAt": "2026-04-11T20:32:00.000Z"
+    },
+    {
+      "id": "it-11",
+      "placeId": "place-3",
+      "name": "螺丝刀套装",
+      "qty": 1,
+      "tags": "工具",
+      "note": "小盒装，六件",
+      "createdAt": "2026-04-11T20:32:30.000Z"
+    },
+    {
+      "id": "it-12",
+      "placeId": "place-3",
+      "name": "充电宝",
+      "qty": 2,
+      "tags": "数码",
+      "note": "其中一个接触不良",
+      "createdAt": "2026-04-11T20:33:00.000Z"
+    },
+    {
+      "id": "it-13",
+      "placeId": "place-3",
+      "name": "创可贴",
+      "qty": 1,
+      "tags": "药品",
+      "note": "顺手放的，主药箱在客厅",
+      "createdAt": "2026-04-11T20:33:30.000Z"
+    },
+    {
+      "id": "it-14",
+      "placeId": "place-4",
+      "name": "相册",
+      "qty": 3,
+      "tags": "纪念",
+      "note": "",
+      "createdAt": "2026-04-11T20:36:00.000Z"
+    },
+    {
+      "id": "it-15",
+      "placeId": "place-4",
+      "name": "旧手机",
+      "qty": 2,
+      "tags": "数码",
+      "note": "还能开机，留着当备用机",
+      "createdAt": "2026-04-11T20:36:30.000Z"
+    },
+    {
+      "id": "it-16",
+      "placeId": "place-4",
+      "name": "移动硬盘",
+      "qty": 1,
+      "tags": "数码",
+      "note": "1T，里面是 2023 年前的照片",
+      "createdAt": "2026-04-11T20:37:00.000Z"
+    },
+    {
+      "id": "it-17",
+      "placeId": "place-4",
+      "name": "发票收纳袋",
+      "qty": 1,
+      "tags": "文件",
+      "note": "保修卡也在里面",
+      "createdAt": "2026-04-11T20:37:30.000Z"
+    },
+    {
+      "id": "it-18",
+      "placeId": "place-4",
+      "name": "笔记本（未拆）",
+      "qty": 5,
+      "tags": "文具",
+      "note": "",
+      "createdAt": "2026-04-11T20:38:00.000Z"
+    },
+    {
+      "id": "it-19",
+      "placeId": "place-5",
+      "name": "备用碗盘",
+      "qty": 6,
+      "tags": "餐具",
+      "note": "来客人时用",
+      "createdAt": "2026-05-02T09:16:00.000Z"
+    },
+    {
+      "id": "it-20",
+      "placeId": "place-5",
+      "name": "保温杯",
+      "qty": 3,
+      "tags": "餐具",
+      "note": "",
+      "createdAt": "2026-05-02T09:16:30.000Z"
+    },
+    {
+      "id": "it-21",
+      "placeId": "place-5",
+      "name": "保鲜盒",
+      "qty": 5,
+      "tags": "厨房",
+      "note": "大小不一，可以套起来",
+      "createdAt": "2026-05-02T09:17:00.000Z"
+    },
+    {
+      "id": "it-22",
+      "placeId": "place-5",
+      "name": "蛋糕模具",
+      "qty": 2,
+      "tags": "厨房",
+      "note": "一年用两次",
+      "createdAt": "2026-05-02T09:17:30.000Z"
+    },
+    {
+      "id": "it-23",
+      "placeId": "place-6",
+      "name": "折叠伞",
+      "qty": 2,
+      "tags": "出行",
+      "note": "",
+      "createdAt": "2026-06-18T18:41:00.000Z"
+    },
+    {
+      "id": "it-24",
+      "placeId": "place-6",
+      "name": "鞋套",
+      "qty": 1,
+      "tags": "出行",
+      "note": "装修师傅来的时候用",
+      "createdAt": "2026-06-18T18:41:30.000Z"
+    },
+    {
+      "id": "it-25",
+      "placeId": "place-6",
+      "name": "快递剪刀",
+      "qty": 1,
+      "tags": "工具",
+      "note": "拆包裹专用，别拿去剪别的",
+      "createdAt": "2026-06-18T18:42:00.000Z"
+    },
+    {
+      "id": "it-26",
+      "placeId": "place-7",
+      "name": "创可贴",
+      "qty": 1,
+      "tags": "药品",
+      "note": "盒装，防水款",
+      "createdAt": "2026-06-18T18:46:00.000Z"
+    },
+    {
+      "id": "it-27",
+      "placeId": "place-7",
+      "name": "退烧药",
+      "qty": 2,
+      "tags": "药品",
+      "note": "看保质期，2027 年 6 月",
+      "createdAt": "2026-06-18T18:46:30.000Z"
+    },
+    {
+      "id": "it-28",
+      "placeId": "place-7",
+      "name": "体温计",
+      "qty": 1,
+      "tags": "药品",
+      "note": "额温枪，电池要定期换",
+      "createdAt": "2026-06-18T18:47:00.000Z"
+    },
+    {
+      "id": "it-29",
+      "placeId": "place-7",
+      "name": "碘伏棉签",
+      "qty": 1,
+      "tags": "药品",
+      "note": "",
+      "createdAt": "2026-06-18T18:47:30.000Z"
+    }
+  ]
+}

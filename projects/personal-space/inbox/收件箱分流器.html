@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>收件箱分流器</title>
+<style>
+  :root{
+    --bg:#f6f5f1;
+    --card:#ffffff;
+    --track:#eeede8;
+    --line:#e5e2d9;
+    --line-2:#d4d0c5;
+    --ink:#1d1b17;
+    --ink-2:#57534a;
+    --ink-3:#8d867a;
+    --accent:#3f3170;
+    --accent-fg:#ffffff;
+    --r-todo:#3f3170;
+    --r-note:#2f7d5b;
+    --r-ref:#3a6ea5;
+    --r-trash:#8d867a;
+    --danger:#b3384a;
+    --r:10px;
+    --sh:0 1px 2px rgba(29,27,23,.06),0 1px 1px rgba(29,27,23,.04);
+    --sh-2:0 6px 16px rgba(29,27,23,.10),0 1px 2px rgba(29,27,23,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#17161c;
+      --card:#1f1e26;
+      --track:#262530;
+      --line:#32313c;
+      --line-2:#3d3c48;
+      --ink:#ece9e2;
+      --ink-2:#c4bfb6;
+      --ink-3:#a29b8f;
+      --accent:#8c7ce0;
+      --accent-fg:#16151b;
+      --r-todo:#8c7ce0;
+      --r-note:#55b98a;
+      --r-ref:#6ea8dc;
+      --r-trash:#a29b8f;
+      --danger:#e0616f;
+      --sh:0 1px 2px rgba(0,0,0,.3);
+      --sh-2:0 8px 20px rgba(0,0,0,.4);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+
+  body{
+    margin:0;
+    padding:0 0 26px;
+    overflow-y:auto;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:13.5px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:color-mix(in srgb,var(--accent) 22%,transparent); }
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line-2); border-radius:9px; border:2px solid var(--bg); }
+  ::-webkit-scrollbar-track{ background:transparent; }
+
+  .wrap{ max-width:820px; margin:0 auto; }
+
+  /* ── 顶部（吸顶） ── */
+  .top{
+    position:sticky; top:0; z-index:6;
+    padding:12px 14px 10px;
+    background:linear-gradient(180deg,var(--bg) 80%,color-mix(in srgb,var(--bg) 85%,transparent));
+    backdrop-filter:saturate(1.1) blur(3px);
+    border-bottom:1px solid var(--line);
+  }
+  .head-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .brand{ font-size:14.5px; font-weight:700; letter-spacing:-.01em; }
+  .stat{ font-size:12px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+  .stat b{ color:var(--ink-2); }
+  .spacer{ flex:1 1 auto; }
+
+  .lede{ margin:6px 0 0; font-size:12px; color:var(--ink-3); }
+
+  .capture{
+    display:flex; align-items:flex-end; gap:6px;
+    margin-top:9px; padding:5px 6px 5px 10px;
+    background:var(--card);
+    border:1px solid var(--line-2);
+    border-radius:12px;
+    box-shadow:var(--sh);
+    transition:box-shadow .16s ease,border-color .16s ease;
+  }
+  .capture:focus-within{ border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent); }
+  .capture textarea{
+    flex:1 1 auto; min-width:0;
+    max-height:120px;
+    padding:6px 0;
+    font:inherit; font-size:13.5px; line-height:1.55; color:var(--ink);
+    background:transparent; border:0; outline:0; resize:none;
+    overflow-y:auto;
+  }
+  .capture textarea::placeholder{ color:var(--ink-3); }
+  .btn{
+    flex:0 0 auto;
+    padding:6px 13px;
+    font:inherit; font-size:12.5px; font-weight:600;
+    color:var(--accent-fg); background:var(--accent);
+    border:0; border-radius:9px; cursor:pointer;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:disabled{ opacity:.55; cursor:progress; }
+  .btn.ghost{
+    color:var(--ink-2); background:var(--card);
+    border:1px solid var(--line-2); font-weight:500;
+  }
+  .btn.ghost:hover{ border-color:var(--ink-3); color:var(--ink); }
+
+  /* ── 区块 ── */
+  .sec{ padding:16px 14px 0; }
+  .sec-head{ display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin-bottom:9px; }
+  .sec-head h2{
+    margin:0; font-size:11.5px; font-weight:700;
+    letter-spacing:.1em; color:var(--ink-2); text-transform:uppercase;
+  }
+  .sec-head .hint{ font-size:11.5px; color:var(--ink-3); }
+  .sec-head .grow{ flex:1 1 auto; }
+
+  /* ── 待分流卡片 ── */
+  .card{
+    position:relative;
+    margin-bottom:9px;
+    padding:11px 12px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    box-shadow:var(--sh);
+    transition:box-shadow .16s ease,border-color .16s ease;
+  }
+  .card:hover{ box-shadow:var(--sh-2); border-color:var(--line-2); }
+  .card::before{
+    content:"";
+    position:absolute; left:0; top:11px; bottom:11px;
+    width:3px; border-radius:0 3px 3px 0;
+    background:var(--line-2);
+  }
+  .card.has-proposal::before{ background:var(--c,var(--line-2)); }
+
+  .c-body{
+    font-size:13.5px; line-height:1.62;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .c-body.clamp{
+    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .link{
+    padding:0; margin:0;
+    font:inherit; color:var(--r-ref);
+    background:transparent; border:0; cursor:pointer;
+    text-decoration:underline; text-underline-offset:2px;
+    word-break:break-all;
+  }
+
+  .c-meta{
+    display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+    margin-top:6px; font-size:11.5px; color:var(--ink-3);
+  }
+  .c-meta .ic{
+    width:22px; height:22px;
+    display:grid; place-items:center;
+    font:inherit; font-size:11.5px; line-height:1;
+    color:var(--ink-3); background:transparent;
+    border:1px solid transparent; border-radius:6px; cursor:pointer;
+  }
+  .c-meta .ic:hover{ background:var(--track); color:var(--ink); border-color:var(--line); }
+  .c-meta .ic.armed{ color:#fff; background:var(--danger); border-color:var(--danger); }
+
+  /* 建议条 */
+  .proposal{
+    margin-top:9px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--track);
+  }
+  .p-head{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .badge{
+    display:inline-flex; align-items:center; gap:4px;
+    padding:1.5px 8px;
+    font-size:11px; font-weight:600; letter-spacing:.02em;
+    color:var(--c,var(--ink-2));
+    background:color-mix(in srgb,var(--c,var(--ink-3)) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--c,var(--ink-3)) 34%,transparent);
+    border-radius:99px;
+    white-space:nowrap;
+  }
+  .route-todo{ --c:var(--r-todo); }
+  .route-note{ --c:var(--r-note); }
+  .route-ref{ --c:var(--r-ref); }
+  .route-trash{ --c:var(--r-trash); }
+  .p-by{ font-size:11.5px; color:var(--ink-3); }
+  .p-reason{ margin-top:5px; font-size:12.5px; color:var(--ink-2); }
+  .p-extra{ margin-top:5px; font-size:11.5px; color:var(--ink-3); display:flex; gap:8px; flex-wrap:wrap; }
+  .p-extra code{
+    font-family:inherit; font-size:11.5px;
+    padding:0 5px; border-radius:4px; background:var(--card);
+    border:1px solid var(--line);
+  }
+  .p-actions{ display:flex; gap:6px; flex-wrap:wrap; margin-top:9px; align-items:center; }
+  .p-actions .lbl{ font-size:11.5px; color:var(--ink-3); }
+  .rbtn{
+    padding:4px 10px;
+    font:inherit; font-size:12px;
+    color:var(--c,var(--ink-2));
+    background:var(--card);
+    border:1px solid color-mix(in srgb,var(--c,var(--ink-3)) 40%,transparent);
+    border-radius:8px; cursor:pointer;
+    transition:background .14s ease,color .14s ease;
+  }
+  .rbtn:hover{ color:var(--accent-fg); background:var(--c,var(--accent)); border-color:var(--c,var(--accent)); }
+  .p-actions .btn{ padding:5px 12px; font-size:12px; }
+
+  /* ── 已落地 ── */
+  .chips{ display:flex; gap:5px; flex-wrap:wrap; }
+  .chip{
+    padding:3px 9px;
+    font:inherit; font-size:11.5px;
+    color:var(--ink-2); background:var(--card);
+    border:1px solid var(--line-2); border-radius:99px; cursor:pointer;
+  }
+  .chip:hover{ border-color:var(--ink-3); color:var(--ink); }
+  .chip[aria-pressed="true"]{ color:var(--accent-fg); background:var(--accent); border-color:var(--accent); }
+  .chip .n{ opacity:.75; margin-left:4px; }
+
+  .row{
+    display:flex; align-items:flex-start; gap:8px;
+    padding:8px 10px;
+    margin-bottom:6px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:9px;
+  }
+  .row:hover{ border-color:var(--line-2); }
+  .row .badge{ margin-top:1px; flex:0 0 auto; }
+  .row-main{ flex:1 1 auto; min-width:0; }
+  .row-text{
+    font-size:12.5px; line-height:1.55; color:var(--ink);
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    word-break:break-word;
+  }
+  .row-sub{ margin-top:3px; font-size:11px; color:var(--ink-3); display:flex; gap:8px; flex-wrap:wrap; }
+  .row-actions{ flex:0 0 auto; display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; max-width:220px; }
+  .mini{
+    padding:3px 8px;
+    font:inherit; font-size:11px;
+    color:var(--ink-2); background:var(--track);
+    border:1px solid transparent; border-radius:7px; cursor:pointer;
+  }
+  .mini:hover{ background:var(--card); border-color:var(--line-2); color:var(--ink); }
+  .mini.primary{ color:var(--accent-fg); background:var(--accent); }
+  .mini.primary:hover{ filter:brightness(1.08); background:var(--accent); }
+  .mini.danger{ color:var(--danger); }
+  .mini.danger.armed{ color:#fff; background:var(--danger); border-color:var(--danger); }
+  .mini.sent{ color:var(--r-note); background:transparent; border-color:color-mix(in srgb,var(--r-note) 35%,transparent); cursor:default; }
+
+  /* 编辑原文 */
+  .edit textarea{
+    width:100%; min-height:70px; resize:vertical;
+    padding:8px 10px;
+    font:inherit; font-size:13px; line-height:1.6; color:var(--ink);
+    background:var(--bg);
+    border:1px solid var(--line-2); border-radius:9px; outline:0;
+  }
+  .edit textarea:focus{ border-color:var(--accent); }
+  .edit .save-row{ display:flex; gap:6px; justify-content:flex-end; margin-top:7px; }
+
+  .empty{
+    padding:22px 16px;
+    text-align:center;
+    background:var(--card);
+    border:1px dashed var(--line-2);
+    border-radius:var(--r);
+    color:var(--ink-3);
+    font-size:12.5px;
+    line-height:1.85;
+  }
+  .empty b{ display:block; margin-bottom:4px; color:var(--ink); font-size:13px; font-weight:600; }
+
+  .foot{
+    display:flex; gap:14px; flex-wrap:wrap;
+    margin:18px 14px 0; padding-top:10px;
+    border-top:1px solid var(--line);
+    font-size:11.5px; color:var(--ink-3);
+  }
+  .foot .mono{ font-variant-numeric:tabular-nums; }
+
+  @media (max-width:640px){
+    .top{ padding:10px 10px 8px; }
+    .sec{ padding:14px 10px 0; }
+    .foot{ margin-left:10px; margin-right:10px; }
+    .row{ flex-wrap:wrap; }
+    .row-actions{ max-width:none; justify-content:flex-start; }
+    .lede{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="head-row">
+      <span class="brand">🗂 收件箱分流器</span>
+      <span class="stat"><b id="n-new">0</b> 待分流 · <b id="n-filed">0</b> 已落地</span>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="ask-btn" hidden>交给小助手分流</button>
+    </div>
+    <p class="lede">丢进来时不用想。之后再逐条判定去向 —— 待办 / 笔记 / 参考 / 丢掉。</p>
+    <div class="capture">
+      <textarea id="capture-input" rows="1" placeholder="把任何东西丢进来… Enter 提交；粘贴多行会拆成多条"></textarea>
+      <button class="btn" id="capture-btn">丢进去</button>
+    </div>
+  </div>
+
+  <section class="sec">
+    <div class="sec-head">
+      <h2>待分流</h2>
+      <span class="hint" id="queue-hint">按时间从早到晚，先处理最旧的</span>
+      <span class="grow"></span>
+    </div>
+    <div id="queue"></div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <h2>已落地</h2>
+      <span class="chips" id="route-chips"></span>
+    </div>
+    <div id="filed"></div>
+  </section>
+
+  <div class="foot">
+    <span>数据：inbox/inbox.data.json</span>
+    <span id="ask-hint">也可以直接对我说：帮我分流收件箱</span>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var INBOX_FILE = "inbox/inbox.data.json";
+  var TODO_FILE = "todo/todo.data.json";
+  var TODO_TAG_FALLBACK = "收件箱";
+  /* 「交给小助手分流」的目标会话解析顺序：
+     ① 数据文件 inbox.data.json 里记录的 triageSession（首次会自动新建并记下，之后一直用它）
+     ② 下面的默认绑定 TRIAGE_SESSION（留空字符串则总是走「新建 + 记录」）
+     ③ 若绑定/记录的会话在本机不存在（session_not_found，例如换到别人的环境），新建一个并记下 */
+  var TRIAGE_SESSION = "4d05096d-9559-48c5-84d6-4c40e2144328";
+  var TRIAGE_KEY = "triageSession";
+  /* 新建会话时指定 Agent：留空 = 用项目默认 Agent；也可填 agentSlug（如 "assistant-xxxx"） */
+  var TRIAGE_AGENT_SLUG = "";
+  var SDK = window.spherse;
+
+  var ROUTES = {
+    todo:  { label: "待办", color: "route-todo",  hint: "需要动手做的事" },
+    note:  { label: "笔记", color: "route-note",  hint: "值得留存的思考" },
+    ref:   { label: "参考", color: "route-ref",   hint: "以后可能查的资料" },
+    trash: { label: "丢掉", color: "route-trash", hint: "不处理" }
+  };
+  var ROUTE_ORDER = ["todo", "note", "ref", "trash"];
+
+  var state = {
+    items: [],
+    filter: "all",
+    chooser: {},
+    body: {},
+    editing: null,
+    armedDelete: null
+  };
+
+  var timerDelete = null;
+
+  var el = {
+    input: document.getElementById("capture-input"),
+    captureBtn: document.getElementById("capture-btn"),
+    askBtn: document.getElementById("ask-btn"),
+    askHint: document.getElementById("ask-hint"),
+    nNew: document.getElementById("n-new"),
+    nFiled: document.getElementById("n-filed"),
+    queue: document.getElementById("queue"),
+    filed: document.getElementById("filed"),
+    routeChips: document.getElementById("route-chips"),
+    queueHint: document.getElementById("queue-hint")
+  };
+
+  /* ───────── 工具 ───────── */
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function bodyHtml(text, clamp) {
+    var html = esc(text || "");
+    html = html.replace(/(https?:\/\/[^\s<]+)/g, function (u) {
+      return '<button class="link" data-act="open-link" data-url="' + u + '">' + u + "</button>";
+    });
+    return '<div class="c-body' + (clamp ? " clamp" : "") + '">' + html + "</div>";
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var p = function (n) { return n < 10 ? "0" + n : String(n); };
+    var now = new Date();
+    var sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return (sameDay ? "今天 " : (d.getMonth() + 1) + "月" + d.getDate() + "日 ") + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+
+  function toast(variant, message, description) {
+    if (!SDK || !SDK.toast) return;
+    try { SDK.toast({ variant: variant, message: message, description: description }); } catch (e) {}
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return legacyCopy(text); });
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+
+  function legacyCopy(text) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "-1000px";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  function uidKey() {
+    return "inbox:" + Date.now() + ":" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function find(id) {
+    var hit = null;
+    state.items.forEach(function (it) { if (it.id === id) hit = it; });
+    return hit;
+  }
+
+  function oneLine(s, n) {
+    var t = String(s || "").replace(/\s+/g, " ").trim();
+    return t.length > n ? t.slice(0, n - 1) + "…" : t;
+  }
+
+  /* ───────── 数据 ───────── */
+
+  function load() {
+    if (!SDK || !SDK.data) return Promise.resolve();
+    return SDK.data.get({ file: INBOX_FILE, key: "items" }).then(function (items) {
+      state.items = Array.isArray(items) ? items : [];
+    }, function () { state.items = []; });
+  }
+
+  function mutate(file, name, args) {
+    if (!SDK || !SDK.data) {
+      toast("error", "未连接到 Spherse 数据服务", "请在 Spherse 中打开本页面");
+      return Promise.reject(new Error("no_sdk"));
+    }
+    return SDK.data.mutate({ file: file, name: name, args: args, idempotencyKey: uidKey() });
+  }
+
+  function upsert(item) {
+    var found = false;
+    state.items = state.items.map(function (it) {
+      if (it.id === item.id) { found = true; return item; }
+      return it;
+    });
+    if (!found) state.items.push(item);
+  }
+
+  function refresh() {
+    return load().then(render, render);
+  }
+
+  /* ───────── 渲染 ───────── */
+
+  function queueItems() {
+    return state.items
+      .filter(function (it) { return (it.status || "new") === "new"; })
+      .sort(function (a, b) { return String(a.createdAt || "").localeCompare(String(b.createdAt || "")); });
+  }
+
+  function filedItems() {
+    return state.items
+      .filter(function (it) { return it.status === "filed"; })
+      .filter(function (it) { return state.filter === "all" || it.route === state.filter; })
+      .sort(function (a, b) { return String(b.createdAt || "").localeCompare(String(a.createdAt || "")); });
+  }
+
+  function renderStats() {
+    var q = queueItems().length;
+    var f = state.items.filter(function (it) { return it.status === "filed"; }).length;
+    el.nNew.textContent = q;
+    el.nFiled.textContent = f;
+    el.queueHint.textContent = q
+      ? "按时间从早到晚，先处理最旧的"
+      : "收件箱空了";
+  }
+
+  function renderQueue() {
+    var list = queueItems();
+    if (!list.length) {
+      el.queue.innerHTML = '<div class="empty"><b>没有待分流的碎片</b>'
+        + "在上面丢一条试试：一段想法、一个链接、半句话都行。</div>";
+      return;
+    }
+    el.queue.innerHTML = list.map(renderCard).join("");
+  }
+
+  function renderCard(it) {
+    var hasProposal = !!(it.proposedRoute && ROUTES[it.proposedRoute]);
+    var routeMeta = hasProposal ? ROUTES[it.proposedRoute] : null;
+    var full = !!state.body[it.id];
+    var long = (it.body || "").length > 170;
+    var editing = state.editing === it.id;
+    var chooserOpen = !!state.chooser[it.id] || !hasProposal;
+
+    var html = '<article class="card' + (hasProposal ? " has-proposal " + routeMeta.color : "") + '" data-id="' + esc(it.id) + '">';
+
+    if (editing) {
+      html += '<div class="edit">'
+        + '<textarea class="e-body">' + esc(it.body || "") + "</textarea>"
+        + '<div class="save-row">'
+        + '<button class="mini" data-act="cancel-edit">取消</button>'
+        + '<button class="mini primary" data-act="save-edit">保存</button>'
+        + "</div></div></article>";
+      return html;
+    }
+
+    html += bodyHtml(it.body, !full && long);
+    if (long) {
+      html += '<div style="margin-top:3px"><button class="mini" data-act="toggle-body">'
+        + (full ? "收起" : "展开全文") + "</button></div>";
+    }
+
+    html += '<div class="c-meta">'
+      + "<span>" + esc(it.source || "手动") + "</span>"
+      + "<span>·</span><span>" + esc(fmtTime(it.createdAt)) + "</span>"
+      + '<span class="spacer" style="flex:1 1 auto"></span>'
+      + '<button class="ic" data-act="copy" title="复制原文">⧉</button>'
+      + '<button class="ic" data-act="edit" title="修改原文">✎</button>'
+      + '<button class="ic' + (state.armedDelete === it.id ? " armed" : "") + '" data-act="del" title="删除">'
+      + (state.armedDelete === it.id ? "确认" : "✕") + "</button>"
+      + "</div>";
+
+    if (hasProposal) {
+      html += '<div class="proposal">'
+        + '<div class="p-head">'
+        + '<span class="badge ' + routeMeta.color + '">' + esc(routeMeta.label) + "</span>"
+        + '<span class="p-by">' + esc(it.triagedBy || "小助手") + "建议</span>"
+        + "</div>"
+        + (it.proposedReason ? '<div class="p-reason">' + esc(it.proposedReason) + "</div>" : "");
+      if (it.proposedTitle || it.tags || it.priority) {
+        html += '<div class="p-extra">'
+          + (it.proposedTitle ? "<span>建议标题 <code>" + esc(it.proposedTitle) + "</code></span>" : "")
+          + (it.tags ? "<span>标签 <code>" + esc(it.tags) + "</code></span>" : "")
+          + (it.priority ? "<span>优先级 <code>" + esc(({ high: "P1", medium: "P2", low: "P3" })[it.priority] || it.priority) + "</code></span>" : "")
+          + "</div>";
+      }
+      html += '<div class="p-actions">'
+        + '<button class="btn" data-act="accept" data-route="' + esc(it.proposedRoute) + '">同意，落地</button>'
+        + '<button class="mini" data-act="chooser">改判</button>'
+        + "</div>";
+      if (chooserOpen) {
+        html += '<div class="p-actions"><span class="lbl">改成</span>'
+          + ROUTE_ORDER.filter(function (r) { return r !== it.proposedRoute; }).map(function (r) {
+              return '<button class="rbtn ' + ROUTES[r].color + '" data-act="file" data-route="' + r
+                + '">' + esc(ROUTES[r].label) + "</button>";
+            }).join("")
+          + "</div>";
+      }
+      html += "</div>";
+    } else {
+      html += '<div class="p-actions"><span class="lbl">选一个去向</span>'
+        + ROUTE_ORDER.map(function (r) {
+            return '<button class="rbtn ' + ROUTES[r].color + '" data-act="file" data-route="' + r
+              + '" title="' + esc(ROUTES[r].hint) + '">' + esc(ROUTES[r].label) + "</button>";
+          }).join("")
+        + "</div>";
+    }
+
+    html += "</article>";
+    return html;
+  }
+
+  function renderRouteChips() {
+    var all = state.items.filter(function (it) { return it.status === "filed"; });
+    if (!all.length) { el.routeChips.innerHTML = ""; return; }
+    var counts = { all: all.length };
+    ROUTE_ORDER.forEach(function (r) {
+      counts[r] = all.filter(function (it) { return it.route === r; }).length;
+    });
+    var html = '<button class="chip" data-filter="all" aria-pressed="' + (state.filter === "all") + '">全部<span class="n">' + counts.all + "</span></button>";
+    html += ROUTE_ORDER.filter(function (r) { return counts[r]; }).map(function (r) {
+      return '<button class="chip" data-filter="' + r + '" aria-pressed="' + (state.filter === r) + '">'
+        + esc(ROUTES[r].label) + '<span class="n">' + counts[r] + "</span></button>";
+    }).join("");
+    el.routeChips.innerHTML = html;
+  }
+
+  function renderFiled() {
+    var list = filedItems();
+    if (!list.length) {
+      el.filed.innerHTML = '<div class="empty"><b>还没有落地的条目</b>'
+        + "在「待分流」里点一个去向，它就会归到这里。</div>";
+      return;
+    }
+    el.filed.innerHTML = list.map(function (it) {
+      var meta = ROUTES[it.route] || ROUTES.trash;
+      var sent = !!it.sentToTodo;
+      var sub = ["落于 " + (fmtTime(it.createdAt) || "—"), (it.source || "手动")];
+      if (it.decision === "override") sub.push("你改判过");
+      if (it.decision === "self") sub.push("你自行判定");
+
+      return '<div class="row" data-id="' + esc(it.id) + '">'
+        + '<span class="badge ' + meta.color + '">' + esc(meta.label) + "</span>"
+        + '<div class="row-main">'
+        + '<div class="row-text" title="' + esc(oneLine(it.body, 200)) + '">' + esc(oneLine(it.body, 220)) + "</div>"
+        + '<div class="row-sub">' + sub.map(esc).join("<span>·</span>") + "</div>"
+        + "</div>"
+        + '<div class="row-actions">'
+        + '<button class="mini" data-act="copy">复制</button>'
+        + (it.route === "todo"
+            ? (sent
+                ? '<span class="mini sent">已送事务簿 ✓</span>'
+                : '<button class="mini primary" data-act="send">送进事务簿</button>')
+            : "")
+        + '<button class="mini" data-act="restore">退回</button>'
+        + '<button class="mini danger' + (state.armedDelete === it.id ? " armed" : "") + '" data-act="del">'
+        + (state.armedDelete === it.id ? "确认删除" : "删除") + "</button>"
+        + "</div></div>";
+    }).join("");
+  }
+
+  function render() {
+    renderStats();
+    renderQueue();
+    renderRouteChips();
+    renderFiled();
+  }
+
+  /* ───────── 动作 ───────── */
+
+  function resetDeleteArm() {
+    if (timerDelete) { clearTimeout(timerDelete); timerDelete = null; }
+    state.armedDelete = null;
+  }
+
+  function capture() {
+    var raw = el.input.value;
+    var lines = String(raw || "").split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!lines.length) { el.input.focus(); return; }
+
+    el.captureBtn.disabled = true;
+    /* 逐条写入，避免并行写同一份文件互相覆盖 */
+    var chain = Promise.resolve(0);
+    lines.forEach(function (line) {
+      chain = chain.then(function (n) {
+        return mutate(INBOX_FILE, "capture", { body: line, source: "手动" }).then(function (item) {
+          upsert(item);
+          return n + 1;
+        }, function (e) {
+          if (e && e.message === "no_sdk") throw e;
+          return n;
+        });
+      });
+    });
+
+    chain.then(function (n) {
+      el.input.value = "";
+      autoGrow();
+      render();
+      el.input.focus();
+      toast("success", "已丢进 " + n + " 条", n > 1 ? "在「待分流」里逐条判定去向" : oneLine(lines[0], 24));
+    }, function () {}).then(function () { el.captureBtn.disabled = false; });
+  }
+
+  function decide(id, route, decision) {
+    var it = find(id);
+    if (!it) return;
+    mutate(INBOX_FILE, "file", { id: id, route: route, status: "filed", decision: decision }).then(function (item) {
+      upsert(item);
+      delete state.chooser[id];
+      resetDeleteArm();
+      render();
+      toast("success", "已落到「" + ROUTES[route].label + "」", oneLine(it.body, 26));
+    }, function () {});
+  }
+
+  function restore(id) {
+    mutate(INBOX_FILE, "restore", { id: id, status: "new" }).then(function (item) {
+      upsert(item);
+      resetDeleteArm();
+      render();
+      toast("info", "已退回待分流", oneLine(item.body, 26));
+    }, function () {});
+  }
+
+  function sendToTodo(id) {
+    var it = find(id);
+    if (!it) return;
+    var title = oneLine(it.proposedTitle || it.body, 60);
+    mutate(TODO_FILE, "addTodo", {
+      title: title,
+      tag: (it.tags || "").trim() || TODO_TAG_FALLBACK,
+      priority: it.priority || "medium",
+      status: "todo",
+      notes: it.body || ""
+    }).then(function () {
+      return mutate(INBOX_FILE, "markSent", { id: id, sentToTodo: true });
+    }).then(function (item) {
+      upsert(item);
+      render();
+      toast("success", "已送进事务簿", title);
+    }, function () {
+      toast("error", "投递失败", "事务簿不可用，或写入被拒绝");
+    });
+  }
+
+  /* ───────── 事件 ───────── */
+
+  function autoGrow() {
+    el.input.style.height = "auto";
+    el.input.style.height = Math.min(el.input.scrollHeight, 120) + "px";
+  }
+
+  el.input.addEventListener("input", autoGrow);
+
+  el.input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      capture();
+    }
+  });
+
+  el.captureBtn.addEventListener("click", capture);
+
+  el.queue.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    var card = btn.closest("[data-id]");
+    if (!card) return;
+    var id = card.dataset.id;
+    var it = find(id);
+    if (!it) return;
+    var act = btn.dataset.act;
+
+    if (act === "open-link") { SDK.openExternalLink(btn.dataset.url); return; }
+    if (act === "copy") {
+      copyText(it.body).then(function (ok) {
+        toast(ok ? "success" : "error", ok ? "已复制原文" : "复制失败");
+      });
+      return;
+    }
+    if (act === "edit") { state.editing = id; resetDeleteArm(); render(); return; }
+    if (act === "cancel-edit") { state.editing = null; render(); return; }
+    if (act === "save-edit") {
+      var text = card.querySelector(".e-body").value.trim();
+      if (!text) { toast("warning", "原文不能为空"); return; }
+      mutate(INBOX_FILE, "editItem", { id: id, body: text }).then(function (item) {
+        upsert(item);
+        state.editing = null;
+        render();
+      }, function () {});
+      return;
+    }
+    if (act === "toggle-body") { state.body[id] = !state.body[id]; render(); return; }
+    if (act === "chooser") { state.chooser[id] = true; render(); return; }
+    if (act === "accept") { decide(id, btn.dataset.route, "accept"); return; }
+    if (act === "file") {
+      decide(id, btn.dataset.route, it.proposedRoute ? "override" : "self");
+      return;
+    }
+    if (act === "del") {
+      if (state.armedDelete !== id) {
+        state.armedDelete = id;
+        render();
+        timerDelete = setTimeout(function () {
+          timerDelete = null; state.armedDelete = null; render();
+        }, 3200);
+        return;
+      }
+      resetDeleteArm();
+      mutate(INBOX_FILE, "removeItem", { id: id }).then(function () {
+        state.items = state.items.filter(function (x) { return x.id !== id; });
+        if (state.editing === id) state.editing = null;
+        render();
+      }, function () {});
+      return;
+    }
+  });
+
+  el.filed.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    var row = btn.closest("[data-id]");
+    if (!row) return;
+    var id = row.dataset.id;
+    var it = find(id);
+    if (!it) return;
+    var act = btn.dataset.act;
+
+    if (act === "copy") {
+      copyText(it.body).then(function (ok) {
+        toast(ok ? "success" : "error", ok ? "已复制原文" : "复制失败");
+      });
+      return;
+    }
+    if (act === "send") { sendToTodo(id); return; }
+    if (act === "restore") { restore(id); return; }
+    if (act === "del") {
+      if (state.armedDelete !== id) {
+        state.armedDelete = id;
+        render();
+        timerDelete = setTimeout(function () {
+          timerDelete = null; state.armedDelete = null; render();
+        }, 3200);
+        return;
+      }
+      resetDeleteArm();
+      mutate(INBOX_FILE, "removeItem", { id: id }).then(function () {
+        state.items = state.items.filter(function (x) { return x.id !== id; });
+        render();
+      }, function () {});
+      return;
+    }
+  });
+
+  el.routeChips.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-filter]");
+    if (!b) return;
+    state.filter = b.dataset.filter;
+    resetDeleteArm();
+    render();
+  });
+
+  /* ── 分流目标会话：已记录 → 默认绑定 → 新建并记录 ── */
+
+  function resolveSessionId() {
+    if (!SDK || !SDK.data) return Promise.resolve(TRIAGE_SESSION || null);
+    return SDK.data.get({ file: INBOX_FILE, key: TRIAGE_KEY }).then(function (v) {
+      return (typeof v === "string" && v) ? v : (TRIAGE_SESSION || null);
+    }, function () {
+      return TRIAGE_SESSION || null;
+    });
+  }
+
+  function rememberSessionId(id) {
+    if (!SDK || !SDK.data) return Promise.resolve();
+    /* 写进数据文件，跨浏览器/会话都在；失败也不阻断发送 */
+    return SDK.data.set({ file: INBOX_FILE, key: TRIAGE_KEY, value: id }).then(function () {}, function () {});
+  }
+
+  function createAndSend(message) {
+    var args = { open: false };          /* 只创建、不跳转，避免打断当前页面 */
+    if (TRIAGE_AGENT_SLUG) args.agentSlug = TRIAGE_AGENT_SLUG;
+    return SDK.createSession(args).then(function (r) {
+      var id = r && r.sessionId;
+      if (!id) throw new Error("create_failed");
+      return rememberSessionId(id).then(function () {
+        return SDK.sendMessage({ sessionId: id, message: message });
+      });
+    });
+  }
+
+  function sendToAssistant(message) {
+    return resolveSessionId().then(function (id) {
+      if (!id) return createAndSend(message);
+      return SDK.sendMessage({ sessionId: id, message: message }).then(null, function (err) {
+        if (err && err.message === "session_not_found") return createAndSend(message);
+        throw err;
+      });
+    });
+  }
+
+  el.askBtn.addEventListener("click", function () {
+    var msg = "请帮我分流收件箱。读 inbox/inbox.data.json，用 listUntriaged 取出 status=new 且 triaged=false 的条目，"
+      + "逐条判断去向并调用 triage 写建议：proposedRoute 取 todo/note/ref/trash，proposedReason 写一句判断依据（不要复述原文）；"
+      + "若建议 todo，再补 proposedTitle、tags、priority。先不要直接 file，我会在页面上逐条确认。"
+      + "分完后告诉我哪几条属于「参考」需要我读。";
+    el.askBtn.disabled = true;
+    sendToAssistant(msg).then(function () {
+      toast("success", "已把分流任务交给小助手", "它写完建议后页面会自动刷新");
+    }, function (err) {
+      var busy = err && err.message === "session_busy";
+      toast(busy ? "warning" : "error",
+        busy ? "会话正在生成中" : "发送失败",
+        busy ? "稍后再试" : "请直接在对话里说：帮我分流收件箱");
+    }).then(function () { el.askBtn.disabled = false; });
+  });
+
+  /* ───────── 启动 ───────── */
+
+  function boot() {
+    if (!SDK || !SDK.data) {
+      el.queue.innerHTML = '<div class="empty"><b>无法连接数据服务</b>'
+        + "未检测到 Spherse 运行环境，请在 Spherse 中打开本页面。</div>";
+      return;
+    }
+
+    refresh();
+
+    if (SDK.events && SDK.events.on) {
+      SDK.events.on("file:update", { path: INBOX_FILE }, function () {
+        if (state.editing) return;
+        refresh();
+      });
+    }
+
+    /* 「交给小助手分流」固定绑定到 TRIAGE_SESSION，任何打开方式都可用 */
+    el.askBtn.hidden = false;
+    el.askHint.textContent = "或点右上角「交给小助手分流」";
+
+    el.input.focus();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
