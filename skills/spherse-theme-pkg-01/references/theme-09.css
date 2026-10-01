@@ -1,0 +1,533 @@
+/* ============================================================
+   Spherse 自定义主题 · Mac OS 9 铂金（Platinum Appearance）
+   浅色 = 经典铂金：浅银灰面板 + 细横纹标题栏 + 淡紫蓝选中高亮
+   深色 = 石墨夜色：深炭灰面板 + 冷调蓝紫高光
+   标志元素：横纹（pinstripe）标题栏、柔和双层斜面、圆角按钮、
+             椭圆滚动条滑块、淡紫蓝（periwinkle）高亮
+   ============================================================ */
+
+/* ---------- 浅色模式：铂金 ---------- */
+:root {
+  /* 页面与容器（浅银灰「铂金」面板，略透出桌面） */
+  --sp-background: rgba(221, 221, 221, 0.9);
+  --sp-foreground: #1a1a1a;
+  --sp-card: rgba(238, 238, 238, 0.96);
+  --sp-card-foreground: #1a1a1a;
+
+  /* 弹出层 */
+  --sp-popover: rgba(242, 242, 242, 0.99);
+  --sp-popover-foreground: #1a1a1a;
+
+  /* 交互元素（淡紫蓝 = Mac 经典选中高亮） */
+  --sp-primary: #5b5bb0;
+  --sp-primary-foreground: #ffffff;
+  --sp-secondary: #e4e4e4;
+  --sp-secondary-foreground: #1a1a1a;
+  --sp-accent: #c9c9ea;
+  --sp-accent-foreground: #1c1c40;
+
+  /* 文字层级 */
+  --sp-muted: #d2d2d2;
+  --sp-muted-foreground: #555555;
+
+  /* 边框与输入 */
+  --sp-border: #a0a0a0;
+  --sp-input: #a0a0a0;
+  --sp-ring: #5b5bb0;
+
+  /* 语义色 */
+  --sp-destructive: #c0392b;
+  --sp-success: #2e8b57;
+  --sp-success-foreground: #ffffff;
+  --sp-warning: #b8860b;
+  --sp-warning-foreground: #ffffff;
+  --sp-diff-added: #2e8b57;
+
+  /* 柔和圆角（铂金不是直角，但也很克制） */
+  --sp-radius: 0.3rem;
+
+  /* 滚动条：椭圆滑块 */
+  --sp-scrollbar-size: 14px;
+  --sp-scrollbar-thumb: #d0d0d0;
+  --sp-scrollbar-thumb-hover: #bcbcbc;
+  --sp-scrollbar-track: #e8e8e8;
+
+  /* 侧边栏 */
+  --sp-sidebar: rgba(221, 221, 221, 0.9);
+  --sp-sidebar-foreground: #1a1a1a;
+  --sp-sidebar-primary: #5b5bb0;
+  --sp-sidebar-primary-foreground: #ffffff;
+  --sp-sidebar-accent: #c9c9ea;
+  --sp-sidebar-accent-foreground: #1c1c40;
+  --sp-sidebar-border: #a0a0a0;
+  --sp-sidebar-ring: #5b5bb0;
+}
+
+/* ---------- 深色模式：石墨夜色 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sp-background: rgba(58, 58, 62, 0.9);
+    --sp-foreground: #ececee;
+    --sp-card: rgba(70, 70, 76, 0.96);
+    --sp-card-foreground: #ececee;
+
+    --sp-popover: rgba(72, 72, 78, 0.99);
+    --sp-popover-foreground: #ececee;
+
+    --sp-primary: #8f9be0;
+    --sp-primary-foreground: #11142e;
+    --sp-secondary: #4a4a50;
+    --sp-secondary-foreground: #ececee;
+    --sp-accent: #3a3f66;
+    --sp-accent-foreground: #dfe3ff;
+
+    --sp-muted: #505057;
+    --sp-muted-foreground: #a8a8b0;
+
+    --sp-border: #6a6a72;
+    --sp-input: #6a6a72;
+    --sp-ring: #8f9be0;
+
+    --sp-destructive: #ff7068;
+    --sp-success: #4ade80;
+    --sp-success-foreground: #052e16;
+    --sp-warning: #fbbf24;
+    --sp-warning-foreground: #1c1917;
+    --sp-diff-added: #4ade80;
+
+    --sp-scrollbar-thumb: #55555c;
+    --sp-scrollbar-thumb-hover: #6a6a72;
+    --sp-scrollbar-track: #2a2a2e;
+
+    --sp-sidebar: rgba(52, 52, 56, 0.9);
+    --sp-sidebar-foreground: #ececee;
+    --sp-sidebar-primary: #8f9be0;
+    --sp-sidebar-primary-foreground: #11142e;
+    --sp-sidebar-accent: #3a3f66;
+    --sp-sidebar-accent-foreground: #dfe3ff;
+    --sp-sidebar-border: #6a6a72;
+    --sp-sidebar-ring: #8f9be0;
+  }
+}
+
+/* ============================================================
+   字体：延续系统无衬线（Mac 走苹方 / 微软雅黑）
+   ============================================================ */
+[data-app-root] {
+  font-family: -apple-system, BlinkMacSystemFont, "Lucida Grande",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* ============================================================
+   整窗背景：经典 Mac 蓝桌面（浅）/ 石墨夜色（深）
+   ============================================================ */
+[data-app-root] {
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 38%, rgba(255, 255, 255, 0.12), transparent 70%),
+    linear-gradient(180deg, #6f83ab 0%, #586c95 50%, #47597e 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root] {
+    background:
+      radial-gradient(ellipse 120% 80% at 50% 35%, rgba(140, 160, 230, 0.10), transparent 70%),
+      linear-gradient(180deg, #232633 0%, #1b1d28 55%, #14161f 100%);
+  }
+}
+
+/* 桌面细腻噪点（透过半透明面板隐约可见） */
+[data-app-root]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E") repeat;
+  opacity: 0.035;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root]::before {
+    opacity: 0.05;
+  }
+}
+
+/* ============================================================
+   滚动条：Mac OS 9 风椭圆滑块
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+::-webkit-scrollbar-track {
+  background: #e8e8e8;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #f2f2f2, #cfcfcf);
+  border: 1px solid #9a9a9a;
+  border-radius: 7px;
+  box-shadow: inset 1px 1px 0 #ffffff;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #e6e6e6, #bcbcbc);
+}
+::-webkit-scrollbar-corner {
+  background: #e8e8e8;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #2a2a2e;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #5f5f68, #4a4a52);
+    border: 1px solid #74747c;
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #6a6a74, #55555c);
+  }
+  ::-webkit-scrollbar-corner {
+    background: #2a2a2e;
+  }
+}
+
+/* ============================================================
+   项目面板 / 内容区
+   ============================================================ */
+[data-project-panel] {
+  background: var(--sp-sidebar);
+  border-inline-end: 1px solid #9a9a9a;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.5);
+}
+
+[data-content-browser] {
+  background: var(--sp-background);
+}
+
+/* ============================================================
+   标签栏：柔和圆角 + 淡紫蓝下划线
+   ============================================================ */
+[data-tab-bar] {
+  background: #dddddd;
+  border-bottom: 1px solid #9a9a9a;
+  gap: 3px;
+  padding: 3px 4px 0;
+}
+
+[data-tab] {
+  background: transparent;
+  color: #333333;
+  border: none;
+  border-radius: 4px 4px 0 0;
+}
+
+[data-tab][data-active="true"] {
+  background: #f2f2f2;
+  color: #000000;
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 #5b5bb0;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-tab-bar] {
+    background: #3a3a3e;
+    border-bottom-color: #55555c;
+  }
+  [data-tab] {
+    color: #c8c8d0;
+  }
+  [data-tab][data-active="true"] {
+    background: #4a4a50;
+    color: #ffffff;
+    box-shadow: inset 0 -2px 0 #8f9be0;
+  }
+}
+
+/* ============================================================
+   右键菜单 / 下拉 / 选择器 / 弹出层：柔和圆角菜单
+   ============================================================ */
+[role="menu"],
+[data-radix-context-menu-content],
+[data-radix-dropdown-menu-content],
+[data-radix-select-content],
+[data-radix-popover-content] {
+  background: #f2f2f2 !important;
+  border: 1px solid #8a8a8a !important;
+  border-radius: 6px !important;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.26),
+    inset 1px 1px 0 #ffffff !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [role="menu"],
+  [data-radix-context-menu-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content],
+  [data-radix-popover-content] {
+    background: #48484e !important;
+    border-color: #74747c !important;
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.5),
+      inset 1px 1px 0 rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+/* ============================================================
+   浮窗内容浏览器 / 浮窗简易浏览器：拟真「Mac 窗口」，横纹标题栏
+   ============================================================ */
+[data-content-float-root],
+[data-browser-float-root] {
+  background: #dddddd;
+  border: 1px solid #7a7a7a;
+  border-radius: 8px;
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 #ffffff;
+  overflow: hidden;
+}
+
+[data-content-float-titlebar],
+[data-browser-float-titlebar] {
+  background: repeating-linear-gradient(180deg, #ffffff 0 1px, #d2d2d2 1px 2px);
+  color: #000000;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-bottom: 1px solid #9a9a9a;
+}
+
+[data-content-float-close],
+[data-browser-float-close] {
+  background: linear-gradient(180deg, #f6f6f6, #d8d8d8);
+  color: #000000;
+  border: 1px solid #8a8a8a;
+  border-radius: 4px;
+}
+[data-content-float-close]:hover,
+[data-browser-float-close]:hover {
+  background: linear-gradient(180deg, #ffffff, #e2e2e2);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-float-root],
+  [data-browser-float-root] {
+    background: #3a3a3e;
+    border-color: #55555c;
+    box-shadow:
+      0 12px 34px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  [data-content-float-titlebar],
+  [data-browser-float-titlebar] {
+    background: repeating-linear-gradient(180deg, #4a4a52 0 1px, #3a3a40 1px 2px);
+    color: #ececee;
+    border-bottom-color: #55555c;
+  }
+  [data-content-float-close],
+  [data-browser-float-close] {
+    background: linear-gradient(180deg, #5a5a62, #46464d);
+    color: #ececee;
+    border-color: #74747c;
+  }
+  [data-content-float-close]:hover,
+  [data-browser-float-close]:hover {
+    background: linear-gradient(180deg, #6a6a74, #55555c);
+  }
+}
+
+/* ============================================================
+   Activity Bar 项目头像：柔和圆角 + 细斜面
+   ============================================================ */
+[data-project-avatar] {
+  border-radius: 7px;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.7),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.22);
+}
+
+/* ============================================================
+   全局 Toast：柔和圆角提示窗
+   ============================================================ */
+[data-toast-root] [data-sonner-toast] {
+  background: #f2f2f2 !important;
+  color: #1a1a1a !important;
+  border: 1px solid #8a8a8a;
+  border-radius: 8px !important;
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.28),
+    inset 1px 1px 0 #ffffff !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-toast-root] [data-sonner-toast] {
+    background: #48484e !important;
+    color: #ececee !important;
+    border-color: #74747c;
+    box-shadow:
+      0 8px 22px rgba(0, 0, 0, 0.5),
+      inset 1px 1px 0 rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+/* ============================================================
+   聊天窗口：横纹标题栏 + 铂金消息窗 + 柔和输入区
+   ============================================================ */
+[data-chat-root] [data-chat-header] {
+  background: repeating-linear-gradient(180deg, #ffffff 0 1px, #d6d6d6 1px 2px);
+  color: #000000;
+  border-bottom: 1px solid #9a9a9a;
+}
+[data-chat-root] [data-chat-header] .header-name { color: #000000; }
+[data-chat-root] [data-chat-header] .header-status,
+[data-chat-root] [data-chat-header] .header-extra { color: #555555; }
+[data-chat-root] [data-chat-header] .header-avatar {
+  background: linear-gradient(180deg, #f6f6f6, #dcdcdc);
+  color: #3a3a7a;
+  border-radius: 7px;
+  box-shadow:
+    inset 1px 1px 0 #ffffff,
+    inset -1px -1px 0 rgba(0, 0, 0, 0.22);
+}
+
+/* 消息气泡：柔和圆角 + 细斜面（助手 = 铂金窗，用户 = 淡紫蓝） */
+[data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+  border-radius: 12px 12px 12px 4px;
+  border: 1px solid #a8a8a8;
+  box-shadow:
+    inset 1px 1px 0 #ffffff,
+    inset -1px -1px 0 rgba(0, 0, 0, 0.12);
+}
+[data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+  border-radius: 12px 12px 4px 12px;
+  background: linear-gradient(180deg, #6f6fc4, #5555a0);
+  color: #ffffff;
+  border: 1px solid #45458a;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.28);
+}
+
+/* 输入区：凹陷输入框 + 圆角发送按钮 */
+[data-chat-root] [data-chat-composer] {
+  background: #dddddd;
+  border-top: 1px solid #9a9a9a;
+}
+[data-chat-root] [data-chat-composer-input] {
+  background: #ffffff;
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.18);
+}
+[data-chat-root] [data-chat-composer] textarea { color: #1a1a1a; }
+[data-chat-root] [data-chat-composer] textarea::placeholder { color: #8a8a8a; }
+[data-chat-root] .send-btn {
+  border-radius: 8px;
+  background: linear-gradient(180deg, #6f6fc4, #5555a0);
+  color: #ffffff;
+  border: 1px solid #45458a;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* 代码块：浅灰「简易文本编辑器」；行内代码淡紫蓝 */
+[data-chat-root] [data-md-code] {
+  background: #f6f6f6;
+  color: #1a1a1a;
+  border: 1px solid #b0b0b0;
+  border-radius: 6px;
+}
+[data-chat-root] [data-md-code-inline] {
+  background: #dcdcf2;
+  color: #3a3a7a;
+  border: 1px solid #b8b8dc;
+  border-radius: 4px;
+}
+[data-chat-root] [data-md-quote] {
+  border-left: 3px solid #5b5bb0;
+  color: #444444;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-root] [data-chat-header] {
+    background: repeating-linear-gradient(180deg, #4a4a52 0 1px, #3a3a40 1px 2px);
+    color: #ececee;
+    border-bottom-color: #55555c;
+  }
+  [data-chat-root] [data-chat-header] .header-name { color: #ececee; }
+  [data-chat-root] [data-chat-header] .header-status,
+  [data-chat-root] [data-chat-header] .header-extra { color: #a8a8b0; }
+  [data-chat-root] [data-chat-header] .header-avatar {
+    background: linear-gradient(180deg, #5a5a62, #46464d);
+    color: #cdd6ff;
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.12),
+      inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+  }
+  [data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    border-color: #6a6a72;
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+      inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+  }
+  [data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+    background: linear-gradient(180deg, #5566b8, #3f4a90);
+    border-color: #2d3568;
+  }
+  [data-chat-root] [data-chat-composer] {
+    background: #3a3a3e;
+    border-top-color: #55555c;
+  }
+  [data-chat-root] [data-chat-composer-input] {
+    background: #262629;
+    border-color: #55555c;
+    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  [data-chat-root] [data-chat-composer] textarea { color: #ececee; }
+  [data-chat-root] [data-chat-composer] textarea::placeholder { color: #808088; }
+  [data-chat-root] .send-btn {
+    background: linear-gradient(180deg, #5566b8, #3f4a90);
+    border-color: #2d3568;
+  }
+  [data-chat-root] [data-md-code] {
+    background: #232327;
+    color: #ececee;
+    border-color: #4a4a52;
+  }
+  [data-chat-root] [data-md-code-inline] {
+    background: #33335a;
+    color: #c8d0ff;
+    border-color: #4a4a7a;
+  }
+  [data-chat-root] [data-md-quote] {
+    border-left-color: #8f9be0;
+    color: #c0c0c8;
+  }
+}
+
+/* ============================================================
+   文档视图 Markdown：与聊天窗口一致的铂金质感
+   ============================================================ */
+[data-content-doc] [data-md-code] {
+  background: #f6f6f6;
+  color: #1a1a1a;
+  border: 1px solid #b0b0b0;
+  border-radius: 6px;
+}
+[data-content-doc] [data-md-code-inline] {
+  background: #dcdcf2;
+  color: #3a3a7a;
+  border: 1px solid #b8b8dc;
+  border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-doc] [data-md-code] {
+    background: #232327;
+    color: #ececee;
+    border-color: #4a4a52;
+  }
+  [data-content-doc] [data-md-code-inline] {
+    background: #33335a;
+    color: #c8d0ff;
+    border-color: #4a4a7a;
+  }
+}
