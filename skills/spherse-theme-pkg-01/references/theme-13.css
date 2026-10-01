@@ -1,0 +1,620 @@
+/* ============================================================
+   Spherse 自定义主题 · Art Deco 盖茨比
+   1920s 装饰艺术：黑金烫箔 + 放射日光纹 + 菱形格 + 烫金细框
+   浅色 = 烫金邀请函：象牙白底 + 墨黑字 + 金箔
+   深色 = 黑金夜宴：黑漆底 + 香槟金字
+   标志元素：放射日光纹(sunburst)、菱形格(lattice)、双眼皮烫金边框、
+             gold gradient 标题、衬线字、祖母绿点缀
+   ============================================================ */
+
+/* ---------- 浅色模式：烫金邀请函 ---------- */
+:root {
+  /* 页面与容器（象牙白，略透出金纹） */
+  --sp-background: rgba(244, 237, 224, 0.92);
+  --sp-foreground: #1c1a16;
+  --sp-card: #fbf6ea;
+  --sp-card-foreground: #1c1a16;
+
+  /* 弹出层 */
+  --sp-popover: #fffdf7;
+  --sp-popover-foreground: #1c1a16;
+
+  /* 交互元素（金箔主色 + 深墨） */
+  --sp-primary: #b8912f;
+  --sp-primary-foreground: #1a1206;
+  --sp-secondary: #ece2cc;
+  --sp-secondary-foreground: #1c1a16;
+  --sp-accent: #e6d3a3;
+  --sp-accent-foreground: #2a2010;
+
+  /* 文字层级 */
+  --sp-muted: #e8ddc6;
+  --sp-muted-foreground: #7a6a4a;
+
+  /* 边框与输入（烫金描边） */
+  --sp-border: #c2ab7a;
+  --sp-input: #c2ab7a;
+  --sp-ring: #b8912f;
+
+  /* 语义色（祖母绿 = 盖茨比的那束绿光） */
+  --sp-destructive: #a83232;
+  --sp-success: #2f7d5a;
+  --sp-success-foreground: #ffffff;
+  --sp-warning: #c8902a;
+  --sp-warning-foreground: #ffffff;
+  --sp-diff-added: #2f7d5a;
+
+  /* 圆角 */
+  --sp-radius: 0.25rem;
+
+  /* 滚动条 */
+  --sp-scrollbar-size: 10px;
+  --sp-scrollbar-thumb: rgba(184, 145, 47, 0.45);
+  --sp-scrollbar-thumb-hover: rgba(184, 145, 47, 0.7);
+  --sp-scrollbar-track: transparent;
+
+  /* 侧边栏 */
+  --sp-sidebar: rgba(240, 232, 216, 0.94);
+  --sp-sidebar-foreground: #1c1a16;
+  --sp-sidebar-primary: #b8912f;
+  --sp-sidebar-primary-foreground: #1a1206;
+  --sp-sidebar-accent: #e6d3a3;
+  --sp-sidebar-accent-foreground: #2a2010;
+  --sp-sidebar-border: #c2ab7a;
+  --sp-sidebar-ring: #b8912f;
+}
+
+/* ---------- 深色模式：黑金夜宴 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sp-background: rgba(13, 12, 10, 0.92);
+    --sp-foreground: #f0e6d2;
+    --sp-card: rgba(22, 20, 15, 0.94);
+    --sp-card-foreground: #f0e6d2;
+
+    --sp-popover: rgba(26, 23, 18, 0.97);
+    --sp-popover-foreground: #f0e6d2;
+
+    --sp-primary: #d4af37;
+    --sp-primary-foreground: #1a1206;
+    --sp-secondary: #241f16;
+    --sp-secondary-foreground: #f0e6d2;
+    --sp-accent: #2e2718;
+    --sp-accent-foreground: #f5e6c0;
+
+    --sp-muted: #1c1913;
+    --sp-muted-foreground: #9a8a68;
+
+    --sp-border: #6a5a34;
+    --sp-input: #6a5a34;
+    --sp-ring: #d4af37;
+
+    --sp-destructive: #d9544d;
+    --sp-success: #3fae7d;
+    --sp-success-foreground: #04180f;
+    --sp-warning: #e0b04a;
+    --sp-warning-foreground: #1a1206;
+    --sp-diff-added: #3fae7d;
+
+    --sp-scrollbar-thumb: rgba(212, 175, 55, 0.45);
+    --sp-scrollbar-thumb-hover: rgba(212, 175, 55, 0.7);
+
+    --sp-sidebar: rgba(9, 8, 7, 0.94);
+    --sp-sidebar-foreground: #f0e6d2;
+    --sp-sidebar-primary: #d4af37;
+    --sp-sidebar-primary-foreground: #1a1206;
+    --sp-sidebar-accent: #2e2718;
+    --sp-sidebar-accent-foreground: #f5e6c0;
+    --sp-sidebar-border: #6a5a34;
+    --sp-sidebar-ring: #d4af37;
+  }
+}
+
+/* ============================================================
+   字体：衬线（1920s 邀请函气质）
+   ============================================================ */
+[data-app-root] {
+  font-family: Georgia, "Times New Roman", "Songti SC", "宋体",
+    "Noto Serif SC", "PingFang SC", serif;
+}
+
+/* ============================================================
+   整窗背景：放射日光纹 + 菱形格 + 暖金光晕
+   ============================================================ */
+[data-app-root] {
+  background-color: #f4ede0;
+  background-image:
+    repeating-conic-gradient(from -30deg at 50% -8%,
+      rgba(184, 145, 47, 0.1) 0deg 3deg, transparent 3deg 7deg),
+    repeating-linear-gradient(45deg, rgba(184, 145, 47, 0.07) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(-45deg, rgba(184, 145, 47, 0.07) 0 1px, transparent 1px 26px),
+    radial-gradient(ellipse 70% 45% at 50% -8%, rgba(232, 200, 116, 0.35), transparent 62%),
+    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 45%, rgba(60, 48, 20, 0.2) 100%),
+    linear-gradient(180deg, #f7f0e2 0%, #f1e9d8 55%, #e9dfca 100%);
+  background-repeat: repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root] {
+    background-color: #0d0c0a;
+    background-image:
+      repeating-conic-gradient(from -30deg at 50% -8%,
+        rgba(212, 175, 55, 0.12) 0deg 3deg, transparent 3deg 7deg),
+      repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.06) 0 1px, transparent 1px 26px),
+      repeating-linear-gradient(-45deg, rgba(212, 175, 55, 0.06) 0 1px, transparent 1px 26px),
+      radial-gradient(ellipse 70% 45% at 50% -8%, rgba(212, 175, 55, 0.18), transparent 62%),
+      radial-gradient(ellipse 120% 100% at 50% 50%, transparent 42%, rgba(0, 0, 0, 0.7) 100%),
+      linear-gradient(180deg, #121009 0%, #0d0c0a 55%, #080706 100%);
+    background-repeat: repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+  }
+}
+
+/* 双眼皮烫金边框（Art Deco 相框） */
+[data-app-root]::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(168, 132, 42, 0.45);
+  outline: 1px solid rgba(168, 132, 42, 0.22);
+  outline-offset: 3px;
+  pointer-events: none;
+  z-index: 6;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root]::before {
+    border-color: rgba(212, 175, 55, 0.5);
+    outline-color: rgba(212, 175, 55, 0.24);
+  }
+}
+
+/* 极淡颗粒（纸质/漆面质感） */
+[data-app-root]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E") repeat;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root]::after {
+    opacity: 0.06;
+  }
+}
+
+/* ============================================================
+   烫金滚动条
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(184, 145, 47, 0.06);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(184, 145, 47, 0.45);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(184, 145, 47, 0.7);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ============================================================
+   输入控件：明确的可编辑底色（避免看起来像 disabled）
+   --sp-input 只控边框色，背景由应用默认决定 → 偏灰像 disabled
+   覆盖：原生控件 + Radix/shadcn 按钮式控件（Select/Combobox）
+   ============================================================ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+textarea,
+select,
+[role="combobox"],
+[role="textbox"],
+[role="searchbox"],
+[data-radix-select-trigger],
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+button[aria-haspopup="listbox"] {
+  background-color: #fffdf7 !important;
+  color: #1c1a16;
+}
+
+/* 聊天输入框是"输入内容"容器，保持透明、沿用主题给它的专属样式 */
+[data-chat-composer] textarea {
+  background-color: transparent !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select,
+  [role="combobox"],
+  [role="textbox"],
+  [role="searchbox"],
+  [data-radix-select-trigger],
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"],
+  button[aria-haspopup="listbox"] {
+    background-color: #1c1913 !important;
+    color: #f0e6d2;
+  }
+}
+
+/* ============================================================
+   项目面板 / 内容区
+   ============================================================ */
+[data-project-panel] {
+  background: var(--sp-sidebar);
+  border-inline-end: 1px solid #c2ab7a;
+  box-shadow: inset -1px 0 0 rgba(212, 175, 55, 0.25);
+}
+
+[data-content-browser] {
+  background: var(--sp-background);
+}
+
+/* ============================================================
+   标签栏：烫金下划线 + 金色选中
+   ============================================================ */
+[data-tab-bar] {
+  background: rgba(240, 232, 216, 0.7);
+  border-bottom: 1px solid #c2ab7a;
+  box-shadow: inset 0 -3px 0 rgba(184, 145, 47, 0.14);
+  gap: 4px;
+  padding: 3px 4px 0;
+}
+
+[data-tab] {
+  background: transparent;
+  color: #7a6a4a;
+  border: none;
+  border-radius: 2px 2px 0 0;
+  letter-spacing: 0.03em;
+}
+
+[data-tab][data-active="true"] {
+  background: rgba(184, 145, 47, 0.12);
+  color: #8a6a1a;
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 #b8912f;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-tab-bar] {
+    background: rgba(9, 8, 7, 0.7);
+    border-bottom-color: #6a5a34;
+    box-shadow: inset 0 -3px 0 rgba(212, 175, 55, 0.14);
+  }
+  [data-tab] {
+    color: #9a8a68;
+  }
+  [data-tab][data-active="true"] {
+    background: rgba(212, 175, 55, 0.12);
+    color: #e8c874;
+    box-shadow: inset 0 -2px 0 #d4af37;
+  }
+}
+
+/* ============================================================
+   右键菜单 / 下拉 / 选择器 / 弹出层：烫金菜单
+   ============================================================ */
+[role="menu"],
+[data-radix-context-menu-content],
+[data-radix-dropdown-menu-content],
+[data-radix-select-content],
+[data-radix-popover-content] {
+  background: #fffdf7 !important;
+  border: 1px solid #b8912f !important;
+  border-radius: 3px !important;
+  box-shadow: 0 10px 30px rgba(60, 48, 20, 0.28), inset 0 0 0 3px rgba(184, 145, 47, 0.1) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [role="menu"],
+  [data-radix-context-menu-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content],
+  [data-radix-popover-content] {
+    background: #1a1712 !important;
+    border-color: #d4af37 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 0 3px rgba(212, 175, 55, 0.1) !important;
+  }
+}
+
+/* ============================================================
+   浮窗：内容 / 浏览器 / 聊天 —— 烫金相框窗
+   ============================================================ */
+[data-content-float-root],
+[data-browser-float-root],
+[data-chat-float-root] {
+  background: #fbf6ea;
+  border: 1px solid #b8912f;
+  border-radius: 4px;
+  box-shadow: 0 16px 44px rgba(60, 48, 20, 0.4), inset 0 0 0 4px rgba(184, 145, 47, 0.12);
+  overflow: hidden;
+}
+
+[data-content-float-titlebar],
+[data-browser-float-titlebar],
+[data-chat-float-titlebar] {
+  background: linear-gradient(180deg, #14120d, #0a0907);
+  color: #e8c874;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 5px 10px;
+  border-bottom: 1px solid #b8912f;
+}
+
+[data-content-float-close],
+[data-browser-float-close],
+[data-chat-float-close] {
+  background: rgba(184, 145, 47, 0.14);
+  color: #8a6a1a;
+  border: 1px solid #b8912f;
+  border-radius: 3px;
+}
+[data-content-float-close]:hover,
+[data-browser-float-close]:hover,
+[data-chat-float-close]:hover {
+  background: #b8912f;
+  color: #1a1206;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-float-root],
+  [data-browser-float-root],
+  [data-chat-float-root] {
+    background: #16140f;
+    border-color: #d4af37;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.7), inset 0 0 0 4px rgba(212, 175, 55, 0.1);
+  }
+  [data-content-float-titlebar],
+  [data-browser-float-titlebar],
+  [data-chat-float-titlebar] {
+    background: linear-gradient(180deg, #1a1712, #0d0c0a);
+    color: #e8c874;
+    border-bottom-color: #d4af37;
+  }
+  [data-content-float-close],
+  [data-browser-float-close],
+  [data-chat-float-close] {
+    background: rgba(212, 175, 55, 0.14);
+    color: #e8c874;
+    border-color: #d4af37;
+  }
+  [data-content-float-close]:hover,
+  [data-browser-float-close]:hover,
+  [data-chat-float-close]:hover {
+    background: #d4af37;
+    color: #1a1206;
+  }
+}
+
+/* ============================================================
+   Activity Bar 项目头像：金环徽记
+   ============================================================ */
+[data-project-avatar] {
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(184, 145, 47, 0.6),
+    0 0 14px rgba(184, 145, 47, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-project-avatar] {
+    box-shadow:
+      inset 0 0 0 1px rgba(212, 175, 55, 0.7),
+      0 0 16px rgba(212, 175, 55, 0.32);
+  }
+}
+
+/* ============================================================
+   全局 Toast：烫金请柬
+   ============================================================ */
+[data-toast-root] [data-sonner-toast] {
+  background: #fffdf7 !important;
+  color: #1c1a16 !important;
+  border: 1px solid #b8912f;
+  border-radius: 3px !important;
+  box-shadow: 0 10px 30px rgba(60, 48, 20, 0.3), inset 0 0 0 3px rgba(184, 145, 47, 0.1) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-toast-root] [data-sonner-toast] {
+    background: #1a1712 !important;
+    color: #f0e6d2 !important;
+    border-color: #d4af37;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 0 3px rgba(212, 175, 55, 0.1) !important;
+  }
+}
+
+/* ============================================================
+   聊天窗口：黑金标题条 + 烫金气泡 + 黑底金字代码
+   ============================================================ */
+[data-chat-root] [data-chat-header] {
+  background: linear-gradient(180deg, #14120d, #0a0907);
+  color: #f0e6d2;
+  border-bottom: 1px solid #b8912f;
+  box-shadow: inset 0 -3px 0 rgba(184, 145, 47, 0.3);
+}
+[data-chat-root] [data-chat-header] .header-name {
+  color: #e8c874;
+  letter-spacing: 0.08em;
+}
+[data-chat-root] [data-chat-header] .header-status,
+[data-chat-root] [data-chat-header] .header-extra { color: #9a8a68; }
+[data-chat-root] [data-chat-header] .header-avatar {
+  background: radial-gradient(circle at 38% 32%, #f4dfa0, #b8912f 55%, #6a4f12);
+  color: #1a1206;
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.4), inset 0 -2px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* 消息气泡（助手 = 烫金边说明卡，用户 = 金箔） */
+[data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+  background: #fbf6ea;
+  color: #1c1a16;
+  border: 1px solid #c2ab7a;
+  border-radius: 6px 6px 6px 2px;
+  box-shadow: inset 0 0 0 3px rgba(184, 145, 47, 0.1);
+}
+[data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+  background: linear-gradient(135deg, #d9b64a, #a8842a);
+  color: #1a1206;
+  border: 1px solid #8a6a1a;
+  border-radius: 6px 6px 2px 6px;
+  box-shadow: 0 2px 14px rgba(184, 145, 47, 0.3);
+}
+
+/* 输入区 */
+[data-chat-root] [data-chat-composer] {
+  background: rgba(240, 232, 216, 0.9);
+  border-top: 1px solid #c2ab7a;
+}
+[data-chat-root] [data-chat-composer-input] {
+  background: #fffdf7;
+  border: 1px solid #b8912f;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px rgba(184, 145, 47, 0.1);
+}
+[data-chat-root] [data-chat-composer] textarea { color: #1c1a16; }
+[data-chat-root] [data-chat-composer] textarea::placeholder { color: #9a8a68; }
+[data-chat-root] .send-btn {
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d9b64a, #a8842a);
+  color: #1a1206;
+  border: none;
+  box-shadow: 0 2px 10px rgba(184, 145, 47, 0.4);
+}
+
+/* 代码块：黑漆底金字；行内代码金箔 */
+[data-chat-root] [data-md-code] {
+  background: #0a0907;
+  color: #e8c874;
+  border: 1px solid #6a5a34;
+  border-radius: 4px;
+}
+[data-chat-root] [data-md-code-inline] {
+  background: rgba(184, 145, 47, 0.14);
+  color: #8a6a1a;
+  border: 1px solid #c2ab7a;
+  border-radius: 3px;
+}
+[data-chat-root] [data-md-quote] {
+  border-left: 3px solid #b8912f;
+  color: #7a6a4a;
+  font-style: italic;
+}
+
+/* 链接：烫金 */
+[data-chat-root] a,
+[data-content-doc] a {
+  color: #a8842a;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(184, 145, 47, 0.5);
+}
+[data-chat-root] a:hover,
+[data-content-doc] a:hover {
+  color: #8a6a1a;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-root] [data-chat-header] {
+    background: linear-gradient(180deg, #1a1712, #0d0c0a);
+    color: #f0e6d2;
+    border-bottom-color: #d4af37;
+    box-shadow: inset 0 -3px 0 rgba(212, 175, 55, 0.3);
+  }
+  [data-chat-root] [data-chat-header] .header-name { color: #e8c874; }
+  [data-chat-root] [data-chat-header] .header-status,
+  [data-chat-root] [data-chat-header] .header-extra { color: #9a8a68; }
+  [data-chat-root] [data-chat-header] .header-avatar {
+    background: radial-gradient(circle at 38% 32%, #f7e6b0, #d4af37 55%, #7a5c14);
+    color: #1a1206;
+  }
+  [data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    background: #16140f;
+    color: #f0e6d2;
+    border-color: #6a5a34;
+    box-shadow: inset 0 0 0 3px rgba(212, 175, 55, 0.08);
+  }
+  [data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+    background: linear-gradient(135deg, #e0bd52, #b8912f);
+    color: #1a1206;
+    border-color: #8a6a1a;
+  }
+  [data-chat-root] [data-chat-composer] {
+    background: rgba(9, 8, 7, 0.92);
+    border-top-color: #6a5a34;
+  }
+  [data-chat-root] [data-chat-composer-input] {
+    background: #1c1913;
+    border-color: #d4af37;
+    box-shadow: inset 0 0 0 2px rgba(212, 175, 55, 0.1);
+  }
+  [data-chat-root] [data-chat-composer] textarea { color: #f0e6d2; }
+  [data-chat-root] [data-chat-composer] textarea::placeholder { color: #8a7a5a; }
+  [data-chat-root] .send-btn {
+    background: linear-gradient(135deg, #e0bd52, #b8912f);
+    color: #1a1206;
+  }
+  [data-chat-root] [data-md-code] {
+    background: #080706;
+    color: #e8c874;
+    border-color: #6a5a34;
+  }
+  [data-chat-root] [data-md-code-inline] {
+    background: rgba(212, 175, 55, 0.14);
+    color: #e8c874;
+    border-color: #6a5a34;
+  }
+  [data-chat-root] [data-md-quote] {
+    border-left-color: #d4af37;
+    color: #9a8a68;
+  }
+  [data-chat-root] a,
+  [data-content-doc] a {
+    color: #e8c874;
+    border-bottom-color: rgba(212, 175, 55, 0.5);
+  }
+  [data-chat-root] a:hover,
+  [data-content-doc] a:hover {
+    color: #f4dfa0;
+  }
+}
+
+/* ============================================================
+   文档视图 Markdown：与聊天窗口一致
+   ============================================================ */
+[data-content-doc] [data-md-code] {
+  background: #0a0907;
+  color: #e8c874;
+  border: 1px solid #6a5a34;
+  border-radius: 4px;
+}
+[data-content-doc] [data-md-code-inline] {
+  background: rgba(184, 145, 47, 0.14);
+  color: #8a6a1a;
+  border: 1px solid #c2ab7a;
+  border-radius: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-doc] [data-md-code] {
+    background: #080706;
+    color: #e8c874;
+    border-color: #6a5a34;
+  }
+  [data-content-doc] [data-md-code-inline] {
+    background: rgba(212, 175, 55, 0.14);
+    color: #e8c874;
+    border-color: #6a5a34;
+  }
+}

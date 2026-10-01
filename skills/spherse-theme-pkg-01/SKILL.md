@@ -1,12 +1,12 @@
 ---
 name: spherse-theme-pkg-01
-description: Spherse 主题包，内置 12 款可一键应用的 UI 主题；当用户询问有哪些主题、想要查看主题预览或要求更换/应用某个主题时使用
-version: 0.1.6
+description: Spherse 主题包，内置 15 款可一键应用的 UI 主题；当用户询问有哪些主题、想要查看主题预览或要求更换/应用某个主题时使用
+version: 0.1.9
 ---
 
 # Spherse 主题包（spherse-theme-pkg-01）
 
-本 skill 是一个**项目级 UI 主题包**：内置 12 款主题，帮助用户一键应用到当前项目。主题作用于整个 App（UI 变量、全局背景、项目面板、聊天窗口默认样式等），应用后刷新页面即可生效。
+本 skill 是一个**项目级 UI 主题包**：内置 15 款主题，帮助用户一键应用到当前项目。主题作用于整个 App（UI 变量、全局背景、项目面板、聊天窗口默认样式等），应用后刷新页面即可生效。
 
 ## 目录结构
 
@@ -14,11 +14,11 @@ version: 0.1.6
 skills/spherse-theme-pkg-01/
 ├── SKILL.md
 ├── references/                 # 主题源文件（只读，勿改动）
-│   ├── theme-01.css … theme-12.css
+│   ├── theme-01.css … theme-15.css
 │   ├── theme-04-bg.png         # theme-04 配套背景图（CSS 内相对引用）
 │   └── theme-06-avatar.webp    # theme-06 配套头像（CSS 内相对引用）
 └── previews/                   # 主题预览
-    ├── index.html              # 聚合预览页：顶部切换 12 款主题
+    ├── index.html              # 聚合预览页：顶部切换 15 款主题
     └── preview-base.css        # 预览页共享骨架
 ```
 
@@ -38,6 +38,9 @@ skills/spherse-theme-pkg-01/
 | 10 | Memphis 孟菲斯 | `references/theme-10.css` | 80s 后现代：撞色色块（红/黄/青）、粗黑描边、波点网格、硬投影、几何色带；含输入控件"可编辑底色"修正 | — |
 | 11 | Game Boy DMG | `references/theme-11.css` | 掌机点阵 LCD：四阶豌豆绿（**护眼柔和版**）、LCD 点阵网格、全直角、方块滚动条、等宽像素字；含输入控件"可编辑底色"修正 | — |
 | 12 | 雨夜驾驶 | `references/theme-12.css` | Blade Runner 风：霓虹雨夜、琥珀钠灯 × 青蓝霓虹、**下落雨丝动画**、霓虹外发光；含输入控件"可编辑底色"修正 | — |
+| 13 | Art Deco 盖茨比 | `references/theme-13.css` | 1920s 装饰艺术：黑金烫箔、放射日光纹 + 菱形格、双眼皮烫金画框、祖母绿点缀；浅色=象牙白邀请函，深色=黑金夜宴；含输入控件"可编辑底色"修正 | — |
+| 14 | Bauhaus 包豪斯 | `references/theme-14.css` | 1919 魏玛设计学院：红黄蓝三原色、几何块（圆/方）、粗黑线 + 网格、海报黑框、几何无衬线；浅色=招贴纸，深色=夜展；含输入控件"可编辑底色"修正 | — |
+| 15 | 宝可梦对话盒 | `references/theme-15.css` | Game Boy 时代对话框：米色对话框 + 粗黑**双线框**、**精灵球**头像、**闪烁 ▼** 指示、等宽像素字；浅色=蓝天绿地，深色=夜晚航线；含输入控件"可编辑底色"修正 | — |
 
 ## 触发场景
 
@@ -49,7 +52,7 @@ skills/spherse-theme-pkg-01/
 用户想看有哪些主题时，用 `render_card` 渲染聚合预览页：
 
 ```
-render_card(type: "html", file_path: "skills/spherse-theme-pkg-01/previews/index.html", title: "Spherse 主题预览 · 12 款主题")
+render_card(type: "html", file_path: "skills/spherse-theme-pkg-01/previews/index.html", title: "Spherse 主题预览 · 15 款主题")
 ```
 
 预览页顶部有主题切换器（左右箭头循环 + 展开列表直选），下方展示每款主题的聊天窗口、界面组件与色板；深色/浅色主题自动跟随系统。让用户在预览页中选定一款，确认后进入应用流程。
@@ -116,6 +119,9 @@ render_card(type: "html", file_path: "skills/spherse-theme-pkg-01/previews/index
 | `Memphis` / `孟菲斯` | 10 |
 | `Game Boy` / `DMG` / `点阵绿屏` | 11 |
 | `雨夜驾驶` / `Blade Runner` | 12 |
+| `Art Deco` / `盖茨比` / `装饰艺术` | 13 |
+| `Bauhaus` / `包豪斯` | 14 |
+| `宝可梦` / `对话盒` / `Pokémon` | 15 |
 
 若都不匹配，说明是用户自定义或其它来源的主题，按通用备份流程处理即可（备份后正常覆盖）。
 

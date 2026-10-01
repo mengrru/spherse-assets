@@ -1,0 +1,628 @@
+/* ============================================================
+   Spherse 自定义主题 · Bauhaus 包豪斯
+   1919 魏玛设计学院：红黄蓝三原色 + 几何形 + 粗黑线 + 网格
+   浅色 = 招贴纸：米白底 + 三原色几何块 + 黑色网格
+   深色 = 夜展：炭黑底 + 三原色 + 白色描边
+   标志元素：三原色块(红/黄/蓝)、圆/方几何形、粗黑描边、海报黑框、几何无衬线
+   ============================================================ */
+
+/* ---------- 浅色模式：招贴纸 ---------- */
+:root {
+  /* 页面与容器（米白招贴纸，略透出几何块） */
+  --sp-background: rgba(242, 239, 230, 0.9);
+  --sp-foreground: #141414;
+  --sp-card: #ffffff;
+  --sp-card-foreground: #141414;
+
+  /* 弹出层 */
+  --sp-popover: #ffffff;
+  --sp-popover-foreground: #141414;
+
+  /* 交互元素（三原色：红 / 黄 / 蓝） */
+  --sp-primary: #e30613;
+  --sp-primary-foreground: #ffffff;
+  --sp-secondary: #f5c400;
+  --sp-secondary-foreground: #141414;
+  --sp-accent: #1352a2;
+  --sp-accent-foreground: #ffffff;
+
+  /* 文字层级 */
+  --sp-muted: #e6e2d6;
+  --sp-muted-foreground: #6b6656;
+
+  /* 边框与输入（粗黑线） */
+  --sp-border: #141414;
+  --sp-input: #141414;
+  --sp-ring: #e30613;
+
+  /* 语义色（保持三原色纯粹） */
+  --sp-destructive: #e30613;
+  --sp-success: #1352a2;
+  --sp-success-foreground: #ffffff;
+  --sp-warning: #f5c400;
+  --sp-warning-foreground: #141414;
+  --sp-diff-added: #1352a2;
+
+  /* 直角：几何理性 */
+  --sp-radius: 0;
+
+  /* 滚动条 */
+  --sp-scrollbar-size: 10px;
+  --sp-scrollbar-thumb: #141414;
+  --sp-scrollbar-thumb-hover: #e30613;
+  --sp-scrollbar-track: #e6e2d6;
+
+  /* 侧边栏 */
+  --sp-sidebar: rgba(238, 234, 224, 0.94);
+  --sp-sidebar-foreground: #141414;
+  --sp-sidebar-primary: #e30613;
+  --sp-sidebar-primary-foreground: #ffffff;
+  --sp-sidebar-accent: #1352a2;
+  --sp-sidebar-accent-foreground: #ffffff;
+  --sp-sidebar-border: #141414;
+  --sp-sidebar-ring: #e30613;
+}
+
+/* ---------- 深色模式：夜展 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sp-background: rgba(23, 23, 26, 0.9);
+    --sp-foreground: #f2efe6;
+    --sp-card: #1e1e22;
+    --sp-card-foreground: #f2efe6;
+
+    --sp-popover: #222227;
+    --sp-popover-foreground: #f2efe6;
+
+    --sp-primary: #f2271f;
+    --sp-primary-foreground: #ffffff;
+    --sp-secondary: #f5c400;
+    --sp-secondary-foreground: #141414;
+    --sp-accent: #2b6fd6;
+    --sp-accent-foreground: #ffffff;
+
+    --sp-muted: #2a2a30;
+    --sp-muted-foreground: #9a968a;
+
+    --sp-border: #f2efe6;
+    --sp-input: #f2efe6;
+    --sp-ring: #f2271f;
+
+    --sp-destructive: #f2271f;
+    --sp-success: #2b6fd6;
+    --sp-success-foreground: #ffffff;
+    --sp-warning: #f5c400;
+    --sp-warning-foreground: #141414;
+    --sp-diff-added: #2b6fd6;
+
+    --sp-scrollbar-thumb: #f2efe6;
+    --sp-scrollbar-thumb-hover: #f2271f;
+    --sp-scrollbar-track: #2a2a30;
+
+    --sp-sidebar: rgba(18, 18, 20, 0.94);
+    --sp-sidebar-foreground: #f2efe6;
+    --sp-sidebar-primary: #f2271f;
+    --sp-sidebar-primary-foreground: #ffffff;
+    --sp-sidebar-accent: #2b6fd6;
+    --sp-sidebar-accent-foreground: #ffffff;
+    --sp-sidebar-border: #f2efe6;
+    --sp-sidebar-ring: #f2271f;
+  }
+}
+
+/* ============================================================
+   字体：几何无衬线（Futura 气质）
+   ============================================================ */
+[data-app-root] {
+  font-family: "Futura", "Century Gothic", "Avenir Next", "Poppins",
+    "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* ============================================================
+   整窗背景：三原色几何块 + 黑色网格
+   ============================================================ */
+[data-app-root] {
+  background-color: #f2efe6;
+  background-image:
+    radial-gradient(circle at 88% 9%, #1352a2 0 62px, transparent 64px),
+    linear-gradient(#e30613, #e30613),
+    linear-gradient(#f5c400, #f5c400),
+    repeating-linear-gradient(0deg, rgba(20, 20, 20, 0.07) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(90deg, rgba(20, 20, 20, 0.07) 0 1px, transparent 1px 40px),
+    linear-gradient(180deg, #f5f2ea 0%, #f2efe6 60%, #ece8dd 100%);
+  background-size: auto, 92px 92px, 64px 64px, auto, auto, auto;
+  background-position: 0 0, 5% 86%, 22% 62%, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root] {
+    background-color: #17171a;
+    background-image:
+      radial-gradient(circle at 88% 9%, #2b6fd6 0 62px, transparent 64px),
+      linear-gradient(#f2271f, #f2271f),
+      linear-gradient(#f5c400, #f5c400),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 40px),
+      linear-gradient(180deg, #1c1c20 0%, #17171a 60%, #101013 100%);
+    background-size: auto, 92px 92px, 64px 64px, auto, auto, auto;
+    background-position: 0 0, 5% 86%, 22% 62%, 0 0, 0 0, 0 0;
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat;
+  }
+}
+
+/* 极淡纸面颗粒 */
+[data-app-root]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E") repeat;
+  opacity: 0.035;
+  pointer-events: none;
+}
+
+/* 海报黑框 */
+[data-app-root]::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border: 2px solid #141414;
+  pointer-events: none;
+  z-index: 6;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-app-root]::after {
+    border-color: #f2efe6;
+  }
+}
+
+/* ============================================================
+   几何滚动条
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #e6e2d6;
+}
+::-webkit-scrollbar-thumb {
+  background: #141414;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e30613;
+}
+::-webkit-scrollbar-corner {
+  background: #e6e2d6;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #2a2a30;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #f2efe6;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #f2271f;
+  }
+  ::-webkit-scrollbar-corner {
+    background: #2a2a30;
+  }
+}
+
+/* ============================================================
+   输入控件：明确的可编辑底色（避免看起来像 disabled）
+   --sp-input 只控边框色，背景由应用默认决定 → 偏灰像 disabled
+   覆盖：原生控件 + Radix/shadcn 按钮式控件（Select/Combobox）
+   ============================================================ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+textarea,
+select,
+[role="combobox"],
+[role="textbox"],
+[role="searchbox"],
+[data-radix-select-trigger],
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+button[aria-haspopup="listbox"] {
+  background-color: #ffffff !important;
+  color: #141414;
+}
+
+/* 聊天输入框是"输入内容"容器，保持透明、沿用主题给它的专属样式 */
+[data-chat-composer] textarea {
+  background-color: transparent !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select,
+  [role="combobox"],
+  [role="textbox"],
+  [role="searchbox"],
+  [data-radix-select-trigger],
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"],
+  button[aria-haspopup="listbox"] {
+    background-color: #222227 !important;
+    color: #f2efe6;
+  }
+}
+
+/* ============================================================
+   项目面板 / 内容区
+   ============================================================ */
+[data-project-panel] {
+  background: var(--sp-sidebar);
+  border-inline-end: 2px solid #141414;
+}
+
+[data-content-browser] {
+  background: var(--sp-background);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-project-panel] {
+    border-inline-end-color: #f2efe6;
+  }
+}
+
+/* ============================================================
+   标签栏：几何页签（选中 = 红色块）
+   ============================================================ */
+[data-tab-bar] {
+  background: #f2efe6;
+  border-bottom: 2px solid #141414;
+  gap: 4px;
+  padding: 6px 8px 0;
+}
+
+[data-tab] {
+  background: #ffffff;
+  color: #141414;
+  border: 2px solid #141414;
+  border-bottom: none;
+  border-radius: 0;
+  font-weight: 600;
+}
+
+[data-tab][data-active="true"] {
+  background: #e30613;
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-tab-bar] {
+    background: #17171a;
+    border-bottom-color: #f2efe6;
+  }
+  [data-tab] {
+    background: #1e1e22;
+    color: #f2efe6;
+    border-color: #f2efe6;
+  }
+  [data-tab][data-active="true"] {
+    background: #f2271f;
+    color: #ffffff;
+  }
+}
+
+/* ============================================================
+   右键菜单 / 下拉 / 选择器 / 弹出层：粗黑边 + 硬投影
+   ============================================================ */
+[role="menu"],
+[data-radix-context-menu-content],
+[data-radix-dropdown-menu-content],
+[data-radix-select-content],
+[data-radix-popover-content] {
+  background: #ffffff !important;
+  border: 2px solid #141414 !important;
+  border-radius: 0 !important;
+  box-shadow: 5px 5px 0 rgba(20, 20, 20, 0.9) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [role="menu"],
+  [data-radix-context-menu-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content],
+  [data-radix-popover-content] {
+    background: #1e1e22 !important;
+    border-color: #f2efe6 !important;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.9) !important;
+  }
+}
+
+/* ============================================================
+   浮窗：内容 / 浏览器 / 聊天 —— 包豪斯窗
+   ============================================================ */
+[data-content-float-root],
+[data-browser-float-root],
+[data-chat-float-root] {
+  background: #ffffff;
+  border: 2px solid #141414;
+  border-radius: 0;
+  box-shadow: 7px 7px 0 rgba(20, 20, 20, 0.85);
+  overflow: hidden;
+}
+
+[data-content-float-titlebar],
+[data-browser-float-titlebar],
+[data-chat-float-titlebar] {
+  background: #141414;
+  color: #f2efe6;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 5px 9px;
+  border-bottom: 3px solid #e30613;
+}
+
+[data-content-float-close],
+[data-browser-float-close],
+[data-chat-float-close] {
+  background: #f5c400;
+  color: #141414;
+  border: 2px solid #141414;
+  border-radius: 0;
+}
+[data-content-float-close]:hover,
+[data-browser-float-close]:hover,
+[data-chat-float-close]:hover {
+  background: #e30613;
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-float-root],
+  [data-browser-float-root],
+  [data-chat-float-root] {
+    background: #1e1e22;
+    border-color: #f2efe6;
+    box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.85);
+  }
+  [data-content-float-titlebar],
+  [data-browser-float-titlebar],
+  [data-chat-float-titlebar] {
+    background: #f2efe6;
+    color: #141414;
+    border-bottom-color: #f2271f;
+  }
+  [data-content-float-close],
+  [data-browser-float-close],
+  [data-chat-float-close] {
+    background: #f5c400;
+    color: #141414;
+    border-color: #141414;
+  }
+  [data-content-float-close]:hover,
+  [data-browser-float-close]:hover,
+  [data-chat-float-close]:hover {
+    background: #f2271f;
+    color: #ffffff;
+  }
+}
+
+/* ============================================================
+   Activity Bar 项目头像：红色方块
+   ============================================================ */
+[data-project-avatar] {
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px #141414;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-project-avatar] {
+    box-shadow: inset 0 0 0 2px #f2efe6;
+  }
+}
+
+/* ============================================================
+   全局 Toast：包豪斯告示
+   ============================================================ */
+[data-toast-root] [data-sonner-toast] {
+  background: #ffffff !important;
+  color: #141414 !important;
+  border: 2px solid #141414;
+  border-radius: 0 !important;
+  box-shadow: 5px 5px 0 rgba(20, 20, 20, 0.85) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-toast-root] [data-sonner-toast] {
+    background: #1e1e22 !important;
+    color: #f2efe6 !important;
+    border-color: #f2efe6;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.85) !important;
+  }
+}
+
+/* ============================================================
+   聊天窗口：黑标题条 + 三原色条 + 几何气泡
+   ============================================================ */
+[data-chat-root] [data-chat-header] {
+  background:
+    linear-gradient(90deg, #e30613 0 33.33%, #f5c400 33.33% 66.66%, #1352a2 66.66% 100%) left bottom / 100% 4px no-repeat,
+    #141414;
+  color: #f2efe6;
+  border-bottom: none;
+}
+[data-chat-root] [data-chat-header] .header-name {
+  color: #ffffff;
+  letter-spacing: 0.05em;
+}
+[data-chat-root] [data-chat-header] .header-status,
+[data-chat-root] [data-chat-header] .header-extra { color: #b9b3a2; }
+[data-chat-root] [data-chat-header] .header-avatar {
+  background: #f5c400;
+  color: #141414;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px #141414;
+}
+
+/* 消息气泡（助手 = 白卡黑框，用户 = 红块） */
+[data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+  background: #ffffff;
+  color: #141414;
+  border: 2px solid #141414;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 rgba(20, 20, 20, 0.85);
+}
+[data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+  background: #e30613;
+  color: #ffffff;
+  border: 2px solid #141414;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 rgba(20, 20, 20, 0.85);
+  font-weight: 500;
+}
+
+/* 输入区 */
+[data-chat-root] [data-chat-composer] {
+  background: #f2efe6;
+  border-top: 2px solid #141414;
+}
+[data-chat-root] [data-chat-composer-input] {
+  background: #ffffff;
+  border: 2px solid #141414;
+  border-radius: 0;
+}
+[data-chat-root] [data-chat-composer] textarea { color: #141414; }
+[data-chat-root] [data-chat-composer] textarea::placeholder { color: #8f8a7a; }
+[data-chat-root] .send-btn {
+  border-radius: 0;
+  background: #e30613;
+  color: #ffffff;
+  border: 2px solid #141414;
+}
+
+/* 代码块：黑底黄字；行内代码蓝底白字 */
+[data-chat-root] [data-md-code] {
+  background: #141414;
+  color: #f5c400;
+  border: 2px solid #141414;
+  border-radius: 0;
+}
+[data-chat-root] [data-md-code-inline] {
+  background: #1352a2;
+  color: #ffffff;
+  border-radius: 0;
+  padding: 1px 5px;
+}
+[data-chat-root] [data-md-quote] {
+  border-left: 4px solid #e30613;
+  color: #6b6656;
+}
+
+/* 链接：蓝色 */
+[data-chat-root] a,
+[data-content-doc] a {
+  color: #1352a2;
+  text-decoration: none;
+  border-bottom: 2px solid #1352a2;
+}
+[data-chat-root] a:hover,
+[data-content-doc] a:hover {
+  color: #e30613;
+  border-bottom-color: #e30613;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-chat-root] [data-chat-header] {
+    background:
+      linear-gradient(90deg, #f2271f 0 33.33%, #f5c400 33.33% 66.66%, #2b6fd6 66.66% 100%) left bottom / 100% 4px no-repeat,
+      #f2efe6;
+    color: #141414;
+    border-bottom: none;
+  }
+  [data-chat-root] [data-chat-header] .header-name { color: #141414; }
+  [data-chat-root] [data-chat-header] .header-status,
+  [data-chat-root] [data-chat-header] .header-extra { color: #6b6656; }
+  [data-chat-root] [data-chat-header] .header-avatar {
+    background: #f2271f;
+    color: #ffffff;
+    box-shadow: inset 0 0 0 2px #141414;
+  }
+  [data-chat-root] [data-chat-message][data-role="assistant"] [data-chat-bubble] {
+    background: #f2efe6;
+    color: #141414;
+    border-color: #141414;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  }
+  [data-chat-root] [data-chat-message][data-role="user"] [data-chat-bubble] {
+    background: #f2271f;
+    color: #ffffff;
+    border-color: #141414;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  }
+  [data-chat-root] [data-chat-composer] {
+    background: #17171a;
+    border-top-color: #f2efe6;
+  }
+  [data-chat-root] [data-chat-composer-input] {
+    background: #222227;
+    border-color: #f2efe6;
+  }
+  [data-chat-root] [data-chat-composer] textarea { color: #f2efe6; }
+  [data-chat-root] [data-chat-composer] textarea::placeholder { color: #8a8678; }
+  [data-chat-root] .send-btn {
+    background: #f2271f;
+    color: #ffffff;
+    border-color: #141414;
+  }
+  [data-chat-root] [data-md-code] {
+    background: #0f0f11;
+    color: #f5c400;
+    border-color: #f2efe6;
+  }
+  [data-chat-root] [data-md-code-inline] {
+    background: #2b6fd6;
+    color: #ffffff;
+  }
+  [data-chat-root] [data-md-quote] {
+    border-left-color: #f2271f;
+    color: #9a968a;
+  }
+  [data-chat-root] a,
+  [data-content-doc] a {
+    color: #6fa8ff;
+    border-bottom-color: #6fa8ff;
+  }
+  [data-chat-root] a:hover,
+  [data-content-doc] a:hover {
+    color: #f2271f;
+    border-bottom-color: #f2271f;
+  }
+}
+
+/* ============================================================
+   文档视图 Markdown：与聊天窗口一致
+   ============================================================ */
+[data-content-doc] [data-md-code] {
+  background: #141414;
+  color: #f5c400;
+  border: 2px solid #141414;
+  border-radius: 0;
+}
+[data-content-doc] [data-md-code-inline] {
+  background: #1352a2;
+  color: #ffffff;
+  border-radius: 0;
+  padding: 1px 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-content-doc] [data-md-code] {
+    background: #0f0f11;
+    color: #f5c400;
+    border-color: #f2efe6;
+  }
+  [data-content-doc] [data-md-code-inline] {
+    background: #2b6fd6;
+    color: #ffffff;
+  }
+}
