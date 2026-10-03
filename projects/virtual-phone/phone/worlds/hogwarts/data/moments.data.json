@@ -1,0 +1,195 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "霍格沃茨 · 告示板：动态与回复",
+    "queries": {
+      "listMoments": {
+        "desc": "读取告示板动态，最新在前，可按作者过滤",
+        "path": "moments",
+        "identity": "id",
+        "params": {
+          "authorId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 20
+      },
+      "listMomentComments": {
+        "desc": "读取某条动态下面的回复，按时间升序",
+        "path": "momentComments",
+        "identity": "id",
+        "params": {
+          "momentId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "createMoment": {
+        "desc": "在告示板上发一条动态",
+        "op": "append",
+        "path": "moments",
+        "fields": {
+          "authorId": {
+            "type": "string",
+            "required": true
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "required": true
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "place": {
+            "type": "string"
+          },
+          "likeCount": {
+            "type": "integer",
+            "default": 0
+          },
+          "likedByMe": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "likeMoment": {
+        "desc": "点赞或取消赞",
+        "op": "update",
+        "path": "moments",
+        "match": "id",
+        "fields": {
+          "likedByMe": {
+            "type": "boolean"
+          },
+          "likeCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "addMomentComment": {
+        "desc": "在某条动态下回复",
+        "op": "append",
+        "path": "momentComments",
+        "fields": {
+          "momentId": {
+            "type": "string",
+            "required": true
+          },
+          "authorId": {
+            "type": "string",
+            "required": true
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "required": true
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "removeMoment": {
+        "desc": "删除一条动态",
+        "op": "remove",
+        "path": "moments",
+        "match": "id"
+      },
+      "removeMomentComment": {
+        "desc": "删除一条回复",
+        "op": "remove",
+        "path": "momentComments",
+        "match": "id"
+      }
+    }
+  },
+  "moments": [
+    {
+      "authorId": "char-harry",
+      "authorName": "哈利",
+      "text": "今天训练飞了三个小时。抓飞贼的时候整个人撞进看台第三排，胳膊青了一大块。值。",
+      "emoji": "🧹",
+      "place": "魁地奇球场",
+      "likeCount": 12,
+      "likedByMe": false,
+      "id": "hmoment-1",
+      "createdAt": "2025-01-01T04:00:00.000Z"
+    },
+    {
+      "authorId": "char-harry",
+      "authorName": "哈利",
+      "text": "谁在图书馆三楼借走了《高级魔药制作》？我等着抄第 394 页已经等了四天。",
+      "emoji": "📖",
+      "place": "图书馆",
+      "likeCount": 3,
+      "likedByMe": false,
+      "id": "hmoment-2",
+      "createdAt": "2025-01-01T04:10:00.000Z"
+    },
+    {
+      "authorId": "me",
+      "authorName": "你",
+      "text": "三楼走廊信号真好。别问我为什么。",
+      "emoji": "📶",
+      "place": "城堡三楼",
+      "likeCount": 7,
+      "likedByMe": true,
+      "id": "hmoment-3",
+      "createdAt": "2025-01-01T04:20:00.000Z"
+    }
+  ],
+  "momentComments": [
+    {
+      "momentId": "hmoment-1",
+      "authorId": "char-ron",
+      "authorName": "罗恩",
+      "text": "看台那块板子该修了，这已经是今年第三次",
+      "id": "hmc-1",
+      "createdAt": "2025-01-01T04:30:00.000Z"
+    },
+    {
+      "momentId": "hmoment-3",
+      "authorId": "char-hermione",
+      "authorName": "赫敏",
+      "text": "我跟你讲，这事儿别到处说",
+      "id": "hmc-2",
+      "createdAt": "2025-01-01T04:40:00.000Z"
+    }
+  ]
+}

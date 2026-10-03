@@ -1,0 +1,287 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 临江论坛：版块、帖子与楼层回复（匿名树洞也在这里）",
+    "queries": {
+      "listPosts": {
+        "desc": "读取帖子，最新在前，可按版块过滤（chat=杂谈 hole=树洞 lost=找人·失物 market=二手）",
+        "path": "posts",
+        "identity": "id",
+        "params": {
+          "board": {
+            "type": "enum",
+            "values": [
+              "chat",
+              "hole",
+              "lost",
+              "market"
+            ]
+          },
+          "author": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 20
+      },
+      "listReplies": {
+        "desc": "读取某个帖子的回复，按时间升序（就是楼层顺序）",
+        "path": "replies",
+        "identity": "id",
+        "params": {
+          "postId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "createPost": {
+        "desc": "发一条新帖。anonymous=true 时按匿名树洞处理，author 仍会记录昵称",
+        "op": "append",
+        "path": "posts",
+        "fields": {
+          "board": {
+            "type": "enum",
+            "values": [
+              "chat",
+              "hole",
+              "lost",
+              "market"
+            ],
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "body": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "anonymous": {
+            "type": "boolean",
+            "default": false
+          },
+          "likeCount": {
+            "type": "integer",
+            "default": 0
+          },
+          "likedByMe": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "addReply": {
+        "desc": "在帖子里回复一层（楼层按时间顺序自动排）",
+        "op": "append",
+        "path": "replies",
+        "fields": {
+          "postId": {
+            "type": "string",
+            "required": true
+          },
+          "author": {
+            "type": "string",
+            "required": true
+          },
+          "body": {
+            "type": "string",
+            "required": true
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "likePost": {
+        "desc": "点赞或取消赞",
+        "op": "update",
+        "path": "posts",
+        "match": "id",
+        "fields": {
+          "likeCount": {
+            "type": "integer"
+          },
+          "likedByMe": {
+            "type": "boolean"
+          }
+        }
+      },
+      "removePost": {
+        "desc": "删帖",
+        "op": "remove",
+        "path": "posts",
+        "match": "id"
+      },
+      "removeReply": {
+        "desc": "删一层回复",
+        "op": "remove",
+        "path": "replies",
+        "match": "id"
+      },
+      "setBbsAgentSession": {
+        "desc": "记录论坛这个 Agent 的会话 id（所有版块共用一个会话）",
+        "op": "set",
+        "path": "agent",
+        "fields": {
+          "sessionId": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "agent": {
+    "sessionId": null,
+    "updatedAt": null
+  },
+  "posts": [
+    {
+      "id": "post-lost-earphone",
+      "board": "lost",
+      "title": "二号线捡到一个耳机盒，里面有张便利贴",
+      "body": "昨天下午在二号线，座位底下捡到一个耳机盒，里面没有耳机，就一张便利贴写着个手机号。我按号码发了条短信问过了，等对方回复。要是你的，跟我说一声。",
+      "author": "拾到东西的人",
+      "anonymous": false,
+      "likeCount": 4,
+      "likedByMe": false,
+      "createdAt": "2026-10-02T11:20:00.000Z"
+    },
+    {
+      "id": "post-wonton",
+      "board": "chat",
+      "title": "巷口那家馄饨摊是不是要搬了？",
+      "body": "上周去的时候老板说房东涨租，可能撑不到年底。有人知道具体情况吗？凌晨两点还开着的那家，别真搬了。",
+      "author": "常客小李",
+      "anonymous": false,
+      "likeCount": 12,
+      "likedByMe": true,
+      "createdAt": "2026-10-01T22:40:00.000Z"
+    },
+    {
+      "id": "post-bookshelf",
+      "board": "chat",
+      "title": "白鹿书店柜台底下留书是什么规矩？",
+      "body": "上周去买书，听旁边的人说店员会把书留在柜台下面给熟客。是这家店的什么传统吗？我问了店员，一个戴眼镜的女生，她没理我。",
+      "author": "想买书的人",
+      "anonymous": false,
+      "likeCount": 6,
+      "likedByMe": false,
+      "createdAt": "2026-10-01T18:05:00.000Z"
+    },
+    {
+      "id": "post-3am",
+      "board": "hole",
+      "title": "凌晨三点还在改稿的人有吗",
+      "body": "不是抱怨，就是想知道这个点还有谁醒着。",
+      "author": "匿名",
+      "anonymous": true,
+      "likeCount": 23,
+      "likedByMe": false,
+      "createdAt": "2026-09-30T19:10:00.000Z"
+    },
+    {
+      "id": "post-tablet",
+      "board": "market",
+      "title": "出一个旧数位板，八十",
+      "body": "旧款，成色还行，笔尖有点秃，自提。老城区，晚上七点后在家。",
+      "author": "换新的了",
+      "anonymous": false,
+      "likeCount": 2,
+      "likedByMe": false,
+      "createdAt": "2026-09-29T13:00:00.000Z"
+    }
+  ],
+  "replies": [
+    {
+      "id": "rep-1",
+      "postId": "post-lost-earphone",
+      "author": "楼下小王",
+      "body": "好人。要真是别人的，人家得记你一辈子。",
+      "createdAt": "2026-10-02T11:33:00.000Z"
+    },
+    {
+      "id": "rep-2",
+      "postId": "post-lost-earphone",
+      "author": "匿名",
+      "body": "二号线丢东西的一般都找不回来了，你这条算难得。",
+      "createdAt": "2026-10-02T12:02:00.000Z"
+    },
+    {
+      "id": "rep-3",
+      "postId": "post-wonton",
+      "author": "夜班司机",
+      "body": "真的假的，我上周三点还去过。老板人挺好的，别搬啊。",
+      "createdAt": "2026-10-01T23:05:00.000Z"
+    },
+    {
+      "id": "rep-4",
+      "postId": "post-wonton",
+      "author": "住在隔壁的",
+      "body": "涨租是真的，我听说谈了两轮了。要是真搬我就没夜宵吃了。",
+      "createdAt": "2026-10-02T08:20:00.000Z"
+    },
+    {
+      "id": "rep-5",
+      "postId": "post-3am",
+      "author": "匿名",
+      "body": "有。",
+      "createdAt": "2026-09-30T19:15:00.000Z"
+    },
+    {
+      "id": "rep-6",
+      "postId": "post-3am",
+      "author": "刚下夜班",
+      "body": "刚到家，泡面还没泡开。你早点睡。",
+      "createdAt": "2026-09-30T19:22:00.000Z"
+    },
+    {
+      "id": "rep-7",
+      "postId": "post-3am",
+      "author": "匿名",
+      "body": "这帖子每年都会有人发一次，然后每年都有人回「有」。",
+      "createdAt": "2026-09-30T20:41:00.000Z"
+    },
+    {
+      "id": "rep-8",
+      "postId": "post-tablet",
+      "author": "路过看看",
+      "body": "有图吗，笔尖秃到什么程度",
+      "createdAt": "2026-09-29T15:12:00.000Z"
+    }
+  ]
+}

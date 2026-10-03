@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日历</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 本页专属：月视图 + 日子列表。颜色一律走 token（见 开发说明.md 的「外观」） */
+  body{position:relative;overflow:hidden}
+  .app-body{padding-bottom:104px}
+  .cal-top{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:14px;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));
+    border:var(--border-w) solid var(--border);border-radius:var(--radius);padding:var(--card-pad);
+    box-shadow:var(--shadow-card);
+  }
+  .cal-date{font-size:26px;font-weight:800;font-style:italic;color:var(--text);line-height:1.1}
+  .cal-wd{font-size:11.5px;font-weight:700;color:var(--text-dim);margin-top:4px}
+  .cal-now{font-family:var(--mono);font-size:26px;font-weight:800;color:var(--accent-ink);line-height:1.1}
+  .cal-rate{font-size:10.5px;font-weight:700;color:var(--text-dim);margin-top:4px;text-align:right}
+  .month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .month-nav b{font-size:13px;font-weight:800;font-style:italic;letter-spacing:1px;color:var(--accent-ink)}
+  .month-nav button{
+    width:26px;height:26px;padding:0 0 2px;border:var(--border-w) solid var(--border);border-radius:9px;
+    background:var(--pill);color:var(--pill-fg);font:inherit;font-size:14px;font-weight:800;line-height:1;cursor:pointer;
+  }
+  .grid-head{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:5px}
+  .grid-head span{text-align:center;font-size:10.5px;font-weight:800;color:var(--text-dim)}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .cell{
+    position:relative;aspect-ratio:1/1;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    font:inherit;color:var(--text);cursor:pointer;background:none;
+    border:1.5px solid transparent;border-radius:9px;
+  }
+  .cell .n{font-family:var(--mono);font-size:12.5px;font-weight:700;line-height:1}
+  .cell.out .n{opacity:.3}
+  .cell.today{border-color:var(--accent-heart)}
+  .cell.today .n{color:var(--accent-heart);font-weight:800}
+  .cell.sel{background:var(--pill)}
+  .cell .dots{display:flex;align-items:center;gap:2px;height:7px}
+  .cell .dots i{display:block;width:4px;height:4px;border-radius:50%}
+  .cell .dots i.dot-me{background:var(--accent-ink)}
+  .cell .dots i.dot-her{background:var(--accent-heart)}
+  .cell .dots i.dot-mark{width:auto;height:auto;font-size:7px;line-height:1;color:var(--seg-hot)}
+  .sec{display:flex;align-items:baseline;gap:8px;margin:4px 2px 9px}
+  .sec b{font-size:12.5px;font-weight:800;font-style:italic;letter-spacing:.5px;color:var(--text)}
+  .sec span{font-size:10.5px;font-weight:700;color:var(--text-dim)}
+  .ev{
+    display:flex;gap:9px;align-items:flex-start;padding:9px 10px;margin-bottom:9px;
+    width:100%;text-align:left;font:inherit;color:var(--text);cursor:pointer;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));
+    border:var(--border-w) solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-row);
+  }
+  .ev.done{opacity:.55}
+  .ev.done .ev-title{text-decoration:line-through}
+  .ev-time{flex:none;width:40px;padding-top:2px;font-family:var(--mono);font-size:11.5px;font-weight:800;color:var(--accent-ink)}
+  .ev-main{flex:1;min-width:0}
+  .ev-title{font-size:13.5px;font-weight:800;color:var(--text);line-height:1.4;word-break:break-word}
+  .ev-who{
+    display:inline-block;margin-left:6px;vertical-align:1px;font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:999px;
+    border:1.5px solid var(--border);background:var(--pill);color:var(--pill-fg);
+  }
+  .ev-who.her{background:var(--btn-pink);color:var(--btn-pink-fg)}
+  .ev-note{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.5;word-break:break-word}
+  .ev-rep{font-size:9.5px;font-weight:800;color:var(--accent-ink);margin-top:4px}
+  .ev-tick,.ev-del{
+    flex:none;width:24px;height:24px;padding:0;border:var(--border-w) solid var(--border);border-radius:8px;
+    font:inherit;font-size:12px;font-weight:800;line-height:1;cursor:pointer;
+    background:var(--pill);color:var(--pill-fg);
+  }
+  .ev-del{background:var(--warn);color:var(--warn-fg);font-size:11px}
+  .markrow{display:flex;align-items:baseline;gap:8px;font-size:12.5px;color:var(--text);padding:7px 0;border-bottom:1.5px dashed rgba(26,20,32,.22)}
+  .markrow:last-child{border-bottom:none}
+  .markrow .d{flex:none;font-family:var(--mono);font-size:11px;font-weight:800;color:var(--accent-heart)}
+  .markrow .y{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--text-dim)}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span id="title">日历</span>
+  <button class="ghost" id="today-btn">今天</button>
+</header>
+<div class="app-body" id="body">
+  <div class="cal-top" id="top"></div>
+  <div class="card" id="month"></div>
+  <div id="marks"></div>
+  <div class="sec" id="day-head"></div>
+  <div id="day-list"></div>
+</div>
+<button class="fab" id="fab" title="记一件事">＋</button>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-head"><span>记一件事</span><button id="sheet-cancel">取消</button></div>
+  <input id="f-date" class="winput" type="date">
+  <input id="f-time" class="winput" type="time">
+  <input id="f-title" class="winput" placeholder="做什么（交稿 / 看电影 / 书店盘点）">
+  <div class="wtargets" id="f-who"></div>
+  <div class="wtargets" id="f-rep"></div>
+  <input id="f-note" class="winput" placeholder="备注（可留空）">
+  <button class="sheet-send" id="sheet-send">记下</button>
+</div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var data = { events: [], marks: [] };
+  var chars = [];
+  var sel = null;             // 选中的日子 "YYYY-MM-DD"
+  var view = null;            // 正在看的月份（当月 1 号）
+  var who = "me", rep = "none";
+
+  /* ---------- 日期小工具：一律用手机世界里的时间 ---------- */
+  function k2(d) { return d.getFullYear() + "-" + phone.pad(d.getMonth() + 1) + "-" + phone.pad(d.getDate()); }
+  function validKey(k) { return /^\d{4}-\d{2}-\d{2}$/.test(String(k || "")); }
+  function keyDay(key) {
+    var p = String(key || "").split("-");
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function daysDiff(a, b) { return Math.round((b.getTime() - a.getTime()) / 86400000); }
+
+  async function load() {
+    await phone.loadShared();
+    var d = await phone.entries(phone.FILES.CAL);
+    data.events = (d && d.events) || [];
+    data.marks = (d && d.marks) || [];
+    chars = phone.characters();
+    var t = phone.worldNow();
+    if (!validKey(sel)) sel = k2(t);
+    if (!view) view = new Date(t.getFullYear(), t.getMonth(), 1);
+    render();
+  }
+
+  /* ---------- 某天有什么 ---------- */
+  function eventsOn(key) {
+    var day = keyDay(key);
+    return data.events.filter(function (ev) {
+      if (!validKey(ev.date)) return false;
+      var s = keyDay(ev.date);
+      if (k2(s) === key) return true;
+      if (ev.repeat === "weekly") {          // 每周重复：从它那天起，每 7 天一次
+        var n = daysDiff(s, day);
+        return n > 0 && n % 7 === 0;
+      }
+      if (ev.repeat === "yearly") {           // 每年重复：只看"月-日"（生日、周年、节日）
+        return String(ev.date).slice(5) === String(key).slice(5);
+      }
+      return false;
+    }).sort(function (a, b) {
+      return String(a.time || "00:00").localeCompare(String(b.time || "00:00"));
+    });
+  }
+  // 纪念日按"月-日"逐年重复
+  function marksOn(key) {
+    var md = String(key).slice(5);
+    return data.marks.filter(function (mk) {
+      var d = phone.toWorld(mk.since);
+      if (!d || isNaN(d.getTime())) return false;
+      return md === (phone.pad(d.getMonth() + 1) + "-" + phone.pad(d.getDate()));
+    });
+  }
+  function whoOf(ev) { return ev.who || "me"; }
+  function whoLabel(ev) {
+    var w = whoOf(ev);
+    if (w === "me") return { text: "我的", her: false };
+    var ch = phone.charById(w);
+    if (ch) return { text: ch.name + "的", her: true };
+    return { text: "世界的", her: false };
+  }
+
+  /* ---------- 渲染 ---------- */
+  function render() { renderTop(); renderGrid(); renderMarks(); renderDay(); }
+
+  function renderTop() {
+    var t = phone.worldNow();
+    var cfg = phone.clockCfg();
+    $("top").innerHTML =
+      '<div><div class="cal-date">' + (t.getMonth() + 1) + " 月 " + t.getDate() + " 日</div>" +
+      '<div class="cal-wd">' + phone.esc(phone.dateLabel()) + " · " + phone.esc(phone.worldDayPart(t)) + "</div></div>" +
+      '<div><div class="cal-now">' + phone.pad(t.getHours()) + ":" + phone.pad(t.getMinutes()) + "</div>" +
+      '<div class="cal-rate">' + (cfg && cfg.rate !== 1 ? "手机时间 ×" + cfg.rate : "与世界同步") + "</div></div>";
+  }
+
+  function renderGrid() {
+    var y = view.getFullYear(), m = view.getMonth();
+    var lead = (new Date(y, m, 1).getDay() + 6) % 7;      // 周一为第一列
+    var todayKey = k2(phone.worldNow());
+    var cells = "";
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(y, m, 1 - lead + i);
+      var key = k2(d);
+      var evs = eventsOn(key), mks = marksOn(key);
+      var dots = "";
+      if (evs.some(function (e) { return whoOf(e) === "me"; })) dots += '<i class="dot-me"></i>';
+      if (evs.some(function (e) { return whoOf(e) !== "me"; })) dots += '<i class="dot-her"></i>';
+      if (mks.length) dots += '<i class="dot-mark">✦</i>';
+      cells += '<button class="cell' + (d.getMonth() !== m ? " out" : "") +
+        (key === todayKey ? " today" : "") + (key === sel ? " sel" : "") +
+        '" data-day="' + key + '"><span class="n">' + d.getDate() + '</span>' +
+        '<span class="dots">' + dots + "</span></button>";
+    }
+    $("month").innerHTML =
+      '<div class="month-nav"><button data-mv="-1">‹</button><b>' + y + " 年 " + (m + 1) + " 月</b>" +
+      '<button data-mv="1">›</button></div>' +
+      '<div class="grid-head"><span>一</span><span>二</span><span>三</span><span>四</span>' +
+      "<span>五</span><span>六</span><span>日</span></div>" +
+      '<div class="grid">' + cells + "</div>";
+  }
+
+  function renderMarks() {
+    if (!data.marks.length) { $("marks").innerHTML = ""; return; }
+    var rows = data.marks.map(function (mk) {
+      var n = phone.daysSince(mk.since);
+      var d = phone.toWorld(mk.since);
+      var y = (d && !isNaN(d.getTime())) ? (d.getFullYear() + "." + phone.pad(d.getMonth() + 1) + "." + phone.pad(d.getDate())) : "";
+      return '<div class="markrow"><span class="d">' + (n == null ? "—" : "第 " + n + " 天") + "</span>" +
+        "<span>" + phone.esc(mk.emoji ? mk.emoji + " " : "") + phone.esc(mk.title) + "</span>" +
+        '<span class="y">' + phone.esc(y) + "</span></div>";
+    }).join("");
+    $("marks").innerHTML = '<div class="card"><h3>★ 纪 念 ★</h3>' + rows + "</div>";
+  }
+
+  // 从某天往后找最近的几件事（空着的日子不给一片空白看）
+  function nextUp(fromKey, n) {
+    var out = [], d = keyDay(fromKey);
+    for (var i = 0; i < 400 && out.length < n; i++) {
+      var k = k2(new Date(d.getFullYear(), d.getMonth(), d.getDate() + i));
+      marksOn(k).forEach(function (mk) { if (out.length < n) out.push({ mark: mk, key: k }); });
+      eventsOn(k).forEach(function (ev) { if (out.length < n) out.push({ ev: ev, key: k }); });
+    }
+    return out;
+  }
+
+  function renderDay() {
+    var evs = eventsOn(sel), mks = marksOn(sel);
+    var d = keyDay(sel);
+    $("day-head").innerHTML = "<b>" + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日 · 星期" +
+      "日一二三四五六"[d.getDay()] + "</b><span>" +
+      (evs.length + mks.length ? (evs.length + mks.length) + " 件事" : "空着") + "</span>";
+
+    if (!evs.length && !mks.length) {
+      var up = nextUp(sel, 4);
+      $("day-list").innerHTML = '<div class="ph"><div class="big">✦</div><div class="t">这天没有事</div>' +
+        '<div class="d">点右下角 ＋ 记一件。<br>对方答应了什么，也会出现在这里。</div></div>' +
+        (up.length
+          ? '<div class="sec"><b>接下来</b><span>最近 ' + up.length + " 件</span></div>" +
+            up.map(function (it) {
+              var kd = keyDay(it.key), label = (kd.getMonth() + 1) + "/" + kd.getDate();
+              if (it.mark) {
+                return '<button class="ev" data-day="' + it.key + '"><div class="ev-time">' + label + "</div>" +
+                  '<div class="ev-main"><div class="ev-title">' + phone.esc(it.mark.title) +
+                  '<span class="ev-who">纪念</span></div></div></button>';
+              }
+              var e2 = it.ev, wl2 = whoLabel(e2);
+              return '<button class="ev" data-day="' + it.key + '"><div class="ev-time">' + label + "</div>" +
+                '<div class="ev-main"><div class="ev-title">' +
+                phone.esc((e2.time ? e2.time + " " : "") + e2.title) +
+                '<span class="ev-who' + (wl2.her ? " her" : "") + '">' + phone.esc(wl2.text) + "</span></div>" +
+                (e2.repeat !== "none" ? '<div class="ev-rep">↻ ' + (e2.repeat === "weekly" ? "每周" : "每年") + "</div>" : "") +
+                "</div></button>";
+            }).join("")
+          : "");
+      return;
+    }
+    var html = mks.map(function (mk) {
+      return '<div class="ev"><div class="ev-time">★</div><div class="ev-main">' +
+        '<div class="ev-title">' + phone.esc(mk.title) + '<span class="ev-who">纪念</span></div></div></div>';
+    }).join("");
+    html += evs.map(function (ev) {
+      var wl = whoLabel(ev);
+      return '<div class="ev' + (ev.done ? " done" : "") + '">' +
+        '<div class="ev-time">' + phone.esc(ev.time || "全天") + "</div>" +
+        '<div class="ev-main"><div class="ev-title">' + phone.esc(ev.title) +
+        '<span class="ev-who' + (wl.her ? " her" : "") + '">' + phone.esc(wl.text) + "</span></div>" +
+        (ev.note ? '<div class="ev-note">' + phone.esc(ev.note) + "</div>" : "") +
+        (ev.repeat === "weekly" ? '<div class="ev-rep">↻ 每周</div>' :
+          (ev.repeat === "yearly" ? '<div class="ev-rep">↻ 每年</div>' : "")) + "</div>" +
+        '<button class="ev-tick" data-done="' + phone.esc(ev.id) + '" title="标记做完">' +
+        (ev.done ? "✓" : "○") + "</button>" +
+        '<button class="ev-del" data-del="' + phone.esc(ev.id) + '" title="删掉">✕</button></div>';
+    }).join("");
+    $("day-list").innerHTML = html;
+  }
+
+  /* ---------- 打勾 / 删除（都先动本地再落盘，失败回滚） ---------- */
+  async function toggleDone(id) {
+    var ev = data.events.filter(function (x) { return x.id === id; })[0];
+    if (!ev) return;
+    var was = !!ev.done;
+    ev.done = !was; renderGrid(); renderDay();
+    try {
+      await phone.mutate(phone.FILES.CAL, "updateEvent", { id: id, done: ev.done });
+    } catch (e) {
+      ev.done = was; renderGrid(); renderDay();
+      phone.toast({ variant: "error", message: "没存上" });
+    }
+  }
+  async function removeEv(id) {
+    var i = data.events.map(function (x) { return x.id; }).indexOf(id);
+    if (i < 0) return;
+    var backup = data.events[i];
+    data.events.splice(i, 1); renderGrid(); renderDay();
+    try {
+      await phone.mutate(phone.FILES.CAL, "removeEvent", { id: id });
+    } catch (e) {
+      data.events.splice(i, 0, backup); renderGrid(); renderDay();
+      phone.toast({ variant: "error", message: "删不掉" });
+    }
+  }
+
+  /* ---------- 弹层 ---------- */
+  function renderWho() {
+    var list = [{ id: "me", emoji: "🙋", name: "我" }].concat(chars.map(function (c) {
+      return { id: c.id, emoji: c.avatarEmoji || "🙂", name: c.name };
+    }));
+    $("f-who").innerHTML = list.map(function (p) {
+      return '<button class="wchip' + (p.id === who ? " on" : "") + '" data-who="' + phone.esc(p.id) + '">' +
+        phone.esc(p.emoji) + " " + phone.esc(p.name) + "</button>";
+    }).join("");
+  }
+  function renderRep() {
+    $("f-rep").innerHTML = [["none", "不重复"], ["weekly", "每周"], ["yearly", "每年"]].map(function (p) {
+      return '<button class="wchip' + (p[0] === rep ? " on" : "") + '" data-rep="' + p[0] + '">' + p[1] + "</button>";
+    }).join("");
+  }
+  function openSheet() {
+    $("f-date").value = validKey(sel) ? sel : k2(phone.worldNow());
+    $("f-time").value = "";
+    $("f-title").value = "";
+    $("f-note").value = "";
+    who = "me"; rep = "none";
+    renderWho(); renderRep();
+    $("sheet").classList.add("open");
+    setTimeout(function () { $("f-title").focus(); }, 90);
+  }
+  function closeSheet() { $("sheet").classList.remove("open"); }
+
+  async function send() {
+    var date = $("f-date").value;
+    var title = ($("f-title").value || "").trim();
+    if (!validKey(date)) { phone.toast({ variant: "warning", message: "先挑个日子" }); return; }
+    if (!title) { phone.toast({ variant: "warning", message: "写点什么" }); return; }
+    var note = ($("f-note").value || "").trim();
+    var time = ($("f-time").value || "").trim();
+    var args = { date: date, title: title, time: time, who: who, note: note, repeat: rep };
+    closeSheet();
+    try {
+      var saved = await phone.mutate(phone.FILES.CAL, "addEvent", args);
+      data.events.push(saved);
+      var d = keyDay(date);
+      sel = date; view = new Date(d.getFullYear(), d.getMonth(), 1);
+      render();
+      phone.toast({ variant: "success", message: "记下了", description: date + (time ? " " + time : " · 全天") + "  " + title });
+      if (who !== "me") {                       // 记的是别人的事 → 通知那个人
+        var ch = phone.charById(who);
+        if (ch) phone.notify(ch, phone.prompt.calendarNote(ch, saved));
+      }
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没记上", description: String(e.message || e) });
+    }
+  }
+
+  /* ---------- 事件（都绑在不会重绘的容器上） ---------- */
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("today-btn").addEventListener("click", function () {
+    var t = phone.worldNow();
+    sel = k2(t); view = new Date(t.getFullYear(), t.getMonth(), 1);
+    render();
+  });
+  $("fab").addEventListener("click", openSheet);
+  $("sheet-cancel").addEventListener("click", closeSheet);
+  $("sheet-send").addEventListener("click", send);
+  $("f-who").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-who]");
+    if (!b) return;
+    who = b.dataset.who; renderWho();
+  });
+  $("f-rep").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-rep]");
+    if (!b) return;
+    rep = b.dataset.rep; renderRep();
+  });
+  $("body").addEventListener("click", function (e) {
+    var mv = e.target.closest("[data-mv]");
+    if (mv) { view = new Date(view.getFullYear(), view.getMonth() + Number(mv.dataset.mv), 1); renderGrid(); return; }
+    var cell = e.target.closest("[data-day]");
+    if (cell) { sel = cell.dataset.day; renderGrid(); renderDay(); return; }
+    var dn = e.target.closest("[data-done]");
+    if (dn) { toggleDone(dn.dataset.done); return; }
+    var dl = e.target.closest("[data-del]");
+    if (dl) { removeEv(dl.dataset.del); }
+  });
+  phone.bindEscape(function () {
+    if ($("sheet").classList.contains("open")) { closeSheet(); return true; }
+    return false;
+  });
+
+  var title = phone.pageTitle("calendar", "日历");
+  $("title").textContent = title;
+  document.title = title;
+
+  load().catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.CAL, phone.FILES.SHARED], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

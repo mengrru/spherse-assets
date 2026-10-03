@@ -1,0 +1,18 @@
+- id: PUwVdDeIF93ZC2dx0799g
+  name: 刷板子（每 5 小时）
+  enabled: true
+  type: time
+  cron: 30 */5 * * *
+  mode: reusable_session
+  message: >-
+    【刷新】现实时间是 {{weekday}} {{time}}。
+
+
+    手机里的时间另算 —— 看消息里的「数据文件」行找公共数据，读 key="worldClock" 的 now /
+    label，按那个时间判断"这个点休息室里谁在写东西"。
+
+
+    按《休息室 · 行为规则》处理：想动就发一条新帖、或者回一两层；觉得板子该安静就回一句「不发」，什么都不做。
+  notify: false
+  createdAt: 1790964746108
+  updatedAt: 1791048256306

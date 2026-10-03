@@ -1,0 +1,193 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "霍格沃茨 · 城堡地图：地点与到访记录（「你现在在哪」存在 shared.data.json 的 where）",
+    "queries": {
+      "listPlaces": {
+        "desc": "列出所有地点",
+        "path": "places",
+        "identity": "id",
+        "defaultLimit": 50
+      },
+      "listVisits": {
+        "desc": "读取到访记录，最新在前，可按地点过滤",
+        "path": "visits",
+        "identity": "id",
+        "params": {
+          "placeId": { "type": "string" },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "desc" }
+        },
+        "defaultLimit": 30
+      }
+    },
+    "mutations": {
+      "createPlace": {
+        "desc": "在地图上新增一个地点（角色发现新地方时也能用）",
+        "op": "append",
+        "path": "places",
+        "fields": {
+          "name": { "type": "string", "required": true },
+          "kind": { "type": "enum", "values": ["shop", "food", "home", "transit", "view", "public"], "default": "public" },
+          "emoji": { "type": "string" },
+          "x": { "type": "integer" },
+          "y": { "type": "integer" },
+          "desc": { "type": "string" },
+          "hours": { "type": "string" },
+          "characterId": { "type": "string" }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "updatePlace": {
+        "desc": "改一个地点的描述、时间等",
+        "op": "update",
+        "path": "places",
+        "match": "id",
+        "fields": {
+          "desc": { "type": "string" },
+          "hours": { "type": "string" },
+          "characterId": { "type": "string" }
+        }
+      },
+      "addVisit": {
+        "desc": "记一次到访",
+        "op": "append",
+        "path": "visits",
+        "fields": {
+          "placeId": { "type": "string", "required": true },
+          "note": { "type": "string" }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "removeVisit": {
+        "desc": "删一条到访记录",
+        "op": "remove",
+        "path": "visits",
+        "match": "id"
+      }
+    }
+  },
+  "places": [
+    {
+      "id": "hs-common-room",
+      "name": "格兰芬多塔楼",
+      "kind": "home",
+      "emoji": "🦁",
+      "x": 34,
+      "y": 40,
+      "desc": "胖夫人画像后面。壁炉整天点着，几张塌陷的扶手椅，谁的书忘在这儿三天了。",
+      "hours": "宵禁后禁止喧哗（没人遵守）",
+      "characterId": "char-harry",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hs-hall",
+      "name": "大礼堂",
+      "kind": "public",
+      "emoji": "🕯️",
+      "x": 52,
+      "y": 34,
+      "desc": "四张长桌，天花板是天空。早饭七点半，猫头鹰就是在这时候送信的。",
+      "hours": "07:30 / 12:00 / 18:30",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hs-library",
+      "name": "图书馆",
+      "kind": "public",
+      "emoji": "📚",
+      "x": 66,
+      "y": 26,
+      "desc": "平斯夫人管得很严。禁书区要签字条，还得有人陪着。三楼靠窗的位置最难抢。",
+      "hours": "08:00 – 20:00",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hs-tower",
+      "name": "天文塔",
+      "kind": "view",
+      "emoji": "🔭",
+      "x": 44,
+      "y": 16,
+      "desc": "天文课在这儿上。晚上锁着，但锁扣坏了三年没人修。夜里能看很远。",
+      "hours": "夜里锁门（形同虚设）",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hs-room",
+      "name": "有求必应屋",
+      "kind": "view",
+      "emoji": "🚪",
+      "x": 74,
+      "y": 52,
+      "desc": "八楼挂毯对面，来回走三次。里面是什么取决于你要什么。信号很差。",
+      "hours": "—",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hs-pitch",
+      "name": "魁地奇球场",
+      "kind": "view",
+      "emoji": "🏟️",
+      "x": 22,
+      "y": 20,
+      "desc": "看台第三排有一块板子是松的。哈利就是撞在那儿。",
+      "hours": "训练 17:00 / 06:30",
+      "characterId": "char-wood",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hs-owlery",
+      "name": "猫头鹰棚屋",
+      "kind": "shop",
+      "emoji": "🦉",
+      "x": 80,
+      "y": 16,
+      "desc": "西塔顶，味道很大。每个学生有自己的柱子位置。海德薇的柱子是三层左数第四根。",
+      "hours": "全天",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hs-hogsmeade",
+      "name": "霍格莫德",
+      "kind": "shop",
+      "emoji": "🍺",
+      "x": 36,
+      "y": 84,
+      "desc": "三年级以上、签了许可表才能去。黄油啤酒、蜂蜜公爵、佐科。",
+      "hours": "周末开放",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hs-forest",
+      "name": "禁林边缘",
+      "kind": "view",
+      "emoji": "🌲",
+      "x": 84,
+      "y": 78,
+      "desc": "海格的小屋在这一侧。进去是违规的，所以总有人在边缘站着。",
+      "hours": "—",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ],
+  "visits": [
+    {
+      "id": "hvisit-1",
+      "placeId": "hs-pitch",
+      "note": "看哈利训练，撞进第三排",
+      "createdAt": "2025-01-01T03:00:00.000Z"
+    },
+    {
+      "id": "hvisit-2",
+      "placeId": "hs-library",
+      "note": "三楼靠窗，被平斯夫人瞪了两次",
+      "createdAt": "2025-01-01T03:10:00.000Z"
+    },
+    {
+      "id": "hvisit-3",
+      "placeId": "hs-hall",
+      "note": "早饭，躲开了两封信",
+      "createdAt": "2025-01-01T03:20:00.000Z"
+    }
+  ]
+}

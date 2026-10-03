@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>好友档案</title>
+<link rel="stylesheet" href="../../theme/base.css">
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span id="title">好友档案</span>
+</header>
+<div class="app-body" id="body"></div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var charId = phone.params().id || null;
+  var shared = {}, messages = [];
+
+  async function load() {
+    shared = await phone.loadShared();
+    var d = await phone.entries(phone.FILES.CHAT);
+    messages = d.messages || [];
+    render();
+  }
+
+  function render() {
+    var ch = phone.charById(charId);
+    if (!ch) {
+      $("body").innerHTML = '<div class="ph"><div class="big">❔</div><div class="t">找不到这位好友</div></div>';
+      return;
+    }
+    var title = phone.pageTitle("friend", "好友档案");
+    $("title").textContent = ch.name + " 的档案";
+    document.title = ch.name + " · " + title;
+
+    var conv = phone.convOfChar(ch.id);
+    var msgs = conv ? messages.filter(function (m) { return m.conversationId === conv.id; })
+      .sort(function (a, b) { return String(a.createdAt).localeCompare(String(b.createdAt)); }) : [];
+    var mine = msgs.filter(function (m) { return m.role === "user"; }).length;
+    var hers = msgs.length - mine;
+    var last = msgs[msgs.length - 1];
+    var aff = phone.clampAff(ch.affection);
+    var days = phone.daysSince((conv && conv.createdAt) || ch.createdAt);
+
+    $("body").innerHTML =
+      '<div class="card"><div class="fhead">' +
+      '<div class="favatar" style="background:' + phone.esc(ch.avatarColor || "#c9d3e6") + '">' +
+      phone.esc(ch.avatarEmoji || "🙂") + "</div>" +
+      '<div class="fname">' + phone.esc(ch.name) + "</div>" +
+      (ch.tagline ? '<div class="ftag">' + phone.esc(ch.tagline) + "</div>" : "") + "</div>" +
+      '<div class="segbar" style="height:14px">' + phone.affinitySegs(aff, 25) + "</div>" +
+      '<div class="fmeta"><span>♥ 好感度 ' + aff + " / 100</span>" +
+      '<span class="lv">关系：' + phone.esc(phone.affectionLevel(aff)) + "</span></div>" +
+      '<div class="fnote">多聊几句，这条会动。</div></div>' +
+
+      '<div class="card"><h3>★ 此刻状态 ★</h3>' +
+      '<div class="kv"><span class="k">心情</span><span>' + phone.esc(ch.mood || "—") + "</span></div>" +
+      '<div class="kv"><span class="k">正在做</span><span>' + phone.esc(ch.doing || "—") + "</span></div>" +
+      '<div class="kv"><span class="k">最近活跃</span><span>' + phone.esc(last ? phone.fmtDateTime(last.createdAt) : "—") + "</span></div></div>" +
+
+      '<div class="card"><h3>★ 聊天统计 ★</h3>' +
+      '<div class="kv"><span class="k">消息总数</span><span>' + msgs.length + "</span></div>" +
+      '<div class="kv"><span class="k">你发的</span><span>' + mine + "</span></div>" +
+      '<div class="kv"><span class="k">TA 发的</span><span>' + hers + "</span></div>" +
+      '<div class="kv"><span class="k">认识</span><span>' + (days == null ? "—" : days + " 天") + "</span></div></div>" +
+
+      '<div class="fbtns"><button class="primary" id="btn-chat">去聊天</button>' +
+      '<button class="secondary" id="btn-poke">戳一戳</button></div>' +
+      '<div class="fnote">「戳一戳」会让 TA 主动给你发一条消息。</div>';
+
+    $("btn-chat").addEventListener("click", function () {
+      phone.navigate(conv ? "chat/" + conv.id : "chatlist");
+    });
+    $("btn-poke").addEventListener("click", async function () {
+      var ok = await phone.notify(ch, phone.prompt.poke(ch, conv || { id: "conv-" + ch.id }));
+      if (ok && conv) phone.navigate("chat/" + conv.id);
+    });
+  }
+
+  $("back").addEventListener("click", function () { phone.navigate("chatlist"); });
+  load().catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.SHARED, phone.FILES.CHAT], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

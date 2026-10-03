@@ -1,0 +1,21 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 项目配置：当前在跑哪个世界（引擎靠它解析所有数据文件路径）",
+    "mutations": {
+      "setWorld": {
+        "desc": "切换当前世界（改完需要重启手机）",
+        "op": "set",
+        "path": "config",
+        "fields": {
+          "world": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "config": {
+    "world": "linjiang"
+  }
+}

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>相册</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 本页专属：拍立得式的照片墙。颜色一律走 token（见 开发说明.md 的「外观」） */
+  body{position:relative;overflow:hidden}
+  .app-body{padding:14px 12px 28px}
+  .lead{
+    margin:0 2px 13px;font-size:11.5px;font-weight:700;line-height:1.75;color:var(--text-dim);
+    border-left:3px solid var(--accent-ink);padding:2px 0 2px 10px;
+  }
+  .lead b{color:var(--text)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .ph{
+    display:block;width:100%;text-align:left;font:inherit;cursor:pointer;padding:6px 6px 8px;
+    background:var(--card-1);color:var(--text);border:var(--border-w) solid var(--border);
+    border-radius:6px;box-shadow:var(--shadow-card);
+  }
+  .ph.tilt1{transform:rotate(-1.3deg)}
+  .ph.tilt2{transform:rotate(1deg)}
+  .ph.tilt3{transform:rotate(-.4deg)}
+  .ph:active{transform:var(--press);box-shadow:var(--shadow-press)}
+  .ph-img{
+    display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--tint-chip);
+    border-radius:3px;border:1px solid var(--border);
+  }
+  .ph-cap{font-size:11.5px;font-weight:700;line-height:1.45;margin-top:6px;word-break:break-word}
+  .ph-cap.none{color:var(--text-dim);font-weight:600}
+  .ph-meta{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--text-dim);margin-top:3px}
+  .up{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;cursor:pointer;
+    padding:12px;margin:14px 0 0;font:inherit;font-size:13px;font-weight:800;
+    border:2px dashed currentColor;border-radius:var(--radius-sm);
+    background:var(--input-bg);color:var(--accent-ink);
+  }
+  .up:disabled{opacity:.6;cursor:default}
+  /* 上传等待卡（跟电台那套一样：网络慢时界面得让人看见"在动"） */
+  .up-card{
+    padding:10px 11px;margin-bottom:13px;
+    background:var(--tint-strip);border:var(--border-w) solid var(--border);
+    border-radius:var(--radius-sm);box-shadow:var(--shadow-row);
+  }
+  .up-top{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--note-fg);line-height:1.5}
+  .up-top .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+  .up-spin{display:inline-block;flex:none;animation:upspin 1.5s linear infinite}
+  @keyframes upspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .up-line{position:relative;height:8px;margin:8px 0 9px;overflow:hidden;border:1.5px solid var(--border);border-radius:999px;background:var(--tint-chip)}
+  .up-line i{position:absolute;top:0;bottom:0;width:42%;border-radius:999px;background:var(--accent-heart);animation:upmarch 1.25s ease-in-out infinite}
+  @keyframes upmarch{0%{left:-42%}100%{left:100%}}
+  @media (prefers-reduced-motion:reduce){ .up-spin,.up-line i{animation:none} }
+  .up-stop{
+    border:var(--border-w) solid var(--border);border-radius:9px;background:var(--warn);color:var(--warn-fg);
+    font:inherit;font-size:11.5px;font-weight:800;padding:4px 12px;cursor:pointer;
+  }
+  /* 看大图 */
+  .lb{position:fixed;inset:0;z-index:70;display:none;background:rgba(12,8,16,.82);padding:22px 16px;overflow-y:auto}
+  .lb.open{display:block}
+  .lb-in{
+    max-width:340px;margin:0 auto;padding:10px 10px 12px;
+    background:var(--card-1);border:var(--border-w) solid var(--border);border-radius:8px;box-shadow:var(--shadow-card);
+  }
+  .lb-img{display:block;width:100%;max-height:44vh;object-fit:contain;background:var(--tint-chip);border-radius:4px;border:1px solid var(--border)}
+  .lb-cap{font-size:13.5px;font-weight:700;line-height:1.6;color:var(--text);margin-top:9px;word-break:break-word}
+  .lb-cap.none{color:var(--text-dim);font-weight:600}
+  .lb-meta{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--text-dim);margin-top:6px}
+  .lb .fbtns{margin-top:12px}
+  /* 「从项目里挑」面板的样式在 theme/picker.css（相册与电台共用一份，base.css 已引入） */
+  .lb-close{
+    display:block;width:100%;margin-top:9px;padding:9px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;
+    border:2px dashed currentColor;border-radius:var(--radius-sm);background:transparent;color:var(--text-dim);
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span id="title">相册</span>
+  <button class="ghost" id="upload-btn">上传</button>
+</header>
+<div class="app-body">
+  <div class="lead" id="lead"></div>
+  <div class="up-card" id="up-card" style="display:none">
+    <div class="up-top"><span class="up-spin">⟳</span><span class="nm" id="up-text"></span></div>
+    <div class="up-line"><i></i></div>
+    <button class="up-stop" id="up-stop">停下</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <button class="up" id="upload-row">🖼️ 上传照片</button>
+  <button class="up pick" id="pick-row">📁 从项目里挑</button>
+</div>
+
+<div class="pick-sheet" id="pick-sheet">
+  <div class="pick-head"><b>项目里现有的图</b><button id="pick-close">关上</button></div>
+  <div class="pick-hint" id="pick-hint">正在找…</div>
+  <div class="pick-grid" id="pick-grid"></div>
+</div>
+
+<div class="lb" id="lb">
+  <div class="lb-in">
+    <img class="lb-img" id="lb-img" alt="">
+    <div class="lb-cap" id="lb-cap"></div>
+    <div class="lb-meta" id="lb-meta"></div>
+    <div class="fbtns">
+      <button class="secondary" id="lb-edit">写说明</button>
+      <button class="primary" id="lb-wall">设为壁纸</button>
+    </div>
+    <div class="fbtns">
+      <button class="secondary" id="lb-del">撕掉这张</button>
+    </div>
+    <button class="lb-close" id="lb-close">关上</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-head"><span>这张是什么情况</span><button id="sheet-cancel">取消</button></div>
+  <textarea id="f-cap" rows="3" placeholder="写一句 —— 别人只能看到这句话，看不到照片"></textarea>
+  <input id="f-place" class="winput" placeholder="在哪儿（可留空）">
+  <button class="sheet-send" id="sheet-send">保存</button>
+</div>
+<input type="file" id="pick" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.bmp,.avif,.ico,image/*" multiple style="display:none">
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var photos = [];
+  var current = null;        // 大图里那张
+  var up = null;             // 上传中 { total, done, name, stopped }
+  var EXT_OK = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "avif", "ico"];
+
+  async function load() {
+    await phone.loadShared();
+    var d = await phone.entries(phone.FILES.ALBUM);
+    photos = (d && d.photos) || [];
+    render();
+  }
+
+  function whenOf(p) {
+    var t = phone.toWorld(p.createdAt);
+    if (!t || isNaN(t.getTime())) return "";
+    return (t.getMonth() + 1) + " 月 " + t.getDate() + " 日";
+  }
+  function whereAmI() {
+    var w = phone.shared().where || {};
+    return w.placeName || "";
+  }
+
+  function render() {
+    $("lead").innerHTML = "<b>照片只有你看得见。</b>别人能知道的，只有你写下的那句话 —— " +
+      "所以说明怎么写，你就等于怎么告诉他们。<br>点开一张可以<b>设成手机壁纸</b>；拍照时人在哪儿，它就记在哪儿。";
+    if (!photos.length) {
+      $("grid").innerHTML = "";
+      $("upload-row").textContent = "🖼️ 上传第一张照片";
+      return;
+    }
+    var sorted = photos.slice().sort(function (a, b) {
+      return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+    });
+    $("grid").innerHTML = sorted.map(function (p, i) {
+      var cap = String(p.caption || "").trim();
+      return '<button class="ph tilt' + ((i % 3) + 1) + '" data-photo="' + phone.esc(p.id) + '">' +
+        '<img class="ph-img" loading="lazy" src="' + phone.esc(encodeURI(phone.assetUrl(p.src))) + '" alt="">' +
+        '<div class="ph-cap' + (cap ? "" : " none") + '">' + (cap ? phone.esc(cap) : "（还没写说明）") + "</div>" +
+        '<div class="ph-meta">' + phone.esc((p.place ? p.place + " · " : "") + whenOf(p)) + "</div></button>";
+    }).join("");
+    $("upload-row").textContent = "🖼️ 再传一些";
+  }
+
+  /* ---------- 看大图 ---------- */
+  function openLb(id) {
+    var p = photos.filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    current = p;
+    $("lb-img").src = encodeURI(phone.assetUrl(p.src));
+    var cap = String(p.caption || "").trim();
+    $("lb-cap").textContent = cap || "（还没写说明 —— 别人看不到这张照片，只等你说一句）";
+    $("lb-cap").className = "lb-cap" + (cap ? "" : " none");
+    $("lb-wall").textContent = isWall(p) ? "取消壁纸" : "设为壁纸";
+    $("lb-meta").textContent = (p.place ? p.place + " · " : "") + whenOf(p) + (isWall(p) ? " · 正贴着它" : "");
+    $("lb").classList.add("open");
+  }
+  function closeLb() { $("lb").classList.remove("open"); current = null; }
+
+  /* ---------- 写说明 ---------- */
+  function openSheet() {
+    if (!current) return;
+    $("f-cap").value = String(current.caption || "");
+    $("f-place").value = String(current.place || "");
+    $("sheet").classList.add("open");
+    setTimeout(function () { $("f-cap").focus(); }, 90);
+  }
+  function closeSheet() { $("sheet").classList.remove("open"); }
+
+  async function saveSheet() {
+    if (!current) return;
+    var id = current.id;
+    var cap = ($("f-cap").value || "").trim();
+    var place = ($("f-place").value || "").trim();
+    closeSheet();
+    closeLb();
+    try {
+      await phone.mutate(phone.FILES.ALBUM, "updatePhoto", { id: id, caption: cap, place: place });
+      phone.toast({ variant: "success", message: "写上了" });
+      await load();
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没存上", description: String(e.message || e) });
+    }
+  }
+
+  /* ---------- 设为壁纸 ----------
+     只是往公共数据里写一个 key（src = 世界内的相对路径），外壳会在数据变化时自己重算 ——
+     所以不用刷新、不用重启手机，回桌面就是新的了。 */
+  function wallSrc() {
+    var w = (phone.shared() || {}).wallpaper || {};
+    return String(w.src || "");
+  }
+  function isWall(p) { return !!p && !!wallSrc() && wallSrc() === p.src; }
+
+  async function toggleWall() {
+    if (!current) return;
+    var p = current;
+    var on = isWall(p);
+    try {
+      await phone.mutate(phone.FILES.SHARED, "setWallpaper", {
+        src: on ? "" : p.src,
+        at: new Date().toISOString()
+      });
+      phone.toast({
+        variant: "success",
+        message: on ? "用回主题自带的壁纸了" : "设成壁纸了",
+        description: on ? "桌面和锁屏都变回去了" : "回桌面 / 锁屏看看 —— 这手机现在贴着它"
+      });
+      render();
+      if ($("lb").classList.contains("open")) openLb(p.id);
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没换上", description: String(e.message || e) });
+    }
+  }
+
+  async function removePhoto() {
+    if (!current) return;
+    var id = current.id;
+    var wasWall = isWall(current);   // 正贴着桌面的那张被撕掉，就得一起换回去 —— 否则相册里没了它，就再也没法取消了
+    closeLb();
+    try {
+      await phone.mutate(phone.FILES.ALBUM, "removePhoto", { id: id });
+      if (wasWall) {
+        await phone.mutate(phone.FILES.SHARED, "setWallpaper", { src: "", at: new Date().toISOString() });
+      }
+      phone.toast({
+        variant: "info",
+        message: "撕掉了",
+        description: wasWall ? "它本来正贴着桌面，一并换回主题壁纸了" : ""
+      });
+      await load();
+    } catch (e) {
+      phone.toast({ variant: "error", message: "撕不掉", description: String(e.message || e) });
+    }
+  }
+
+  /* ---------- 上传 ---------- */
+  function whyFailed(e) {
+    var m = String((e && e.message) || e || "");
+    try { console.error("[小手机] 上传失败，原始错误：", m, e); } catch (_) {}   // 原始错误绝不能丢：提示只能翻人话，定位要靠它
+    if (m.indexOf("unsupported_type") >= 0) return "这个格式相册不收（支持 " + EXT_OK.join(" ") + "）";
+    if (m.indexOf("file_too_large") >= 0) return "文件太大了（单个上限 100MB）";
+    if (m.indexOf("upload_failed") >= 0) return "写不进去 —— 目标目录可能不存在";
+    if (m.indexOf("forbidden") >= 0) return "平台拒绝了这次写入（forbidden）—— 原始信息：" + m;
+    return m || "不知道哪儿出了问题";
+  }
+  function renderUp() {
+    var card = $("up-card"), btn = $("upload-btn"), row = $("upload-row");
+    if (!up) {
+      card.style.display = "none";
+      btn.disabled = false; btn.textContent = "上传";
+      row.disabled = false;
+      render();   // 恢复按钮文案
+      return;
+    }
+    card.style.display = "";
+    $("up-text").textContent = (up.stopped ? "正在收尾" : "正在上传 " + (up.done + 1) + "/" + up.total) + " · " + up.name;
+    btn.disabled = true; btn.textContent = "上传中";
+    row.disabled = true; row.textContent = "正在上传 " + up.done + "/" + up.total + " …";
+  }
+  async function uploadFiles(files) {
+    if (up) return;
+    if (!files || !files.length) return;
+    if (!phone.worldId()) { phone.toast({ variant: "warning", message: "还没认出这个世界" }); return; }
+    up = { total: files.length, done: 0, name: "", stopped: false };
+    var ok = 0, fail = 0, skipped = 0, lastId = null;
+    for (var i = 0; i < files.length; i++) {
+      if (up.stopped) { skipped = files.length - i; break; }
+      var f = files[i];
+      up.name = String(f.name || "（没名字）");
+      renderUp();
+      var ext = String(f.name || "").split(".").pop().toLowerCase();
+      if (EXT_OK.indexOf(ext) < 0) {
+        fail++; up.done++;
+        phone.toast({ variant: "warning", message: "跳过一个文件", description: f.name + "：" + whyFailed({ message: "unsupported_type" }) });
+        continue;
+      }
+      try {
+        var res = await phone.uploadFile({ data: f, dirPath: worldAssetDir() });
+        var saved = await phone.mutate(phone.FILES.ALBUM, "addPhoto", {
+          src: toWorldRel(res.path),
+          caption: "",
+          place: whereAmI()      // 你此刻在哪儿，就记在哪儿
+        });
+        if (saved && saved.id) lastId = saved.id;
+        ok++; up.done++;
+        await load();
+        renderUp();
+      } catch (e) {
+        fail++; up.done++;
+        phone.toast({ variant: "error", message: "这张没传上去", description: up.name + "：" + whyFailed(e) });
+        renderUp();
+      }
+    }
+    var stopped = up.stopped, total = up.total;
+    up = null;
+    renderUp();
+    var extra = [];
+    if (fail) extra.push(fail + " 张没成功");
+    if (stopped && skipped) extra.push("停下了，还有 " + skipped + " 张没传");
+    phone.toast({
+      variant: ok ? "success" : (stopped && !ok ? "info" : "warning"),
+      message: ok ? ("相册收下了 " + ok + " 张") : (stopped ? "没传完" : "一张都没传上去"),
+      description: extra.join(" · ") || ("一共 " + total + " 张")
+    });
+    await load();
+    if (ok === 1 && fail === 0 && lastId) {
+      openLb(lastId);          // 只传了一张 → 顺手让你把它说明写了
+      openSheet();
+    }
+  }
+  function worldAssetDir() { return "phone/worlds/" + phone.worldId() + "/assets"; }
+  function toWorldRel(path) {
+    var pre = "phone/worlds/" + phone.worldId() + "/";
+    var p = String(path || "");
+    return p.indexOf(pre) === 0 ? p.slice(pre.length) : p;
+  }
+
+  /* ---------- 事件 ---------- */
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("upload-btn").addEventListener("click", function () { if (!up) $("pick").click(); });
+  $("upload-row").addEventListener("click", function () { if (!up) $("pick").click(); });
+  $("pick-row").addEventListener("click", openPick);
+  $("pick-close").addEventListener("click", function () { $("pick-sheet").classList.remove("open"); });
+  $("pick-grid").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-src]");
+    if (b) pickOne(b.dataset.src);
+  });
+
+  /* ---------- 从项目里挑一张 ----------
+     上传需要**写**权限（实测：web 宿主会被拒），而"挑一张已有的"只需要**读** ——
+     所以这是不能上传的宿主上的正规入口：文件先由别的途径进项目（桌面端上传 / 拖进文件面板 / 让 Agent 放）。 */
+  var picking = false;
+
+  async function openPick() {
+    if (picking) return;
+    picking = true;
+    $("pick-sheet").classList.add("open");
+    $("pick-hint").textContent = "正在找 " + phone.worldId() + " 的 assets/ …";
+    $("pick-grid").innerHTML = "";
+    try {
+      var list = await phone.listWorldAssets("image");
+      if (!list.length) {
+        $("pick-hint").textContent = "世界目录的 assets/ 里还没有图。把图片先放进去（桌面端上传、拖进文件面板、或让 Agent 放），再来这儿挑。";
+        return;
+      }
+      $("pick-hint").textContent = "共 " + list.length + " 张 —— 点一张收进相册，说明之后自己写。";
+      $("pick-grid").innerHTML = list.map(function (f) {
+        return '<button class="pick-item" data-src="' + phone.esc(f.src) + '" title="' + phone.esc(f.name) + '">' +
+          '<img loading="lazy" src="' + phone.esc(encodeURI(phone.assetUrl(f.src))) + '" alt="">' +
+          "<span>" + phone.esc(f.name) + "</span></button>";
+      }).join("");
+    } catch (e) {
+      $("pick-hint").textContent = "读不到世界目录：" + String((e && e.message) || e);
+    } finally {
+      picking = false;
+    }
+  }
+
+  async function pickOne(src) {
+    try {
+      await phone.mutate(phone.FILES.ALBUM, "addPhoto", { src: src, caption: "", place: whereAmI() });
+      $("pick-sheet").classList.remove("open");
+      phone.toast({ variant: "success", message: "收进相册了", description: "点开可以写说明、设成壁纸" });
+      await load();
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没放进相册", description: String((e && e.message) || e) });
+    }
+  }
+  $("up-stop").addEventListener("click", function () {
+    if (!up) return;
+    up.stopped = true;
+    renderUp();
+    phone.toast({ variant: "info", message: "传完这张就停" });
+  });
+  $("grid").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-photo]");
+    if (b) openLb(b.dataset.photo);
+  });
+  $("lb-close").addEventListener("click", closeLb);
+  $("lb-edit").addEventListener("click", openSheet);
+  $("lb-wall").addEventListener("click", toggleWall);
+  $("lb-del").addEventListener("click", removePhoto);
+  $("lb").addEventListener("click", function (e) { if (e.target === $("lb")) closeLb(); });
+  $("sheet-cancel").addEventListener("click", closeSheet);
+  $("sheet-send").addEventListener("click", saveSheet);
+  $("pick").addEventListener("change", function () {
+    var fs = $("pick").files;
+    var arr = [];
+    for (var i = 0; i < (fs ? fs.length : 0); i++) arr.push(fs[i]);
+    $("pick").value = "";
+    uploadFiles(arr);
+  });
+  phone.bindEscape(function () {
+    if ($("sheet").classList.contains("open")) { closeSheet(); return true; }
+    if ($("lb").classList.contains("open")) { closeLb(); return true; }
+    return false;
+  });
+
+  var title = phone.pageTitle("album", "相册");
+  $("title").textContent = title;
+  document.title = title;
+
+  load().catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.ALBUM, phone.FILES.SHARED], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

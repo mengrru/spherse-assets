@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>备忘录</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 本页专属：便签纸。颜色一律走 token（见 开发说明.md 的「外观」） */
+  body{position:relative;overflow:hidden}
+  .app-body{padding:14px 12px 104px}
+  .lead{
+    margin:0 2px 14px;font-size:11.5px;font-weight:700;line-height:1.75;color:var(--text-dim);
+    border-left:3px solid var(--accent-ink);padding:2px 0 2px 10px;
+  }
+  .lead b{color:var(--text)}
+  .lead .lk{color:var(--accent-heart)}
+  .note{
+    position:relative;display:block;width:100%;text-align:left;font:inherit;cursor:pointer;
+    padding:11px 12px 9px;margin-bottom:12px;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));color:var(--text);
+    border:var(--border-w) solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-row);
+  }
+  .note.tilt1{transform:rotate(-1.05deg)}
+  .note.tilt2{transform:rotate(.8deg)}
+  .note.tilt3{transform:rotate(-.5deg)}
+  .note.locked{background:var(--note);color:var(--note-fg);border-style:dashed}
+  .note-text{font-size:14px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .note-foot{
+    display:flex;align-items:center;gap:8px;margin-top:7px;padding-top:6px;
+    border-top:1.5px dashed rgba(26,20,32,.22);
+    font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);
+  }
+  .note-lock{font-size:9.5px;font-weight:800;color:var(--accent-heart);letter-spacing:0}
+  .lockrow{display:flex;align-items:center;gap:8px;margin:2px 0 9px;font-size:11px;font-weight:700;color:var(--text-dim);line-height:1.6}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span id="title">备忘录</span>
+</header>
+<div class="app-body" id="list"></div>
+<button class="fab" id="fab" title="记一条">＋</button>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-head"><span id="sheet-title">记一条</span><button id="sheet-cancel">取消</button></div>
+  <textarea id="f-text" rows="4" placeholder="写点什么…"></textarea>
+  <div class="wtargets" id="f-lock"></div>
+  <div class="lockrow" id="f-hint">标了「只给自己」的，只是提醒自己 —— 别人不用照应。</div>
+  <div class="fbtns">
+    <button class="secondary" id="sheet-save">保存</button>
+    <button class="primary" id="sheet-del" style="display:none">删除</button>
+  </div>
+</div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var notes = [];
+  var editing = null;         // 正在编辑的那条（null = 新建）
+  var wipPrivate = false;
+
+  /*
+   * 备忘录里全部是手机主人自己写的 —— 别人只能读，不能写。
+   * 这是「他作为上帝影响故事」的那一处开口：他写下在意谁、盼着什么，
+   * 别处的角色与系统 Agent 读得到（消息里的「数据文件」行会带上这个文件）。
+   */
+  async function load() {
+    await phone.loadShared();
+    var d = await phone.entries(phone.FILES.NOTES);
+    notes = (d && d.notes) || [];
+    render();
+  }
+
+  function timeLabel(n) {
+    var t = phone.toWorld(n.createdAt);
+    if (!t || isNaN(t.getTime())) return "";
+    return (t.getMonth() + 1) + " 月 " + t.getDate() + " 日 " + phone.pad(t.getHours()) + ":" + phone.pad(t.getMinutes());
+  }
+
+  function leadHtml() {
+    return '<div class="lead"><b>这里写的不是待办，是给这部手机看的念头。</b><br>' +
+      "你在意谁、盼着什么事、不希望发生什么 —— 写下来，别处会慢慢有回音。<br>" +
+      '<span class="lk">🔒 只给自己</span> 的只是提醒自己，别人不用照应。</div>';
+  }
+
+  function render() {
+    if (!notes.length) {
+      $("list").innerHTML = leadHtml() +
+        '<div class="ph"><div class="big">🗒️</div><div class="t">还是空的</div>' +
+        '<div class="d">点右下角 ＋ 写下第一条。</div></div>';
+      return;
+    }
+    var sorted = notes.slice().sort(function (a, b) {
+      return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+    });
+    $("list").innerHTML = leadHtml() + sorted.map(function (n, i) {
+      return '<button class="note tilt' + ((i % 3) + 1) + (n["private"] ? " locked" : "") +
+        '" data-note="' + phone.esc(n.id) + '">' +
+        '<div class="note-text">' + phone.escLines(n.text) + "</div>" +
+        '<div class="note-foot"><span>' + phone.esc(timeLabel(n)) + "</span>" +
+        (n["private"] ? '<span class="note-lock">🔒 只给自己</span>' : "") + "</div></button>";
+    }).join("");
+  }
+
+  /* ---------- 弹层 ---------- */
+  function openSheet(note) {
+    editing = note || null;
+    $("sheet-title").textContent = note ? "改一条" : "记一条";
+    $("f-text").value = note ? String(note.text || "") : "";
+    wipPrivate = note ? !!note["private"] : false;
+    renderLock();
+    $("sheet-del").style.display = note ? "" : "none";
+    $("sheet").classList.add("open");
+    setTimeout(function () { $("f-text").focus(); }, 90);
+  }
+  function closeSheet() { $("sheet").classList.remove("open"); editing = null; }
+
+  function renderLock() {
+    $("f-lock").innerHTML = '<button class="wchip' + (wipPrivate ? " on" : "") +
+      '" data-lock="1">🔒 只给自己</button>';
+  }
+
+  async function save() {
+    var text = ($("f-text").value || "").trim();
+    if (!text) { phone.toast({ variant: "warning", message: "写点什么" }); return; }
+    var was = editing;
+    closeSheet();
+    try {
+      if (was) {
+        await phone.mutate(phone.FILES.NOTES, "updateNote", { id: was.id, text: text, "private": wipPrivate });
+        phone.toast({ variant: "success", message: "改好了" });
+      } else {
+        await phone.mutate(phone.FILES.NOTES, "addNote", { text: text, "private": wipPrivate });
+        phone.toast({ variant: "success", message: "写下了" });
+      }
+      await load();
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没存上", description: String(e.message || e) });
+    }
+  }
+
+  async function remove() {
+    if (!editing) return;
+    var id = editing.id;
+    closeSheet();
+    try {
+      await phone.mutate(phone.FILES.NOTES, "removeNote", { id: id });
+      phone.toast({ variant: "info", message: "撕掉了" });
+      await load();
+    } catch (e) {
+      phone.toast({ variant: "error", message: "撕不掉", description: String(e.message || e) });
+    }
+  }
+
+  /* ---------- 事件（都绑在不会重绘的容器上） ---------- */
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("fab").addEventListener("click", function () { openSheet(null); });
+  $("sheet-cancel").addEventListener("click", closeSheet);
+  $("sheet-save").addEventListener("click", save);
+  $("sheet-del").addEventListener("click", remove);
+  $("f-lock").addEventListener("click", function (e) {
+    if (!e.target.closest("[data-lock]")) return;
+    wipPrivate = !wipPrivate;
+    renderLock();
+  });
+  $("list").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-note]");
+    if (!b) return;
+    var n = notes.filter(function (x) { return x.id === b.dataset.note; })[0];
+    if (n) openSheet(n);
+  });
+
+  var title = phone.pageTitle("notes", "备忘录");
+  $("title").textContent = title;
+  document.title = title;
+
+  load().catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.NOTES, phone.FILES.SHARED], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

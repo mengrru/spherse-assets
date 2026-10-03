@@ -1,0 +1,147 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "霍格沃茨 · 钱袋：加隆与账目（余额由流水推导）",
+    "queries": {
+      "listTransactions": {
+        "desc": "读取账目，最新在前，可按方向或对象过滤",
+        "path": "transactions",
+        "identity": "id",
+        "params": {
+          "direction": {
+            "type": "enum",
+            "values": [
+              "in",
+              "out"
+            ]
+          },
+          "counterpartyId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 20
+      }
+    },
+    "mutations": {
+      "sendMoney": {
+        "desc": "记一笔账。direction 以手机主人为基准：out=他花出去，in=他收到",
+        "op": "append",
+        "path": "transactions",
+        "fields": {
+          "kind": {
+            "type": "enum",
+            "values": [
+              "transfer",
+              "redPacket",
+              "topup"
+            ],
+            "required": true
+          },
+          "direction": {
+            "type": "enum",
+            "values": [
+              "in",
+              "out"
+            ],
+            "required": true
+          },
+          "amount": {
+            "type": "number",
+            "required": true
+          },
+          "counterpartyId": {
+            "type": "string",
+            "required": true
+          },
+          "counterpartyName": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "status": {
+            "type": "enum",
+            "values": [
+              "pending",
+              "accepted",
+              "returned"
+            ],
+            "default": "pending"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "setTransactionStatus": {
+        "desc": "收下 / 退回一笔（pending → accepted 或 returned）",
+        "op": "update",
+        "path": "transactions",
+        "match": "id",
+        "fields": {
+          "status": {
+            "type": "enum",
+            "values": [
+              "pending",
+              "accepted",
+              "returned"
+            ],
+            "required": true
+          }
+        }
+      }
+    }
+  },
+  "wallet": {
+    "initial": 17,
+    "currency": "加隆",
+    "updatedAt": "2026-10-03T15:00:00.000Z"
+  },
+  "transactions": [
+    {
+      "kind": "topup",
+      "direction": "in",
+      "amount": 15,
+      "counterpartyId": "system",
+      "counterpartyName": "家里寄来的钱袋",
+      "note": "妈妈附了一张条：「别乱花，别买扫帚。」",
+      "status": "accepted",
+      "id": "htx-1",
+      "createdAt": "2025-01-01T05:00:00.000Z"
+    },
+    {
+      "kind": "transfer",
+      "direction": "out",
+      "amount": 2,
+      "counterpartyId": "char-harry",
+      "counterpartyName": "哈利",
+      "note": "黄油啤酒，上次是你垫的",
+      "status": "accepted",
+      "id": "htx-2",
+      "createdAt": "2025-01-01T05:10:00.000Z"
+    },
+    {
+      "kind": "redPacket",
+      "direction": "out",
+      "amount": 3,
+      "counterpartyId": "char-harry",
+      "counterpartyName": "哈利",
+      "note": "买那个二手坩埚",
+      "status": "pending",
+      "id": "htx-3",
+      "createdAt": "2025-01-01T05:20:00.000Z"
+    }
+  ]
+}

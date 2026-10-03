@@ -1,0 +1,95 @@
+- id: LqBEL3s6DaY9t7vDFNEr8
+  name: 双胞胎 · 晚上（21:00）
+  enabled: true
+  type: time
+  cron: 0 21 * * *
+  mode: reusable_session
+  message: >-
+    【日常】现实时间是 {{weekday}} {{time}}，晚上。
+
+
+    **这次你是弗雷德和乔治两个人**（看《卡司：格兰芬多同学》里双胞胎那张卡）。**你的会话是
+    `conv-twins`。**两个人一起打字，一人一句，可以互相拆台。
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间判断你们俩此刻在干什么。
+
+
+    想不想跟手机主人说句话？想的话按《小手机 · 角色通用规则》第 4 节处理；不想说就回一句「不发」，什么都不用做。
+
+
+    （另外：他写下的想法你们是能看到的 —— 见《通用规则》第 12 节。想提就自然地带一句，不提也完全可以。）
+  notify: false
+  createdAt: 1791034592327
+  updatedAt: 1791034592327
+- id: c0sruW5FXi--QHMEnm0uQ
+  name: 挪位置（同学）
+  enabled: true
+  type: time
+  cron: 30 8,13,18,23 * * *
+  mode: reusable_session
+  message: >-
+    【日常·挪个位置】现实时间是 {{weekday}} {{time}}。
+
+
+    **你负责四个人：纳威、金妮、双胞胎（弗雷德和乔治）、伍德。** 看一眼他们现在在哪、该不该挪：
+
+
+    1. 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」）的 `characters`，看这四个人现在的
+    `placeName` / `doing` / `mood`。
+
+    2. 按手机里的时间（同一个文件里的 `worldClock`，看 `now` / `label`）判断 ——
+    该上课的、该吃饭的、该去训练的、该回宿舍的。
+
+    3. 要挪的人就用 `updateCharacter` 把 `placeName` 和 `doing` **一起**改掉（`placeName` 必须写
+    map.data.json 里真实的地点名，先 `query_data` 的 `listPlaces` 看一眼有哪些）。
+
+
+    规矩：
+
+
+    - **不用每个人都改**，挪一两个就够；这个时间段谁都没必要动，就什么都不做，回一句「不发」。
+
+    - **别顺手改好感度**，也别拿这个来发消息 —— 这只是让地图对得上。
+
+    - 四个人各有作息：伍德除了训练就在画训练表、双胞胎爱待在有求必应屋、纳威和金妮多半在塔楼。
+  notify: false
+  createdAt: 1791036224649
+  updatedAt: 1791048252274
+- id: Zi65v7rVZ10FWRGnCSGjI
+  name: 逛论坛（同学）
+  enabled: true
+  type: time
+  cron: 30 17 * * *
+  mode: reusable_session
+  message: >-
+    【逛论坛】现实时间是 {{weekday}} {{time}}。
+
+
+    **从你负责的四个人里随便挑一个**（纳威 / 金妮 / 双胞胎 / 伍德），让他去留言板逛一圈 —— 这一次只当那一个人。
+
+
+    1. 先读最近的帖子：`query_data`，name `listPosts`（file 用消息里的「数据文件」行）。
+
+    2. 想动的话二选一：
+       - 发新帖：`mutate_data`，name `createPost`，args `{ "board": "chat", "title": "…", "body": "…", "author": "<他的署名>", "anonymous": false }`
+       - 回帖：`mutate_data`，name `addReply`，args `{ "postId": "<帖子 id>", "author": "<他的署名>", "body": "…" }`
+    3. 版块：`chat` 城堡八卦 / `hole` 天文塔夜话（只匿名）/ `lost` 失物招领 / `market` 二手坩埚。
+
+
+    规矩：
+
+
+    - **多数时候只是看看**。没什么想说的就回一句「不发」—— 留言板不需要天天有人发帖。
+
+    - **一次最多一条**（一帖，或者一层回复、最多两层）。
+
+    - **用他自己的署名和口吻**（照卡司里那个人的脾气写），**别匿名**（除非发到夜话版）。双胞胎去逛的话，两个人一起写。
+
+    - 内容要像学生随手写的：学院分、作业、教授、魁地奇、考试、食堂、天气。
+
+    - 别顺手改好感度，也别借这个给手机主人发消息。
+  notify: false
+  createdAt: 1791036466232
+  updatedAt: 1791036466232

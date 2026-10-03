@@ -1,0 +1,483 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "霍格沃茨 · 公共数据：手机主人、世界时钟、好友与会话（所有 App 共用）",
+    "queries": {
+      "listCharacters": {
+        "desc": "列出手机里所有好友",
+        "path": "characters",
+        "identity": "id",
+        "defaultLimit": 50
+      },
+      "getCharacter": {
+        "desc": "按 id 获取单个好友（含好感度、心情、正在做什么）",
+        "path": "characters",
+        "identity": "id",
+        "defaultLimit": 1
+      },
+      "listConversations": {
+        "desc": "列出会话，可按好友过滤",
+        "path": "conversations",
+        "identity": "id",
+        "params": {
+          "characterId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "createCharacter": {
+        "desc": "往手机里新增一个好友",
+        "op": "append",
+        "path": "characters",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "agentSlug": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "avatarEmoji": {
+            "type": "string"
+          },
+          "avatarColor": {
+            "type": "string"
+          },
+          "mood": {
+            "type": "string"
+          },
+          "doing": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updateCharacter": {
+        "desc": "更新好友状态：好感度、心情、此刻在做什么",
+        "op": "update",
+        "path": "characters",
+        "match": "id",
+        "fields": {
+          "affection": {
+            "type": "integer"
+          },
+          "mood": {
+            "type": "string"
+          },
+          "doing": {
+            "type": "string"
+          },
+          "lastActiveAt": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "personaFile": {
+            "type": "string"
+          },
+          "agentSlug": {
+            "type": "string"
+          },
+          "placeName": {
+            "type": "string"
+          },
+          "background": {
+            "type": "string"
+          }
+        }
+      },
+      "createConversation": {
+        "desc": "为某个好友新建一个会话",
+        "op": "append",
+        "path": "conversations",
+        "fields": {
+          "characterId": {
+            "type": "string",
+            "required": true
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "setConversationSession": {
+        "desc": "记录会话绑定的 agent 会话 id 与最近活跃时间",
+        "op": "update",
+        "path": "conversations",
+        "match": "id",
+        "fields": {
+          "sessionId": {
+            "type": "string"
+          },
+          "lastActiveAt": {
+            "type": "string"
+          }
+        }
+      },
+      "setWorldClock": {
+        "desc": "设置手机世界时钟：基准时刻与流速",
+        "op": "set",
+        "path": "worldClock",
+        "fields": {
+          "anchorReal": {
+            "type": "string"
+          },
+          "anchorWorld": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "number"
+          },
+          "now": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "setTheme": {
+        "desc": "切换整台手机的配色主题",
+        "op": "set",
+        "path": "theme",
+        "fields": {
+          "id": {
+            "type": "string"
+          },
+          "skin": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "setWallpaper": {
+        "desc": "把手机壁纸换成相册里的某张照片：src 是**世界目录内**的相对路径（如 assets/xxx.jpg）。src 传空字符串 = 用回主题自带的壁纸",
+        "op": "set",
+        "path": "wallpaper",
+        "fields": {
+          "src": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string"
+          }
+        }
+      },
+      "setWhere": {
+        "desc": "记录手机主人现在在哪",
+        "op": "set",
+        "path": "where",
+        "fields": {
+          "placeId": {
+            "type": "string"
+          },
+          "placeName": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "wallpaper": {
+    "src": "",
+    "at": "2026-10-03T15:00:00.000Z"
+  },
+  "theme": {
+    "id": "grimoire",
+    "skin": "tome",
+    "updatedAt": "2026-10-03T15:00:00.000Z"
+  },
+  "where": {
+    "placeId": "hs-common-room",
+    "placeName": "格兰芬多塔楼",
+    "updatedAt": "2026-10-03T15:00:00.000Z"
+  },
+  "profile": {
+    "displayName": "你",
+    "avatarEmoji": "🪄",
+    "avatarColor": "linear-gradient(150deg,#e8dcc0,#a68a5b)",
+    "updatedAt": "2026-10-03T15:00:00.000Z",
+    "lastSeen": {
+      "conv-harry": "2026-10-03T15:00:00.000Z",
+      "conv-ron": "2026-10-03T15:00:00.000Z",
+      "conv-hermione": "2026-10-03T15:00:00.000Z",
+      "conv-neville": "2026-10-03T15:00:00.000Z",
+      "conv-ginny": "2026-10-03T15:00:00.000Z",
+      "conv-twins": "2026-10-03T15:00:00.000Z",
+      "conv-wood": "2026-10-03T15:00:00.000Z",
+      "conv-draco": "2026-10-03T15:00:00.000Z",
+      "conv-cho": "2026-10-03T15:00:00.000Z",
+      "conv-cedric": "2026-10-03T15:00:00.000Z",
+      "conv-luna": "2026-10-03T15:00:00.000Z",
+      "sms-h-owlery": "2026-10-03T15:00:00.000Z",
+      "sms-h-school": "2026-10-03T15:00:00.000Z",
+      "sms-h-daily": "2026-10-03T15:00:00.000Z",
+      "sms-h-stranger": "2026-10-03T15:00:00.000Z"
+    }
+  },
+  "worldClock": {
+    "anchorReal": "2026-10-03T15:00:00.000Z",
+    "anchorWorld": "2026-10-03T15:00:00.000Z",
+    "rate": 1,
+    "now": "2026-10-03T15:00:00.000Z",
+    "label": "10月3日 星期六 深夜 23:00",
+    "updatedAt": "2026-10-03T15:00:00.000Z"
+  },
+  "characters": [
+    {
+      "id": "char-harry",
+      "placeName": "格兰芬多塔楼",
+      "name": "哈利",
+      "agentSlug": "格兰芬多三人组-b58ea8",
+      "personaFile": "phone/worlds/hogwarts/characters/格兰芬多三人组.md",
+      "tagline": "格兰芬多三年级 · 找球手",
+      "avatarEmoji": "⚡",
+      "avatarColor": "linear-gradient(150deg,#d9c9a0,#3f2a1a)",
+      "affection": 31,
+      "mood": "无所谓",
+      "doing": "下楼翻吃的",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-ron",
+      "placeName": "大礼堂",
+      "name": "罗恩",
+      "agentSlug": "格兰芬多三人组-b58ea8",
+      "personaFile": "phone/worlds/hogwarts/characters/格兰芬多三人组.md",
+      "tagline": "格兰芬多三年级",
+      "avatarEmoji": "♟️",
+      "avatarColor": "linear-gradient(150deg,#e8a05a,#a3442f)",
+      "affection": 29,
+      "mood": "无聊",
+      "doing": "盼着午饭",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-hermione",
+      "placeName": "图书馆",
+      "name": "赫敏",
+      "agentSlug": "格兰芬多三人组-b58ea8",
+      "personaFile": "phone/worlds/hogwarts/characters/格兰芬多三人组.md",
+      "tagline": "格兰芬多三年级 · 成绩第一",
+      "avatarEmoji": "📚",
+      "avatarColor": "linear-gradient(150deg,#b8d8c0,#3f7a55)",
+      "affection": 27,
+      "mood": "忙",
+      "doing": "记笔记记到手酸",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-neville",
+      "placeName": "格兰芬多塔楼",
+      "name": "纳威",
+      "agentSlug": "格兰芬多同学-60416e",
+      "personaFile": "phone/worlds/hogwarts/characters/格兰芬多同学.md",
+      "tagline": "格兰芬多三年级 · 草药课上最靠谱的那个",
+      "avatarEmoji": "🌿",
+      "avatarColor": "linear-gradient(150deg,#b8d8c0,#4a6b52)",
+      "affection": 22,
+      "mood": "有点慌",
+      "doing": "满宿舍找莱福",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-ginny",
+      "placeName": "格兰芬多塔楼",
+      "name": "金妮",
+      "agentSlug": "格兰芬多同学-60416e",
+      "personaFile": "phone/worlds/hogwarts/characters/格兰芬多同学.md",
+      "tagline": "格兰芬多二年级 · 罗恩的妹妹",
+      "avatarEmoji": "💫",
+      "avatarColor": "linear-gradient(150deg,#f0c0a8,#a3442f)",
+      "affection": 20,
+      "mood": "安静",
+      "doing": "在走廊上写东西",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-twins",
+      "placeName": "大礼堂",
+      "name": "双胞胎",
+      "agentSlug": "格兰芬多同学-60416e",
+      "personaFile": "phone/worlds/hogwarts/characters/格兰芬多同学.md",
+      "tagline": "格兰芬多五年级 · 弗雷德和乔治（一个会话，两个人）",
+      "avatarEmoji": "🎆",
+      "avatarColor": "linear-gradient(150deg,#f0a05a,#b03a20)",
+      "affection": 25,
+      "mood": "兴致高",
+      "doing": "在长桌上试新东西",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-wood",
+      "placeName": "大礼堂",
+      "name": "伍德",
+      "agentSlug": "格兰芬多同学-60416e",
+      "personaFile": "phone/worlds/hogwarts/characters/格兰芬多同学.md",
+      "tagline": "格兰芬多五年级 · 魁地奇队长",
+      "avatarEmoji": "🧤",
+      "avatarColor": "linear-gradient(150deg,#d9c9a0,#5a4a2a)",
+      "affection": 18,
+      "mood": "上头",
+      "doing": "边扒饭边排阵型",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-draco",
+      "placeName": "猫头鹰棚屋",
+      "name": "马尔福",
+      "agentSlug": "其它学院的同学-d6abdd",
+      "personaFile": "phone/worlds/hogwarts/characters/其它学院的同学.md",
+      "tagline": "斯莱特林三年级 · 老对头",
+      "avatarEmoji": "🐍",
+      "avatarColor": "linear-gradient(150deg,#c8d8b0,#2f5a3a)",
+      "affection": 11,
+      "mood": "不屑",
+      "doing": "在斯莱特林公共休息室",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-cho",
+      "placeName": "天文塔",
+      "name": "张秋",
+      "agentSlug": "其它学院的同学-d6abdd",
+      "personaFile": "phone/worlds/hogwarts/characters/其它学院的同学.md",
+      "tagline": "拉文克劳四年级 · 找球手",
+      "avatarEmoji": "🦅",
+      "avatarColor": "linear-gradient(150deg,#b8c8e8,#3f5a8f)",
+      "affection": 12,
+      "mood": "平静",
+      "doing": "在塔楼改明天的训练表",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-cedric",
+      "placeName": "魁地奇球场",
+      "name": "塞德里克",
+      "agentSlug": "其它学院的同学-d6abdd",
+      "personaFile": "phone/worlds/hogwarts/characters/其它学院的同学.md",
+      "tagline": "赫奇帕奇五年级 · 找球手",
+      "avatarEmoji": "🦡",
+      "avatarColor": "linear-gradient(150deg,#f0e0a0,#8f7a2a)",
+      "affection": 15,
+      "mood": "愉快",
+      "doing": "在球场收最后一盏灯",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "char-luna",
+      "placeName": "禁林边缘",
+      "name": "卢娜",
+      "agentSlug": "其它学院的同学-d6abdd",
+      "personaFile": "phone/worlds/hogwarts/characters/其它学院的同学.md",
+      "tagline": "拉文克劳二年级 · 金妮的朋友",
+      "avatarEmoji": "🌙",
+      "avatarColor": "linear-gradient(150deg,#e8e0f5,#9a86c8)",
+      "affection": 20,
+      "mood": "平静",
+      "doing": "在长廊台阶上坐着",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv-harry",
+      "characterId": "char-harry",
+      "title": "哈利",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "conv-ron",
+      "characterId": "char-ron",
+      "title": "罗恩",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "conv-hermione",
+      "characterId": "char-hermione",
+      "title": "赫敏",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    },
+    {
+      "id": "conv-neville",
+      "characterId": "char-neville",
+      "title": "纳威",
+      "createdAt": "2014-09-06T09:12:00.000Z"
+    },
+    {
+      "id": "conv-ginny",
+      "characterId": "char-ginny",
+      "title": "金妮",
+      "createdAt": "2014-09-08T20:40:00.000Z"
+    },
+    {
+      "id": "conv-twins",
+      "characterId": "char-twins",
+      "title": "双胞胎",
+      "createdAt": "2014-09-09T23:05:00.000Z"
+    },
+    {
+      "id": "conv-wood",
+      "characterId": "char-wood",
+      "title": "伍德",
+      "createdAt": "2014-09-11T06:02:00.000Z"
+    },
+    {
+      "id": "conv-draco",
+      "characterId": "char-draco",
+      "title": "马尔福",
+      "createdAt": "2014-09-12T17:25:00.000Z"
+    },
+    {
+      "id": "conv-cho",
+      "characterId": "char-cho",
+      "title": "张秋",
+      "createdAt": "2014-09-14T15:30:00.000Z"
+    },
+    {
+      "id": "conv-cedric",
+      "characterId": "char-cedric",
+      "title": "塞德里克",
+      "createdAt": "2014-09-15T18:10:00.000Z"
+    },
+    {
+      "id": "conv-luna",
+      "characterId": "char-luna",
+      "title": "卢娜",
+      "createdAt": "2014-09-17T21:15:00.000Z"
+    }
+  ]
+}

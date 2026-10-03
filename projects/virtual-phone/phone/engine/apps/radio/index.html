@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>电台</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 本页专属：电台。颜色一律走 token（见 开发说明.md 的「外观」） */
+  body{position:relative;overflow:hidden}
+  .app-body{padding:14px 14px 28px}
+  .station{
+    display:flex;align-items:center;gap:11px;margin-bottom:14px;padding:11px 12px;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));
+    border:var(--border-w) solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-card);
+  }
+  .dial{
+    flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:20px;
+    background:var(--note);color:var(--note-fg);border:var(--border-w) solid var(--border);
+  }
+  .st-name{font-size:14.5px;font-weight:800;font-style:italic;color:var(--text);line-height:1.3}
+  .st-freq{font-family:var(--mono);font-size:10.5px;font-weight:800;color:var(--accent-ink);margin-top:2px}
+  .st-note{font-size:11px;font-weight:700;color:var(--text-dim);margin-top:3px;line-height:1.5}
+  .disc-wrap{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .disc{
+    position:relative;flex:none;width:78px;height:78px;border-radius:50%;
+    border:var(--border-w) solid var(--border);
+    background:
+      repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,.055) 0 1px,rgba(255,255,255,0) 1px 4px),
+      var(--ink);
+    box-shadow:var(--shadow-row);
+    display:grid;place-items:center;
+  }
+  .disc:after{
+    content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    background:linear-gradient(115deg,rgba(255,255,255,.22) 0 14%,rgba(255,255,255,0) 36%);
+  }
+  .disc-label{
+    width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+    background:var(--note);color:var(--note-fg);border:1.5px solid var(--border);font-size:13px;
+  }
+  .disc.spinning{animation:spin 6s linear infinite}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){ .disc.spinning{animation:none} }
+  .now-title{font-size:15px;font-weight:800;font-style:italic;color:var(--text);line-height:1.35;word-break:break-word}
+  .now-sub{font-size:11px;font-weight:700;color:var(--text-dim);margin-top:4px;line-height:1.55}
+  .bar{
+    position:relative;height:12px;margin:0 2px 6px;cursor:pointer;touch-action:none;
+    border:var(--border-w) solid var(--border);border-radius:999px;background:var(--tint-chip);
+    box-shadow:inset 0 1px 2px rgba(26,20,32,.18);
+  }
+  .bar i{display:block;height:100%;width:0;border-radius:999px;background:var(--accent-heart);transition:width .12s linear}
+  .times{display:flex;justify-content:space-between;margin:0 3px 12px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--text-dim)}
+  .controls{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px}
+  .ctl{
+    display:grid;place-items:center;cursor:pointer;padding:0;font:inherit;line-height:1;
+    border:var(--border-w) solid var(--border);border-radius:50%;
+    background:var(--pill);color:var(--pill-fg);width:42px;height:42px;font-size:15px;box-shadow:var(--shadow-row);
+  }
+  .ctl.big{width:56px;height:56px;font-size:20px;background:var(--btn-pink);color:var(--btn-pink-fg);box-shadow:var(--shadow-card)}
+  .ctl:active{transform:var(--press);box-shadow:var(--shadow-press)}
+  .sec{display:flex;align-items:baseline;gap:8px;margin:14px 2px 9px}
+  .sec b{font-size:12.5px;font-weight:800;font-style:italic;letter-spacing:.5px;color:var(--text)}
+  .sec span{font-size:10.5px;font-weight:700;color:var(--text-dim)}
+  .rv,.tr{
+    display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;font:inherit;cursor:pointer;
+    padding:9px 11px;margin-bottom:9px;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));color:var(--text);
+    border:var(--border-w) solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-row);
+  }
+  .rv{background:var(--note);color:var(--note-fg);border-style:dashed;cursor:default}
+  .rv.playable{cursor:pointer}
+  .tr.on{background:var(--note);color:var(--note-fg);border-style:dashed}
+  .rv-time{flex:none;width:38px;padding-top:2px;font-family:var(--mono);font-size:10px;font-weight:800;opacity:.8}
+  .rv-main{flex:1;min-width:0}
+  .rv-text{font-size:12.5px;font-weight:600;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .rv-of{font-size:10.5px;font-weight:800;opacity:.75;margin-top:5px}
+  .tr-no{flex:none;width:18px;padding-top:1px;font-family:var(--mono);font-size:11px;font-weight:800;opacity:.7}
+  .tr-main{flex:1;min-width:0}
+  .tr-title{font-size:13.5px;font-weight:800;line-height:1.4;word-break:break-word}
+  .tr-note{font-size:11px;font-weight:600;opacity:.75;margin-top:3px;line-height:1.5;white-space:pre-wrap}
+  .tr-del{
+    flex:none;width:22px;height:22px;padding:0;line-height:1;font:inherit;font-size:11px;font-weight:800;cursor:pointer;
+    border:var(--border-w) solid var(--border);border-radius:7px;background:var(--warn);color:var(--warn-fg);
+  }
+  .up{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;cursor:pointer;
+    padding:12px;margin-bottom:9px;font:inherit;font-size:13px;font-weight:800;
+    border:2px dashed currentColor;border-radius:var(--radius-sm);
+    background:var(--input-bg);color:var(--accent-ink);
+  }
+  .up:disabled{opacity:.6;cursor:default}
+  /* 上传等待卡：网络慢的时候，界面得让人知道"在动" */
+  .up-card{
+    padding:10px 11px;margin-bottom:9px;
+    background:var(--tint-strip);border:var(--border-w) solid var(--border);
+    border-radius:var(--radius-sm);box-shadow:var(--shadow-row);
+  }
+  .up-top{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--note-fg);line-height:1.5}
+  .up-top .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+  .up-spin{display:inline-block;flex:none;animation:upspin 1.5s linear infinite}
+  @keyframes upspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .up-line{
+    position:relative;height:8px;margin:8px 0 9px;overflow:hidden;
+    border:1.5px solid var(--border);border-radius:999px;background:var(--tint-chip);
+  }
+  .up-line i{
+    position:absolute;top:0;bottom:0;width:42%;border-radius:999px;background:var(--accent-heart);
+    animation:upmarch 1.25s ease-in-out infinite;
+  }
+  @keyframes upmarch{0%{left:-42%}100%{left:100%}}
+  @media (prefers-reduced-motion:reduce){ .up-spin,.up-line i{animation:none} }
+  .up-stop{
+    border:var(--border-w) solid var(--border);border-radius:9px;background:var(--warn);color:var(--warn-fg);
+    font:inherit;font-size:11.5px;font-weight:800;padding:4px 12px;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span id="title">电台</span>
+  <button class="ghost" id="upload-btn">上传</button>
+</header>
+<div class="app-body">
+  <div class="station" id="station"></div>
+
+  <div class="disc-wrap">
+    <div class="disc" id="disc"><span class="disc-label" id="disc-label">♪</span></div>
+    <div style="flex:1;min-width:0">
+      <div class="now-title" id="now-title">—</div>
+      <div class="now-sub" id="now-sub"></div>
+    </div>
+  </div>
+
+  <div class="bar" id="bar"><i id="bar-fill"></i></div>
+  <div class="times"><span id="t-cur">0:00</span><span id="t-all">0:00</span></div>
+  <div class="controls">
+    <button class="ctl" id="prev" title="上一首">⏮</button>
+    <button class="ctl big" id="play" title="播放 / 暂停">▶</button>
+    <button class="ctl" id="next" title="下一首">⏭</button>
+  </div>
+  <div class="wtargets" id="modes"></div>
+
+  <div class="sec"><b>节目</b><span id="shows-count"></span></div>
+  <div id="shows"></div>
+
+  <div class="sec"><b>歌</b><span id="tracks-count"></span></div>
+  <div class="up-card" id="up-card" style="display:none">
+    <div class="up-top"><span class="up-spin">⟳</span><span class="nm" id="up-text"></span></div>
+    <div class="up-line"><i></i></div>
+    <button class="up-stop" id="up-stop">停下</button>
+  </div>
+  <div id="tracks"></div>
+  <button class="up" id="upload-row">📻 上传一首给电台</button>
+  <button class="up pick" id="pick-row">📁 从文件夹里挑</button>
+</div>
+
+<div class="pick-sheet" id="pick-sheet">
+  <div class="pick-head"><b>项目里现有的声音</b><button id="pick-close">关上</button></div>
+  <div class="pick-hint" id="pick-hint">正在找…</div>
+  <div class="pick-list" id="pick-list"></div>
+</div>
+<input type="file" id="pick" accept=".mp3,.wav,.ogg,.m4a,.flac,.aac,.opus,audio/*" multiple style="display:none">
+<audio id="au" preload="metadata"></audio>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var au = $("au");
+  var tracks = [], shows = [], idx = 0, loopOne = false, muted = false;
+  var KEY = "xiaoshouji:radio";
+  var keep = {}, tick = 0, up = null;    // up = 上传中 { total, done, name, stopped }，null 表示没在传
+  var EXT_OK = ["mp3", "wav", "ogg", "m4a", "flac", "aac", "opus"];
+
+  function readStore() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; }
+  }
+  function writeStore() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        id: tracks[idx] && tracks[idx].id, loopOne: loopOne, muted: muted, pos: au.currentTime || 0
+      }));
+    } catch (e) {}
+  }
+  function mmss(s) {
+    if (!isFinite(s) || s < 0) s = 0;
+    var m = Math.floor(s / 60), r = Math.floor(s % 60);
+    return m + ":" + (r < 10 ? "0" : "") + r;
+  }
+  function trackById(id) {
+    for (var i = 0; i < tracks.length; i++) if (tracks[i].id === id) return tracks[i];
+    return null;
+  }
+  function indexOfTrack(id) {
+    for (var i = 0; i < tracks.length; i++) if (tracks[i].id === id) return i;
+    return -1;
+  }
+
+  async function load() {
+    await phone.loadShared();
+    var d = await phone.entries(phone.FILES.RADIO);
+    tracks = (d && d.tracks) || [];
+    shows = (d && d.shows) || [];
+    keep = readStore();
+    loopOne = !!keep.loopOne;
+    muted = !!keep.muted;
+    if (tracks.length) {
+      var want = indexOfTrack(keep.id);
+      if (want < 0 || !au.getAttribute("src")) setTrack(want >= 0 ? want : 0, false);
+      else { idx = want; renderNow(); }
+    }
+    renderStation(); renderModes(); renderShows(); renderTracks(); renderUp();
+    if (!tracks.length) {
+      $("now-title").textContent = "电台还没歌";
+      $("now-sub").textContent = "点下面的「上传一首给电台」，从电脑里挑个音频文件。";
+    }
+  }
+
+  /* ---------- 播放 ---------- */
+  function setTrack(i, autoplay) {
+    if (!tracks.length) return;
+    idx = ((i % tracks.length) + tracks.length) % tracks.length;
+    var t = tracks[idx];
+    if (t.src) au.src = encodeURI(phone.assetUrl(t.src));   // src 是**世界目录内**的相对路径，如 assets/xxx.mp3
+    else { au.removeAttribute("src"); au.load(); }
+    au.muted = muted;
+    renderNow(); renderTracks(); paint();
+    if (autoplay) playIt(true);
+  }
+  function playIt(showErr) {
+    au.play().then(function () {
+      $("disc").classList.add("spinning"); $("play").textContent = "⏸";
+    }, function (e) {
+      $("disc").classList.remove("spinning"); $("play").textContent = "▶";
+      if (showErr) phone.toast({ variant: "error", message: "这首放不出来", description: String((e && e.message) || e) });
+    });
+  }
+  function pauseIt() {
+    au.pause();
+    $("disc").classList.remove("spinning"); $("play").textContent = "▶";
+    writeStore();
+  }
+  function toggle() { if (au.paused) playIt(true); else pauseIt(); }
+
+  /* ---------- 渲染 ---------- */
+  function renderStation() {
+    var st = (phone.world() || {}).station || {};
+    $("station").innerHTML =
+      '<div class="dial">📻</div><div style="flex:1;min-width:0">' +
+      '<div class="st-name">' + phone.esc(st.name || phone.pageTitle("radio", "电台")) + "</div>" +
+      (st.freq ? '<div class="st-freq">' + phone.esc(st.freq) + "</div>" : "") +
+      (st.note ? '<div class="st-note">' + phone.esc(st.note) + "</div>" : "") + "</div>";
+  }
+  function renderNow() {
+    var t = tracks[idx] || {};
+    $("now-title").textContent = t.title || "—";
+    var bits = [];
+    if (t.artist) bits.push(t.artist);
+    if (t.note) bits.push(t.note);
+    $("now-sub").textContent = bits.join(" · ");
+    $("disc-label").textContent = t.emoji || "♪";
+    document.title = (t.title ? t.title + " · " : "") + phone.pageTitle("radio", "电台");
+  }
+  function renderModes() {
+    $("modes").innerHTML =
+      '<button class="wchip' + (loopOne ? " on" : "") + '" data-mode="loop">' + (loopOne ? "🔂 单曲循环" : "🔁 列表循环") + "</button>" +
+      '<button class="wchip' + (muted ? " on" : "") + '" data-mode="mute">' + (muted ? "🔇 静音" : "🔈 有声音") + "</button>";
+  }
+  // DJ 的话（角色/系统 Agent 写的），最新的在最上面
+  function renderShows() {
+    $("shows-count").textContent = shows.length ? shows.length + " 条" : "";
+    if (!shows.length) {
+      $("shows").innerHTML = '<div class="ph"><div class="big">📡</div><div class="t">还没有节目</div>' +
+        '<div class="d">电台不会一直说话。<br>有节目的时候，它会出现在这里。</div></div>';
+      return;
+    }
+    var sorted = shows.slice().sort(function (a, b) {
+      return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+    });
+    $("shows").innerHTML = sorted.map(function (s) {
+      var t = s.trackId ? trackById(s.trackId) : null;
+      return '<button class="rv' + (t ? " playable" : "") + '"' + (t ? ' data-play="' + phone.esc(t.id) + '"' : "") + ">" +
+        '<span class="rv-time">' + phone.esc(phone.fmtAgo(s.createdAt)) + "</span>" +
+        '<span class="rv-main"><span class="rv-text">' + phone.escLines(s.text || "") + "</span>" +
+        (t ? '<span class="rv-of">▶ 正在放：' + phone.esc(t.title || "") + "</span>" : "") + "</span></button>";
+    }).join("");
+  }
+  function renderTracks() {
+    $("tracks-count").textContent = tracks.length ? tracks.length + " 首" : "";
+    $("tracks").innerHTML = tracks.map(function (t, i) {
+      return '<div class="tr' + (i === idx ? " on" : "") + '">' +
+        '<button class="tr-no" data-play="' + phone.esc(t.id) + '" style="border:none;background:none;cursor:pointer;color:inherit;font:inherit;padding:0" title="播这首">' +
+        (i === idx ? "▶" : (i + 1)) + "</button>" +
+        '<div class="tr-main"><div class="tr-title">' + phone.esc(t.title || "（没名字）") + "</div>" +
+        (t.note ? '<div class="tr-note">' + phone.esc(t.note) + "</div>" : "") + "</div>" +
+        '<button class="tr-del" data-del="' + phone.esc(t.id) + '" title="从歌单里去掉">✕</button></div>';
+    }).join("");
+  }
+  function paint() {
+    var d = au.duration;
+    var pct = (d && isFinite(d)) ? (au.currentTime / d) * 100 : 0;
+    $("bar-fill").style.width = Math.max(0, Math.min(100, pct)) + "%";
+    $("t-cur").textContent = mmss(au.currentTime);
+    $("t-all").textContent = isFinite(d) ? mmss(d) : "0:00";
+  }
+
+  /* ---------- 上传 ---------- */
+  function worldAssetDir() { return "phone/worlds/" + phone.worldId() + "/assets"; }
+  // 上传返回的是项目根相对路径（phone/worlds/<id>/assets/xxx.mp3），
+  // 存进数据时转成世界目录内的相对路径（assets/xxx.mp3）—— 跟地图的 assets/map.svg 同一套约定。
+  function toWorldRel(path) {
+    var pre = "phone/worlds/" + phone.worldId() + "/";
+    var p = String(path || "");
+    return p.indexOf(pre) === 0 ? p.slice(pre.length) : p;
+  }
+  function whyFailed(e) {
+    var m = String((e && e.message) || e || "");
+    try { console.error("[小手机] 上传失败，原始错误：", m, e); } catch (_) {}   // 原始错误绝不能丢：提示只能翻人话，定位要靠它
+    if (m.indexOf("unsupported_type") >= 0) return "这个格式电台不收（支持 " + EXT_OK.join(" ") + "）";
+    if (m.indexOf("file_too_large") >= 0) return "文件太大了（单个上限 100MB）";
+    if (m.indexOf("upload_failed") >= 0) return "写不进去 —— 目标目录可能不存在";
+    if (m.indexOf("forbidden") >= 0) return "平台拒绝了这次写入（forbidden）—— 原始信息：" + m;
+    return m || "不知道哪儿出了问题";
+  }
+  async function uploadFiles(files) {
+    if (up) return;
+    if (!files || !files.length) return;
+    if (!phone.worldId()) { phone.toast({ variant: "warning", message: "还没认出这个世界" }); return; }
+    up = { total: files.length, done: 0, name: "", stopped: false };
+    var ok = 0, fail = 0, skipped = 0;
+    for (var i = 0; i < files.length; i++) {
+      if (up.stopped) { skipped = files.length - i; break; }
+      var f = files[i];
+      up.name = String(f.name || "（没名字）");
+      renderUp();
+      var ext = String(f.name || "").split(".").pop().toLowerCase();
+      if (EXT_OK.indexOf(ext) < 0) {
+        fail++; up.done++;
+        phone.toast({ variant: "warning", message: "跳过一个文件", description: f.name + "：" + whyFailed({ message: "unsupported_type" }) });
+        continue;
+      }
+      try {
+        var res = await phone.uploadFile({ data: f, dirPath: worldAssetDir() });
+        await phone.mutate(phone.FILES.RADIO, "addTrack", {
+          title: String(f.name).replace(/\.[^.]+$/, ""),
+          src: toWorldRel(res.path),     // 世界目录内的相对路径，播放时用 phone.assetUrl() 取
+          note: res.renamed ? "（上传时重名，已改名存下）" : ""
+        });
+        ok++; up.done++;
+        await load();     // 传完一首就让它立刻出现在歌单里 —— 这本身就是进度
+        renderUp();
+      } catch (e) {
+        fail++; up.done++;
+        phone.toast({ variant: "error", message: "这首没传上去", description: up.name + "：" + whyFailed(e) });
+        renderUp();
+      }
+    }
+    var stopped = up.stopped, total = up.total;
+    up = null;
+    renderUp();
+    var extra = [];
+    if (fail) extra.push(fail + " 首没成功");
+    if (stopped && skipped) extra.push("停下了，还有 " + skipped + " 首没传");
+    phone.toast({
+      variant: ok ? "success" : (stopped && !ok ? "info" : "warning"),
+      message: ok ? ("电台收下了 " + ok + " 首") : (stopped ? "没传完" : "一首都没传上去"),
+      description: extra.join(" · ") || ("一共 " + total + " 首，都在歌单里了")
+    });
+    await load();
+  }
+
+  // 上传等待卡：传得慢的时候，界面必须让人看见"在动"（SDK 不给进度百分比，所以是不确定进度条）
+  function renderUp() {
+    var card = $("up-card"), btn = $("upload-btn"), row = $("upload-row");
+    if (!up) {
+      card.style.display = "none";
+      btn.disabled = false; btn.textContent = "上传";
+      row.disabled = false; row.textContent = "📻 上传一首给电台";
+      return;
+    }
+    card.style.display = "";
+    $("up-text").textContent = (up.stopped ? "正在收尾" : "正在上传 " + (up.done + 1) + "/" + up.total) + " · " + up.name;
+    btn.disabled = true; btn.textContent = "上传中";
+    row.disabled = true; row.textContent = "正在上传 " + up.done + "/" + up.total + " …";
+  }
+
+  /* ---------- 进度条 ---------- */
+  var dragging = false;
+  function seekAt(clientX) {
+    var r = $("bar").getBoundingClientRect();
+    var p = Math.max(0, Math.min(1, (clientX - r.left) / (r.width || 1)));
+    if (isFinite(au.duration) && au.duration > 0) { au.currentTime = p * au.duration; paint(); }
+  }
+  $("bar").addEventListener("pointerdown", function (e) {
+    dragging = true; seekAt(e.clientX);
+    try { $("bar").setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  $("bar").addEventListener("pointermove", function (e) { if (dragging) seekAt(e.clientX); });
+  $("bar").addEventListener("pointerup", function () { dragging = false; writeStore(); });
+  $("bar").addEventListener("pointercancel", function () { dragging = false; });
+
+  /* ---------- 事件（都绑在不会重绘的容器上） ---------- */
+  function playById(id) {
+    var i = indexOfTrack(id);
+    if (i >= 0) setTrack(i, true);
+  }
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("play").addEventListener("click", toggle);
+  $("prev").addEventListener("click", function () {
+    if (au.currentTime > 3) { au.currentTime = 0; paint(); return; }
+    setTrack(idx - 1, !au.paused);
+  });
+  $("next").addEventListener("click", function () { setTrack(idx + 1, !au.paused); });
+  $("modes").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-mode]");
+    if (!b) return;
+    if (b.dataset.mode === "loop") loopOne = !loopOne;
+    if (b.dataset.mode === "mute") { muted = !muted; au.muted = muted; }
+    renderModes(); writeStore();
+  });
+  // 节目：点一下 = 放它说的那首
+  $("shows").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-play]");
+    if (b) playById(b.dataset.play);
+  });
+  // 歌单：点行播这首，点叉从歌单去掉
+  $("tracks").addEventListener("click", function (e) {
+    var del = e.target.closest("[data-del]");
+    if (del) {
+      var id = del.dataset.del;
+      phone.mutate(phone.FILES.RADIO, "removeTrack", { id: id }).then(load, function (err) {
+        phone.toast({ variant: "error", message: "去不掉", description: String((err && err.message) || err) });
+      });
+      return;
+    }
+    var p = e.target.closest("[data-play]");
+    if (p) playById(p.dataset.play);
+  });
+  $("upload-btn").addEventListener("click", function () { if (!up) $("pick").click(); });
+  $("upload-row").addEventListener("click", function () { if (!up) $("pick").click(); });
+  $("pick-row").addEventListener("click", openPick);
+  $("pick-close").addEventListener("click", function () { $("pick-sheet").classList.remove("open"); });
+  $("pick-list").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-src]");
+    if (b) pickOne(b.dataset.src);
+  });
+
+  /* ---------- 从文件夹里挑一首 ----------
+     上传需要**写**权限（实测：web 宿主会被拒），而"挑一个已有的"只要**读**。
+     样式在 theme/picker.css，数据来自 phone.listWorldAssets("audio")（只读 listDir）。 */
+  var picking = false;
+
+  async function openPick() {
+    if (picking) return;
+    picking = true;
+    $("pick-sheet").classList.add("open");
+    $("pick-hint").textContent = "正在找 " + phone.worldId() + " 的 assets/ …";
+    $("pick-list").innerHTML = "";
+    try {
+      var list = await phone.listWorldAssets("audio");
+      if (!list.length) {
+        $("pick-hint").textContent = "世界目录的 assets/ 里还没有音频。把歌先放进去（桌面端上传、拖进文件面板、或让 Agent 放），再来这儿挑。";
+        return;
+      }
+      $("pick-hint").textContent = "共 " + list.length + " 首 —— 点一首加进歌单。";
+      $("pick-list").innerHTML = list.map(function (f) {
+        return '<button class="pick-item" data-src="' + phone.esc(f.src) + '">▶ ' + phone.esc(f.name) + "</button>";
+      }).join("");
+    } catch (e) {
+      $("pick-hint").textContent = "读不到世界目录：" + String((e && e.message) || e);
+    } finally {
+      picking = false;
+    }
+  }
+
+  async function pickOne(src) {
+    var title = String(src).split("/").pop().replace(/\.[^.]+$/, "");
+    try {
+      await phone.mutate(phone.FILES.RADIO, "addTrack", { title: title, src: src });
+      $("pick-sheet").classList.remove("open");
+      phone.toast({ variant: "success", message: "加进歌单了", description: title });
+      await load();
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没加进去", description: String((e && e.message) || e) });
+    }
+  }
+  $("up-stop").addEventListener("click", function () {
+    if (!up) return;
+    up.stopped = true;
+    renderUp();
+    phone.toast({ variant: "info", message: "传完这首就停" });
+  });
+  $("pick").addEventListener("change", function () {
+    var fs = $("pick").files;
+    var arr = [];
+    for (var i = 0; i < (fs ? fs.length : 0); i++) arr.push(fs[i]);
+    $("pick").value = "";
+    uploadFiles(arr);
+  });
+
+  au.addEventListener("loadedmetadata", function () {
+    if (keep.pos > 0 && isFinite(au.duration) && keep.pos < au.duration - 2) au.currentTime = keep.pos;
+    keep.pos = 0;
+    paint();
+  });
+  au.addEventListener("timeupdate", function () {
+    paint();
+    if (++tick % 20 === 0) writeStore();
+  });
+  au.addEventListener("play", function () { $("disc").classList.add("spinning"); $("play").textContent = "⏸"; });
+  au.addEventListener("pause", function () { $("disc").classList.remove("spinning"); $("play").textContent = "▶"; });
+  au.addEventListener("ended", function () {
+    if (loopOne) { au.currentTime = 0; playIt(false); return; }
+    setTrack(idx + 1, true);
+  });
+  au.addEventListener("error", function () {
+    $("disc").classList.remove("spinning"); $("play").textContent = "▶";
+    var t = tracks[idx] || {};
+    phone.toast({ variant: "warning", message: "这首歌的文件读不到", description: String(t.src || "（没写 src）") });
+  });
+  window.addEventListener("beforeunload", writeStore);
+
+  var title = phone.pageTitle("radio", "电台");
+  $("title").textContent = title;
+
+  load().catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.RADIO, phone.FILES.SHARED], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

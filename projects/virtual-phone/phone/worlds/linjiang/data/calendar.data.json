@@ -1,0 +1,237 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 日历：日子与约定。日期一律是「手机世界里的日期」（YYYY-MM-DD），不是现实日期",
+    "queries": {
+      "listEvents": {
+        "desc": "读取日程（不带参数就是全部，最新改的在前面）。要按天看就传 date；who 可以填 \"me\" 或某个角色的档案 id",
+        "path": "events",
+        "identity": "id",
+        "params": {
+          "date": {
+            "type": "string"
+          },
+          "who": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 100
+      },
+      "listMarks": {
+        "desc": "读取纪念日（「从那天起算」的事，比如认识、在一起）。展示为「第 N 天」",
+        "path": "marks",
+        "identity": "id",
+        "defaultLimit": 20
+      }
+    },
+    "mutations": {
+      "addEvent": {
+        "desc": "记一件事（手机主人和角色都能加）",
+        "op": "append",
+        "path": "events",
+        "fields": {
+          "date": {
+            "type": "string",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "time": {
+            "type": "string"
+          },
+          "who": {
+            "type": "string",
+            "default": "me"
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "plan",
+              "work",
+              "school",
+              "date",
+              "note",
+              "anniversary"
+            ],
+            "default": "plan"
+          },
+          "note": {
+            "type": "string"
+          },
+          "repeat": {
+            "type": "enum",
+            "values": [
+              "none",
+              "weekly",
+              "yearly"
+            ],
+            "default": "none"
+          },
+          "done": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updateEvent": {
+        "desc": "改一件事：时间、标题、备注，或者标记做完（done）",
+        "op": "update",
+        "path": "events",
+        "match": "id",
+        "fields": {
+          "date": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "repeat": {
+            "type": "enum",
+            "values": [
+              "none",
+              "weekly",
+              "yearly"
+            ]
+          },
+          "done": {
+            "type": "boolean"
+          }
+        }
+      },
+      "removeEvent": {
+        "desc": "删一件事",
+        "op": "remove",
+        "path": "events",
+        "match": "id"
+      },
+      "addMark": {
+        "desc": "加一个纪念日（从某天开始算，展示为「第 N 天」）",
+        "op": "append",
+        "path": "marks",
+        "fields": {
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "since": {
+            "type": "string",
+            "required": true
+          },
+          "emoji": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "id": "ev-suwan-shift",
+      "date": "2026-10-05",
+      "time": "10:00",
+      "title": "书店的班",
+      "who": "char-suwan",
+      "kind": "work",
+      "note": "周一她看店。柜台底下有留给你的那本。",
+      "repeat": "weekly",
+      "done": false,
+      "createdAt": "2026-09-28T10:12:00.000Z"
+    },
+    {
+      "id": "ev-suwan-run",
+      "date": "2026-10-08",
+      "time": "20:00",
+      "title": "江边跑步",
+      "who": "me",
+      "kind": "plan",
+      "note": "说好一周三次，这是第二次。",
+      "repeat": "none",
+      "done": false,
+      "createdAt": "2026-10-01T12:30:00.000Z"
+    },
+    {
+      "id": "ev-suwan-deadline",
+      "date": "2026-10-09",
+      "time": "",
+      "title": "交稿",
+      "who": "char-suwan",
+      "kind": "work",
+      "note": "三张插图。编辑已经催过两次了。",
+      "repeat": "none",
+      "done": false,
+      "createdAt": "2026-09-28T10:14:00.000Z"
+    },
+    {
+      "id": "ev-suwan-cat",
+      "date": "2026-10-11",
+      "time": "14:00",
+      "title": "回车打疫苗",
+      "who": "char-suwan",
+      "kind": "note",
+      "note": "第二针。要拎猫笼，很重。",
+      "repeat": "none",
+      "done": false,
+      "createdAt": "2026-09-30T06:05:00.000Z"
+    },
+    {
+      "id": "ev-wonton",
+      "date": "2026-10-03",
+      "time": "01:00",
+      "title": "巷口馄饨摊",
+      "who": "me",
+      "kind": "note",
+      "note": "深夜那家。老板记得你不要葱。",
+      "repeat": "none",
+      "done": false,
+      "createdAt": "2026-10-03T00:40:00.000Z"
+    },
+    {
+      "id": "ev-suwan-birthday",
+      "date": "2026-11-07",
+      "time": "",
+      "title": "苏晚的生日",
+      "who": "char-suwan",
+      "kind": "anniversary",
+      "note": "她自己从来不提。",
+      "repeat": "yearly",
+      "done": false,
+      "createdAt": "2026-08-02T09:00:00.000Z"
+    }
+  ],
+  "marks": [
+    {
+      "id": "mark-know-suwan",
+      "title": "认识苏晚",
+      "since": "2026-07-12T09:00:00.000Z",
+      "emoji": "🌤",
+      "createdAt": "2026-07-12T09:00:00.000Z"
+    }
+  ]
+}

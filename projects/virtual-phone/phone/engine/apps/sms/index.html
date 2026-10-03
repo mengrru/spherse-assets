@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>短信</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 短信有自己的配色：青绿，和微信的粉、其它 App 的紫区分开 */
+  .app-header.cyan{background:var(--app-hue-sms)}
+  body{position:relative}
+  .sms-body{flex:1;min-height:0;overflow-y:auto;padding:14px 13px 10px;display:flex;flex-direction:column;gap:10px;
+    background:var(--tint-chat);background-image:radial-gradient(var(--tint-dots) 1px,transparent 1px);background-size:16px 16px}
+  .row .avatar{border-radius:10px}
+  .bubble.sms-them{background:var(--bubble-them);color:var(--bubble-them-fg);border-top-left-radius:4px}
+  .bubble.sms-me{
+    background:var(--bubble-me);color:var(--bubble-me-fg);font-weight:600;
+    border-top-left-radius:15px;border-top-right-radius:4px;
+  }
+  .sms-num{font-family:var(--mono);font-size:10.5px;font-weight:700;color:rgba(255,255,255,.85)}
+  .sysline{
+    align-self:center;max-width:92%;font-size:11px;font-weight:700;color:var(--note-fg);text-align:center;
+    background:var(--note);border:var(--border-w) solid var(--border);border-radius:12px;
+    padding:8px 12px;box-shadow:var(--shadow-row);line-height:1.6;
+  }
+  .composer.sms{background:var(--tint-composer)}
+  .send.sms{background:var(--btn-grad);color:var(--btn-fg)}
+  .syscomposer{
+    flex:none;padding:14px 14px 26px;text-align:center;font-size:11.5px;font-weight:700;color:var(--text-dim);
+    background:var(--tint-composer);border-top:var(--border-w) solid var(--border);
+  }
+</style>
+</head>
+<body>
+<!-- 会话列表 -->
+<section id="pane-list" style="display:none;flex-direction:column;height:100%">
+  <header class="app-header cyan">
+    <button class="back" id="list-home">‹</button>
+    <span>短信</span>
+    <button class="ghost" id="list-dice" title="摇一次骰子，看外面有没有事">摇一下</button>
+  </header>
+  <div class="app-body" id="thread-list"></div>
+</section>
+
+<!-- 会话 -->
+<section id="pane-thread" style="display:none;flex-direction:column;height:100%">
+  <header class="app-header cyan">
+    <button class="back" id="thread-back">‹</button>
+    <div>
+      <div style="font-size:16px;font-weight:800;font-style:italic" id="t-name">—</div>
+      <div class="sms-num" id="t-num"></div>
+    </div>
+    <span class="hint" id="t-kind"></span>
+  </header>
+  <div class="sms-body" id="t-body"></div>
+  <div class="composer sms" id="t-composer">
+    <textarea id="t-input" rows="1" placeholder="发短信…"></textarea>
+    <button class="send sms" id="t-send">发送</button>
+  </div>
+</section>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var P = phone.params();
+  // 参数清洗：路由漏拼出 "null"/"undefined" 时当作没传
+  function valid(v) { return (v && v !== "null" && v !== "undefined") ? v : null; }
+  var threadId = valid(P.thread);
+  var mode = threadId ? "thread" : "list";
+
+  var shared = {}, threads = [], sms = [], meta = {};
+  var awaiting = null;      // { threadId, since }
+
+  /* ---------- 短信局：手机之外的世界，由一个 Agent 统一扮演（共用一个会话） ---------- */
+  async function worldSession(forceNew) {
+    if (!forceNew && meta.sessionId) return meta.sessionId;
+    var sessionId = await phone.createSystemSession(phone.SYSTEM_AGENTS.sms);
+    await phone.mutate(phone.FILES.SMS, "setSmsAgentSession",
+      { sessionId: sessionId, updatedAt: new Date().toISOString() });
+    meta.sessionId = sessionId;
+    return sessionId;
+  }
+  async function askWorld(build) {
+    try {
+      var sid = await worldSession();
+      await phone.sendSession(sid, build());
+      return true;
+    } catch (e) {
+      var msg = String((e && e.message) || e);
+      if (msg.indexOf("not_found") >= 0) {          // 会话被删了就重建一次
+        try {
+          var sid2 = await worldSession(true);
+          await phone.sendSession(sid2, build());
+          return true;
+        } catch (e2) { msg = String((e2 && e2.message) || e2); }
+      }
+      phone.toast({
+        variant: "error",
+        message: msg.indexOf("busy") >= 0 ? "短信局正在忙" : "短信局没接上",
+        description: msg
+      });
+      return false;
+    }
+  }
+
+  async function load(first) {
+    shared = await phone.loadShared();
+    var d = await phone.entries(phone.FILES.SMS);
+    threads = d.smsThreads || [];
+    sms = d.sms || [];
+    meta = d.agent || {};
+    // 会话不存在（比如那条路由过期了）→ 回列表，别晾着用户
+    if (mode === "thread" && !thread()) {
+      if (first) { phone.navigate("sms"); return; }
+      threadId = null;
+      mode = "list";
+      $("pane-thread").style.display = "none";
+      $("pane-list").style.display = "flex";
+    }
+    checkReply();
+    render();
+  }
+
+  function thread() { return threads.filter(function (t) { return t.id === threadId; })[0] || null; }
+  function chOfThread(t) { return t && t.characterId ? phone.charById(t.characterId) : null; }
+  function smsOf(id) {
+    return sms.filter(function (m) { return m.threadId === id; })
+      .sort(function (a, b) { return String(a.createdAt).localeCompare(String(b.createdAt)); });
+  }
+  function avatarOf(t) {
+    var ch = chOfThread(t);
+    if (ch) return { e: ch.avatarEmoji, c: ch.avatarColor };
+    if (t.kind === "unknown") return { e: "❓", c: "linear-gradient(160deg,#dfe6f5,#8f9bb3)" };
+    return { e: t.name.indexOf("银行") >= 0 ? "🏦" : (t.name.indexOf("气象") >= 0 ? "🌧️" : (t.name.indexOf("书店") >= 0 ? "📚" : "📮")), c: "linear-gradient(160deg,#cfe9ff,#7fb6e0)" };
+  }
+
+  /* ---------- 渲染 ---------- */
+  function render() { if (mode === "list") renderList(); else renderThread(); }
+
+  function renderList() {
+    var list = threads.slice().sort(function (a, b) {
+      var ma = smsOf(a.id), mb = smsOf(b.id);
+      var ta = ma.length ? String(ma[ma.length - 1].createdAt) : String(a.createdAt);
+      var tb = mb.length ? String(mb[mb.length - 1].createdAt) : String(b.createdAt);
+      return tb.localeCompare(ta);
+    });
+    if (!list.length) {
+      $("thread-list").innerHTML = '<div class="ph"><div class="big">✉️</div><div class="t">还没有短信</div>' +
+        '<div class="d">陌生的号码偶尔会发来点什么。</div></div>';
+      return;
+    }
+    $("thread-list").innerHTML = list.map(function (t) {
+      var msgs = smsOf(t.id);
+      var last = msgs[msgs.length - 1];
+      var av = avatarOf(t);
+      var unread = phone.unreadOf(t.id, sms, "threadId");
+      var tag = t.kind === "char" ? (phone.charById(t.characterId) ? "好友号码" : "号码")
+        : (t.kind === "unknown" ? "陌生号码" : "机构号");
+      return '<div class="conv" data-thread="' + phone.esc(t.id) + '">' +
+        phone.avatarHtml(av.e, av.c) +
+        '<div class="conv-main"><div class="conv-top"><span class="conv-name">' + phone.esc(t.name) + "</span>" +
+        '<span class="conv-right"><span class="conv-time">' + phone.esc(last ? phone.timeOf(last.createdAt) : "") + "</span>" +
+        (unread ? '<span class="conv-badge">' + unread + "</span>" : "") + "</span></div>" +
+        '<div class="conv-last">' + phone.esc(last ? (last.role === "user" ? "我：" : "") + String(last.text).replace(/\s*\n\s*/g, " ") : "（没有内容）") + "</div>" +
+        '<span class="conv-tag">' + phone.esc(tag) + " · " + phone.esc(t.number || "") + "</span></div></div>";
+    }).join("");
+  }
+
+  function renderThread() {
+    var t = thread();
+    if (!t) { $("t-body").innerHTML = '<div class="sysline">会话不存在</div>'; return; }
+    var ch = chOfThread(t);
+    $("t-name").textContent = t.name;
+    $("t-num").textContent = (t.number || "") + (awaiting && awaiting.threadId === t.id ? "  ·  对方正在输入…" : "");
+    $("t-kind").textContent = t.kind === "char" ? "好友号码" : (t.kind === "unknown" ? "陌生号码" : "机构号");
+
+    var body = $("t-body");
+    var atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 60;
+    var html = '<div class="day">' + phone.esc(phone.dateLabel()) + "</div>";
+
+    smsOf(t.id).forEach(function (m) {
+      if (t.kind === "system" && m.role !== "user") {
+        html += '<div class="sysline">' + phone.escLines(m.text) + "</div>";
+        return;
+      }
+      var mine = m.role === "user";
+      var who = mine
+        ? { e: shared.profile.avatarEmoji, c: shared.profile.avatarColor }
+        : avatarOf(t);
+      html += '<div class="row' + (mine ? " me" : "") + '">' + phone.avatarHtml(who.e, who.c) +
+        '<div class="bubble ' + (mine ? "sms-me" : "sms-them") + '">' + phone.escLines(m.text) + "</div></div>";
+    });
+
+    if (awaiting && awaiting.threadId === t.id) {
+      html += '<div class="row">' + phone.avatarHtml(avatarOf(t).e, avatarOf(t).c) +
+        '<div class="bubble typing"><i></i><i></i><i></i></div></div>';
+    }
+    body.innerHTML = html;
+
+    var busy = !!(awaiting && awaiting.threadId === t.id);
+    $("t-input").disabled = busy;
+    $("t-input").placeholder = busy ? "等对方回你…" : "发短信…";
+    $("t-send").disabled = busy;
+
+    if (atBottom || busy) body.scrollTop = body.scrollHeight;
+  }
+
+  /* ---------- 发短信 ---------- */
+  function armTimeout() {
+    if (!awaiting) return;
+    if (awaiting.timer) clearTimeout(awaiting.timer);
+    awaiting.timer = setTimeout(function () { awaiting = null; render(); }, 180000);
+  }
+  function checkReply() {
+    if (!awaiting) return;
+    var since = Date.parse(awaiting.since) || 0;
+    var hit = sms.some(function (m) {
+      return m.threadId === awaiting.threadId && m.role === "character" && (Date.parse(m.createdAt) || 0) > since;
+    });
+    if (hit) { if (awaiting.timer) clearTimeout(awaiting.timer); awaiting = null; }
+  }
+
+  async function send() {
+    var input = $("t-input");
+    var text = (input.value || "").trim();
+    if (!text || awaiting) return;
+    var t = thread();
+    if (!t) return;
+
+    input.value = "";
+    input.style.height = "auto";
+    try {
+      await phone.mutate(phone.FILES.SMS, "appendSms",
+        { threadId: t.id, role: "user", sender: phone.myName(), text: text },
+        "sms:" + t.id + ":" + Date.now());
+    } catch (e) {
+      input.value = text;
+      phone.toast({ variant: "error", message: "短信没发出去" });
+      return;
+    }
+
+    awaiting = { threadId: t.id, since: new Date().toISOString(), timer: null };
+    armTimeout();
+    render();
+
+    var ch = chOfThread(t);
+    if (ch) {
+      // 好友号码：那边有本人负责
+      await phone.notify(ch, phone.prompt.sms(ch, t, text));
+      return;
+    }
+    // 机构号 / 陌生号码：交给短信局扮演那个号码
+    var ok = await askWorld(function () { return phone.prompt.smsReply(t, text); });
+    if (!ok) { clearAwaiting(); render(); }
+  }
+
+  function clearAwaiting() {
+    if (awaiting && awaiting.timer) clearTimeout(awaiting.timer);
+    awaiting = null;
+  }
+
+  /* ---------- 事件 ---------- */
+  function bind() {
+    $("list-home").addEventListener("click", function () { phone.goHome(); });
+    $("list-dice").addEventListener("click", async function () {
+      var btn = $("list-dice");
+      btn.disabled = true;
+      var ok = await askWorld(function () { return phone.prompt.smsDice(); });
+      btn.disabled = false;
+      if (ok) phone.toast({ variant: "info", message: "摇了骰子", description: "世界要是有点动静，一会儿就来了" });
+    });
+    $("thread-back").addEventListener("click", function () { phone.navigate("sms"); });
+    $("t-send").addEventListener("click", send);
+    $("thread-list").addEventListener("click", function (e) {
+      var row = e.target.closest("[data-thread]");
+      if (row) phone.navigate("sms/" + row.dataset.thread);
+    });
+    var input = $("t-input");
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    input.addEventListener("input", function () {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 92) + "px";
+    });
+    phone.bindEscape(function () {
+      if (mode === "thread") { phone.navigate("sms"); return true; }
+      return false;
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  $("pane-" + mode).style.display = "flex";
+  bind();
+  load(true).then(function () {
+    if (mode === "thread" && threadId) {
+      phone.markSeen(threadId, sms, "threadId");
+    }
+  }).catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.SMS, phone.FILES.SHARED], function () { load(false).catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 朋友圈：动态与评论",
+    "queries": {
+      "listMoments": {
+        "desc": "读取朋友圈动态，最新在前，可按作者过滤",
+        "path": "moments",
+        "identity": "id",
+        "params": {
+          "authorId": { "type": "string" },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "desc" }
+        },
+        "defaultLimit": 20
+      },
+      "listMomentComments": {
+        "desc": "读取某条动态下面的评论，按时间升序",
+        "path": "momentComments",
+        "identity": "id",
+        "params": {
+          "momentId": { "type": "string" },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "asc" }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "createMoment": {
+        "desc": "在朋友圈发一条动态",
+        "op": "append",
+        "path": "moments",
+        "fields": {
+          "authorId": { "type": "string", "required": true },
+          "authorName": { "type": "string" },
+          "text": { "type": "string", "required": true },
+          "emoji": { "type": "string" },
+          "place": { "type": "string" },
+          "likeCount": { "type": "integer", "default": 0 },
+          "likedByMe": { "type": "boolean", "default": false }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "likeMoment": {
+        "desc": "点赞或取消赞某条动态",
+        "op": "update",
+        "path": "moments",
+        "match": "id",
+        "fields": {
+          "likedByMe": { "type": "boolean" },
+          "likeCount": { "type": "integer" }
+        }
+      },
+      "addMomentComment": {
+        "desc": "在某条动态下发表评论",
+        "op": "append",
+        "path": "momentComments",
+        "fields": {
+          "momentId": { "type": "string", "required": true },
+          "authorId": { "type": "string", "required": true },
+          "authorName": { "type": "string" },
+          "text": { "type": "string", "required": true }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "removeMoment": {
+        "desc": "删除一条动态",
+        "op": "remove",
+        "path": "moments",
+        "match": "id"
+      },
+      "removeMomentComment": {
+        "desc": "删除一条评论",
+        "op": "remove",
+        "path": "momentComments",
+        "match": "id"
+      }
+    }
+  },
+  "moments": [
+    {
+      "authorId": "char-suwan",
+      "authorName": "苏晚",
+      "text": "回车把我画了三个小时的稿子打翻了，现在它在窗台上睡得跟没事人一样。",
+      "emoji": "🎨",
+      "place": "临江 · 老城区",
+      "likeCount": 2,
+      "likedByMe": false,
+      "id": "88f596b6-e72d-44f9-8070-3f104c54a815",
+      "createdAt": "2026-10-02T14:15:49.485Z"
+    },
+    {
+      "authorId": "char-suwan",
+      "authorName": "苏晚",
+      "text": "今天来了个小孩，蹲在地上一整排绘本全看完了，走之前还把书按大小排回去。比我勤快。",
+      "emoji": "📚",
+      "place": "白鹿书店",
+      "likeCount": 2,
+      "likedByMe": true,
+      "id": "a888e962-d04a-42c9-8214-29b36e9e39c2",
+      "createdAt": "2026-10-02T14:15:51.637Z"
+    },
+    {
+      "authorId": "me",
+      "authorName": "小柚",
+      "text": "半夜被叫出来吃馄饨，值。就是有人换衣服换了十五分钟。",
+      "emoji": "🥟",
+      "place": "巷口",
+      "likeCount": 3,
+      "likedByMe": true,
+      "id": "91c085b2-a3aa-474c-a963-a483fb3653d8",
+      "createdAt": "2026-10-02T14:15:52.821Z"
+    }
+  ],
+  "momentComments": [
+    {
+      "momentId": "88f596b6-e72d-44f9-8070-3f104c54a815",
+      "authorId": "me",
+      "authorName": "小柚",
+      "text": "它道歉了吗",
+      "id": "036a0ad3-c49f-4812-be39-f8e35eef6fac",
+      "createdAt": "2026-10-02T14:15:54.496Z"
+    },
+    {
+      "momentId": "88f596b6-e72d-44f9-8070-3f104c54a815",
+      "authorId": "char-suwan",
+      "authorName": "苏晚",
+      "text": "它打了个呼噜。算吗。",
+      "id": "635d6fe8-7a28-40a0-ae17-440ee1662cee",
+      "createdAt": "2026-10-02T14:15:55.747Z"
+    },
+    {
+      "momentId": "91c085b2-a3aa-474c-a963-a483fb3653d8",
+      "authorId": "char-suwan",
+      "authorName": "苏晚",
+      "text": "……你就说值不值吧。",
+      "id": "61c3d744-e8fd-406b-aef6-1acca5c1850d",
+      "createdAt": "2026-10-02T14:15:57.173Z"
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+- id: GxjXgL0gAtuzjib13kgag
+  name: 哈利 · 熄灯前（22:30）
+  enabled: true
+  type: time
+  cron: 30 22 * * *
+  mode: reusable_session
+  message: >-
+    【日常】现实时间是 {{weekday}} {{time}}，快要熄灯了。
+
+
+    **这次你是哈利**（看《卡司：格兰芬多三人组》里哈利那张卡）。**你的会话是 `conv-harry`。**
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间判断你此刻该在干什么、心情如何。
+
+
+    想不想跟手机主人说句话？想的话按《小手机 · 角色通用规则》第 4 节处理；不想说就回一句「不发」，什么都不用做。
+
+
+    （另外：他写下的想法你是能看到的 —— 见《通用规则》第 12 节。想提就自然地带一句，不提也完全可以。）
+  notify: false
+  createdAt: 1791034393844
+  updatedAt: 1791048250907
+- id: jO4z0Y9Y73XqqqnJH99hU
+  name: 罗恩 · 晚饭前后（19:30）
+  enabled: true
+  type: time
+  cron: 30 19 * * *
+  mode: reusable_session
+  message: >-
+    【日常】现实时间是 {{weekday}} {{time}}，晚饭前后。
+
+
+    **这次你是罗恩**（看《卡司：格兰芬多三人组》里罗恩那张卡）。**你的会话是 `conv-ron`。**
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间判断你此刻该在干什么、饿不饿。
+
+
+    想不想跟手机主人说句话？想的话按《小手机 · 角色通用规则》第 4 节处理；不想说就回一句「不发」，什么都不用做。
+
+
+    （另外：他写下的想法你是能看到的 —— 见《通用规则》第 12 节。想提就自然地带一句，不提也完全可以。）
+  notify: false
+  createdAt: 1791034397812
+  updatedAt: 1791034397812
+- id: s9U-cnmTWyz89wQ3OPtSx
+  name: 赫敏 · 下午（16:30）
+  enabled: true
+  type: time
+  cron: 30 16 * * *
+  mode: reusable_session
+  message: >-
+    【日常】现实时间是 {{weekday}} {{time}}，下午。
+
+
+    **这次你是赫敏**（看《卡司：格兰芬多三人组》里赫敏那张卡）。**你的会话是 `conv-hermione`。**
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间判断你此刻该在干什么、忙不忙。
+
+
+    想不想跟手机主人说句话？想的话按《小手机 · 角色通用规则》第 4 节处理；不想说就回一句「不发」，什么都不用做。
+
+
+    （另外：他写下的想法你是能看到的 —— 见《通用规则》第 12 节。想提就自然地带一句，不提也完全可以。）
+  notify: false
+  createdAt: 1791034399127
+  updatedAt: 1791034399127
+- id: OFPCY374sh5cE2ECJvPLQ
+  name: 挪位置（三人组）
+  enabled: true
+  type: time
+  cron: 0 7,12,17,22 * * *
+  mode: reusable_session
+  message: >-
+    【日常·挪个位置】现实时间是 {{weekday}} {{time}}。
+
+
+    **你负责三个人：哈利、罗恩、赫敏。** 看一眼他们现在在哪、该不该挪：
+
+
+    1. 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」）的 `characters`，看这三个人现在的
+    `placeName` / `doing` / `mood`。
+
+    2. 按手机里的时间（同一个文件里的 `worldClock`，看 `now` / `label`）判断 ——
+    该上课的、该吃饭的、该去球场的、该回宿舍的。
+
+    3. 要挪的人就用 `updateCharacter` 把 `placeName` 和 `doing` **一起**改掉（`placeName` 必须写
+    map.data.json 里真实的地点名，先 `query_data` 的 `listPlaces` 看一眼有哪些）。
+
+
+    规矩：
+
+
+    - **不用每个人都改**，挪一两个就够；这个时间段谁都没必要动，就什么都不做，回一句「不发」。
+
+    - **别顺手改好感度**，也别拿这个来发消息 —— 这只是让地图对得上。
+
+    - 三个人各有作息：哈利常去球场和塔楼、罗恩饭点必在大礼堂、赫敏不是在图书馆就是在去图书馆的路上。
+  notify: false
+  createdAt: 1791036226849
+  updatedAt: 1791036226849
+- id: bd6T9hdQN1PbroO2ZCdjG
+  name: 逛论坛（三人组）
+  enabled: true
+  type: time
+  cron: 30 21 * * *
+  mode: reusable_session
+  message: >-
+    【逛论坛】现实时间是 {{weekday}} {{time}}。
+
+
+    **从你负责的三个人里随便挑一个**（哈利 / 罗恩 / 赫敏），让他去留言板逛一圈 —— 这一次只当那一个人。
+
+
+    1. 先读最近的帖子：`query_data`，name `listPosts`（file 用消息里的「数据文件」行）。
+
+    2. 想动的话二选一：
+       - 发新帖：`mutate_data`，name `createPost`，args `{ "board": "chat", "title": "…", "body": "…", "author": "<他的署名>", "anonymous": false }`
+       - 回帖：`mutate_data`，name `addReply`，args `{ "postId": "<帖子 id>", "author": "<他的署名>", "body": "…" }`
+    3. 版块：`chat` 城堡八卦 / `hole` 天文塔夜话（只匿名）/ `lost` 失物招领 / `market` 二手坩埚。
+
+
+    规矩：
+
+
+    - **多数时候只是看看**。没什么想说的就回一句「不发」，什么都不做 —— 留言板不需要天天有人发帖。
+
+    - **一次最多一条**（一帖，或者一层回复、最多两层）。
+
+    - **用他自己的署名和口吻**（照卡司里那个人的脾气写），**别匿名**（除非发到夜话版）。
+
+    - 内容要像学生随手写的：学院分、作业、教授、魁地奇、考试、食堂、天气。别写空洞的话，别写长段落。
+
+    - 别顺手改好感度，也别借这个给手机主人发消息。
+  notify: false
+  createdAt: 1791036467065
+  updatedAt: 1791048251608

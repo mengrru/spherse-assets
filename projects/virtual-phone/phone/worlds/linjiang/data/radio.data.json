@@ -1,0 +1,141 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 电台：tracks（歌，用户在页面上手动上传）/ shows（节目，电台 Agent 写的话）。音频文件放在**世界目录内**的 assets/ 下，tracks[].src 就是世界内的相对路径（如 assets/xxx.mp3，与地图的 assets/map.svg 同一套约定）",
+    "queries": {
+      "listTracks": {
+        "desc": "歌单（可能还是空的 —— 歌由听众上传）。**先看这里有没有适合此刻放的**；想放某一首就把它 id 记下来写进节目",
+        "path": "tracks",
+        "identity": "id",
+        "params": {
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 100
+      },
+      "listShows": {
+        "desc": "节目（电台说过的话），最新在前。先读它，别把同一句话重复说",
+        "path": "shows",
+        "identity": "id",
+        "params": {
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "addTrack": {
+        "desc": "往歌单加一首。**给手机页面用**（歌是用户在电台里手动上传的）—— 上传成功后调用，src 填世界目录内的相对路径",
+        "op": "append",
+        "path": "tracks",
+        "fields": {
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "src": {
+            "type": "string",
+            "required": true
+          },
+          "artist": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updateTrack": {
+        "desc": "改一首的标题 / 歌手 / 备注",
+        "op": "update",
+        "path": "tracks",
+        "match": "id",
+        "fields": {
+          "title": {
+            "type": "string"
+          },
+          "artist": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          }
+        }
+      },
+      "removeTrack": {
+        "desc": "从歌单去掉一首（音频文件不会删）",
+        "op": "remove",
+        "path": "tracks",
+        "match": "id"
+      },
+      "addShow": {
+        "desc": "电台说一句话（你来写）。如果这句话是配着某一首放的，把 trackId 填上 —— 听众点它就能听",
+        "op": "append",
+        "path": "shows",
+        "fields": {
+          "text": {
+            "type": "string",
+            "required": true
+          },
+          "trackId": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "removeShow": {
+        "desc": "删一条节目",
+        "op": "remove",
+        "path": "shows",
+        "match": "id"
+      }
+    }
+  },
+  "tracks": [],
+  "shows": [
+    {
+      "id": "show-1",
+      "text": "夜里这两小时是留给睡不着的人的。今晚点歌本还是空的 —— 没关系，电台先开着。",
+      "trackId": "",
+      "createdAt": "2026-10-03T01:00:00.000Z"
+    },
+    {
+      "id": "show-2",
+      "text": "有人打电话来问昨天那首叫什么。我说我也没记住。其实我记得，就是不想说。",
+      "trackId": "",
+      "createdAt": "2026-10-02T23:40:00.000Z"
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+/* 小手机 · 配色主题（管「色」）
+ * 与 skins.css（设计语言，管「形」）正交，两者可任意组合。
+ * 这里只放：颜色、壁纸、底色、细节层（星星/扫描线/网格）、两个滤镜
+ * （--icon-filter / --btn-filter：图标与按钮的整体重着色）、语义色（--bubble-* / --btn-* / --tint-* 等）
+ * 以及 App 身份色（--app-hue-*：每个 App 标题栏自己的"人格色"）。
+ * 规则：某套主题一旦自己写了 --btn-grad / --app-hue-*，就把对应的滤镜设成 none —— 别叠两层。
+ * 用法：<html data-theme="vapor" data-skin="flat">，由 phone.js 的 applyTheme() 设置。
+ */
+
+/* ---------- 默认：千禧铬（y2k） ---------- */
+:root,
+[data-theme="y2k"]{
+  --ink:#1a1420;
+  --wall-1:#ff9ae8;
+  --wall-2:#8ef2ff;
+  --wall-3:#d3ff6b;
+  --wall-base:#d9c9ff,#a9e8ff,#ffe3f7;
+  --grid-op:.55;
+  --petal-op:.34;
+  --sparkles:block;
+  --scan:.5;
+  --screen-bg:#07060d;
+  --page-bg:#eef2ff;
+  --card-1:#ffffff;
+  --card-2:#f1f3ff;
+  /* 圆角与字体属于「形」，见 skins.css —— 配色只管颜色 */
+  --icon-filter:none;
+  --btn-filter:none;
+  /* 以下四项默认值服务于"浅色壁纸"；深色壁纸的主题要把它们一起改掉 */
+  --sb-on-light:#2a1b3d;      /* 锁屏/桌面上状态栏的字色 */
+  --sb-on-dark:#ffffff;       /* App 内（深色标题栏上）状态栏的字色 */
+  --on-wall:#2a1b3d;          /* 桌面上的文字（问候语/图标名） */
+  --on-wall-shadow:0 1px 0 #fff;
+  --sparkle:#ffffff;          /* 壁纸上的星屑 */
+  --sparkle-glow:#ff4fd8;
+  --petal:conic-gradient(from 0deg,#ffffff,#d9c8ff,#9fe9ff,#fff3ba,#ffffff);
+  /* 语义色：App 内部用色。默认值就是"千禧铬"的样子，其它主题按需覆盖 */
+  --bubble-them:linear-gradient(180deg,#ffffff,#e6e9ff);
+  --bubble-them-fg:#1f1830;
+  --bubble-me:linear-gradient(180deg,#ffa3ea,#ff4fd8);
+  --bubble-me-fg:#2a0033;
+  --btn-grad:linear-gradient(180deg,#e2ff8a,#8fd400);
+  --btn-grad-soft:linear-gradient(180deg,#e8ffe0,#b6ff3d);
+  --btn-fg:#1c2600;
+  --btn-pink:linear-gradient(180deg,#ffa3ea,#ff4fd8);
+  --btn-pink-fg:#2a0033;
+  --btn-gold:linear-gradient(180deg,#ffe08a,#ff9d1f);
+  --note:linear-gradient(180deg,#fff8b8,#ffe08a);
+  --note-fg:#4a2b52;
+  --accent-ink:#7a2bd6;
+  --accent-heart:#ff2f8a;
+  --tint-chat:#f6f4ff;
+  --tint-dots:rgba(122,90,255,.13);
+  --tint-chip:#ddd7ee;
+  --tint-strip:linear-gradient(180deg,#fff7fc,#ffe4f6);
+  --tint-composer:linear-gradient(180deg,#e9edff,#dbe1f8);
+  --cover:radial-gradient(58% 80% at 18% 0%,#ff9ae8 0%,rgba(255,154,232,0) 60%),
+          radial-gradient(58% 80% at 86% 18%,#8ef2ff 0%,rgba(142,242,255,0) 62%),
+          linear-gradient(150deg,#b39bff,#7fe7ff 55%,#ffe08a);
+  /* App 身份色：每个 App 标题栏的"人格色"。一个 App 一个 token，
+     主题可以直接给某个 App 换气质（如魔法的"猫头鹰"是棕的），不必再靠滤镜整体糊。 */
+  --app-hue-main:linear-gradient(180deg,#8b63ff 0%,#4a2fe0 46%,#2c1cae 100%);   /* 会话列表/朋友圈/钱包/设置 */
+  --app-hue-chat:linear-gradient(180deg,#ff89e2 0%,#e42fb8 45%,#9c0080 100%);   /* 聊天页 */
+  --app-hue-sms:linear-gradient(180deg,#63e6d8 0%,#12a89b 46%,#067a72 100%);    /* 短信 */
+  --app-hue-bbs:linear-gradient(180deg,#7fa8d8 0%,#3f6ba8 46%,#264a7d 100%);    /* 论坛 */
+  --app-hue-map:linear-gradient(180deg,#8fd9a2 0%,#2f9e63 46%,#1a6b45 100%);    /* 地图 */
+  --app-hue-theme:linear-gradient(180deg,#ffb0ef 0%,#c22fe0 46%,#6a1b9a 100%);  /* 主题商店 */
+  /* 零碎件：输入框、白药丸标签、警告、LED、信用卡卡面、小图标底、收/支数字 */
+  --input-bg:#ffffff;
+  --input-fg:#241a33;
+  --pill:linear-gradient(180deg,#ffffff,#e7e9ff);
+  --pill-fg:#241a33;
+  --warn:linear-gradient(180deg,#ffc9d6,#ff8fa8);
+  --warn-fg:#4a0020;
+  --btn-gold-fg:#3a1a00;
+  --seg-on:#ff2f8a;
+  --seg-hot:#ff9d1f;
+  --led-fg:#c6ff45;
+  --led-bg:#161020;
+  --led-glow:rgba(198,255,69,.35);
+  --card-face:conic-gradient(from 200deg,#ffffff,#c3ccdd 14%,#f6f9ff 30%,#98a2b8 46%,#ffffff 60%,#ccd5e6 76%,#f9fbff 90%,#aab4c9);
+  --card-face-fg:#2b1a3f;
+  --card-face-sub:#4a3a63;
+  --card-face-shadow:0 1px 0 #fff,0 2px 6px rgba(255,255,255,.9);
+  --icon-tint:linear-gradient(160deg,#ffe0f7,#ffb0ef);
+  --accent-in:#12a150;
+  --accent-out:#c7009a;
+  --text:#241a33;              /* 正文 */
+  --text-dim:#4a3a63;          /* 次要文字（说明、元信息） */
+  --map-bg:#eef3e0;            /* 地图底 */
+}
+
+/* ---------- 蒸汽紫（vaporwave） ---------- */
+[data-theme="vapor"]{
+  --ink:#3a0d5c;
+  --wall-1:#ff5ed2;
+  --wall-2:#6ee7ff;
+  --wall-3:#ffe66d;
+  --wall-base:#7b3cff,#ff6ad5,#2de2e6;
+  --grid-op:.7;
+  --petal-op:.5;
+  --sparkles:block;
+  --scan:.32;
+  --screen-bg:#1b0a2e;
+  --page-bg:#f6ecff;
+  --card-1:#ffffff;
+  --card-2:#f0e2ff;
+  --icon-filter:saturate(1.45) contrast(1.05);
+  --btn-filter:hue-rotate(-60deg) saturate(1.4);
+  /* App 身份色：原来靠滤镜 hue-rotate(-40deg) 整体转，现在烘成具体颜色 */
+  --app-hue-main:linear-gradient(180deg,#63a8ff 0%,#2f6ae8 46%,#1c3cb8 100%);
+  --app-hue-chat:linear-gradient(180deg,#e089ff 0%,#b82fe8 45%,#7a009c 100%);
+  --app-hue-sms:linear-gradient(180deg,#63e8a0 0%,#12a850 46%,#067a34 100%);
+  --app-hue-bbs:linear-gradient(180deg,#7fd8e0 0%,#3f9ea8 46%,#26707d 100%);
+  --app-hue-map:linear-gradient(180deg,#b8e863 0%,#7aa82f 46%,#4f7a1a 100%);
+  --app-hue-theme:linear-gradient(180deg,#d98fff 0%,#9c2fe8 46%,#5a1b9a 100%);
+}
+
+/* ---------- 魔典（魔法世界） ---------- */
+[data-theme="grimoire"]{
+  --ink:#2b1c14;                     /* 铁胆墨，偏棕 */
+  --wall-1:#3a2a6b;                  /* 紫色星云 */
+  --wall-2:#1c3a5e;                  /* 夜蓝 */
+  --wall-3:#7a5a22;                  /* 城堡窗口的暖光 */
+  --wall-base:#101a33,#1c1440,#090b18;
+  --grid-op:.14;                     /* 淡淡的"星图"格线 */
+  --petal-op:.55;
+  --sparkles:block;                  /* 星屑开着，但会变成金色 */
+  --scan:.22;
+  --screen-bg:#080c1a;
+  --page-bg:#f5eeda;
+  --card-1:#fffdf4;
+  --card-2:#f0e7cf;
+  --icon-filter:saturate(1.15) hue-rotate(-12deg) contrast(1.04);
+  --btn-filter:none;                 /* 按钮配色已由 --btn-* token 直接给，不再叠滤镜 */
+  /* App 身份色：每个 App 换成本世界的行业色 —— 双面镜是紫墨镜面、
+     猫头鹰是羽毛棕、留言板是旧羊皮黑、城堡地图是羊皮褐 */
+  --app-hue-main:linear-gradient(180deg,#5c4a9c 0%,#3a2a70 46%,#241a4a 100%);   /* 深靛紫墨 */
+  --app-hue-chat:linear-gradient(180deg,#8a6ae0 0%,#5238a8 45%,#2e1c6b 100%);   /* 双面镜 */
+  --app-hue-sms:linear-gradient(180deg,#b08a54 0%,#7a5836 46%,#4a3320 100%);    /* 猫头鹰棕 */
+  --app-hue-bbs:linear-gradient(180deg,#8c8272 0%,#4e4638 46%,#2c2620 100%);    /* 旧羊皮黑 */
+  --app-hue-map:linear-gradient(180deg,#c0a878 0%,#7a5f3a 46%,#4a3620 100%);    /* 羊皮褐 */
+  --app-hue-theme:linear-gradient(180deg,#8f6ae0 0%,#5b3aa8 46%,#331f66 100%);  /* 紫罗兰 */
+  /* 零碎件：输入框变羊皮；信用卡变"黑金卡"；收/支用苔绿与火漆红 */
+  --input-bg:#fffdf4;
+  --input-fg:#2b1c14;
+  --pill:linear-gradient(180deg,#fffdf4,#efe5cd);
+  --pill-fg:#2b1c14;
+  --warn:linear-gradient(180deg,#d4785f,#a83a28);
+  --warn-fg:#fdf0e2;
+  --btn-gold-fg:#2b1c04;
+  --seg-on:#b03a2a;
+  --seg-hot:#c8901f;
+  --led-fg:#e8c470;
+  --led-bg:#1a1228;
+  --led-glow:rgba(232,196,112,.35);
+  --card-face:conic-gradient(from 200deg,#3c2c58,#1e1533 14%,#4a3568 30%,#181026 46%,#3a2a56 60%,#241a3e 76%,#4c3868 90%,#1a1228);
+  --card-face-fg:#f0e2b8;
+  --card-face-sub:#c9b48a;
+  --card-face-shadow:0 1px 0 rgba(0,0,0,.5),0 2px 8px rgba(255,207,114,.35);
+  --icon-tint:linear-gradient(160deg,#fbf5e4,#eadcb4);
+  --accent-in:#3f7a4a;
+  --accent-out:#a8322a;
+  --text:#2b1c14;
+  --text-dim:#5c4a34;
+  --map-bg:#f3ebd6;
+  /* 深色壁纸 → 桌面与状态栏的字都翻成暖白 */
+  --sb-on-light:#f2e8cd;
+  --on-wall:#f4ecd2;
+  --on-wall-shadow:0 1px 3px rgba(0,0,0,.65);
+  --sparkle:#ffeec2;
+  --sparkle-glow:#ffcf72;
+  --petal:radial-gradient(circle,rgba(255,214,122,.55),rgba(255,214,122,0) 68%);
+  /* App 内部：把粉紫/荧光绿全部换成"魔法墨与烛火" */
+  --bubble-them:linear-gradient(180deg,#fffdf4,#eee3c8);   /* 羊皮纸 */
+  --bubble-them-fg:#2b1c14;
+  --bubble-me:linear-gradient(180deg,#7a55d6,#46278a);     /* 紫墨水（你写的字） */
+  --bubble-me-fg:#f7f0ff;
+  --btn-grad:linear-gradient(180deg,#e8c470,#b8860b);      /* 烛金 */
+  --btn-grad-soft:linear-gradient(180deg,#f2dc9e,#c99a2e);
+  --btn-fg:#2b1c04;
+  --btn-pink:linear-gradient(180deg,#8f6ae0,#5b3aa8);
+  --btn-pink-fg:#f4ecff;
+  --btn-gold:linear-gradient(180deg,#ffd98a,#d19a1f);
+  --note:linear-gradient(180deg,#f7e9b8,#e6cf86);          /* 像一小片蜡封纸 */
+  --note-fg:#3a2b12;
+  --accent-ink:#6b4a12;                                    /* 小标题：暗金棕 */
+  --accent-heart:#a8322a;                                  /* 好感度：火漆红 */
+  --tint-chat:#f3ebd6;
+  --tint-dots:rgba(74,54,32,.10);
+  --tint-chip:#e0d3b4;
+  --tint-strip:linear-gradient(180deg,#fbf5e4,#f0e3c4);
+  --tint-composer:linear-gradient(180deg,#f2e9d2,#e5d8ba);
+  --cover:radial-gradient(60% 70% at 18% 8%,#3a2a6b 0%,rgba(58,42,107,0) 62%),
+          radial-gradient(50% 60% at 86% 20%,#1c3a5e 0%,rgba(28,58,94,0) 62%),
+          linear-gradient(150deg,#0f1830,#241a45 55%,#3d2b12);   /* 极光夜空 */
+}
+
+/* ---------- 纸感 ---------- */
+[data-theme="paper"]{
+  --ink:#3a3226;
+  --wall-1:#f3ece0;
+  --wall-2:#efe6d8;
+  --wall-3:#e8ded0;
+  --wall-base:#fdfaf3,#f3ecdf,#efe6d6;
+  --grid-op:.12;
+  --petal-op:.12;
+  --sparkles:none;
+  --scan:0;
+  --screen-bg:#efe7d8;
+  --page-bg:#faf6ee;
+  --card-1:#fffdf8;
+  --card-2:#f4ecdf;
+  --icon-filter:saturate(.6) brightness(1.02);
+  --btn-filter:grayscale(.35) sepia(.5) saturate(.85);
+  /* App 身份色：原来靠滤镜去色+做旧，现在烘成"淡墨"色 */
+  --app-hue-main:linear-gradient(180deg,#9c8fa6 0%,#63566e 46%,#3d3448 100%);
+  --app-hue-chat:linear-gradient(180deg,#c3a0b8 0%,#8c6280 45%,#5c3d54 100%);
+  --app-hue-sms:linear-gradient(180deg,#a8c3bd 0%,#5f8a80 46%,#3c5c55 100%);
+  --app-hue-bbs:linear-gradient(180deg,#a3b1c3 0%,#5f738c 46%,#3c4a5c 100%);
+  --app-hue-map:linear-gradient(180deg,#aebfa8 0%,#6a8060 46%,#43523c 100%);
+  --app-hue-theme:linear-gradient(180deg,#c3a8c8 0%,#8a5f94 46%,#5a3c5c 100%);
+}

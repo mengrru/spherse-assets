@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>诊断：日历为什么空</title>
+<link rel="stylesheet" href="../engine/theme/base.css">
+<style>
+  body{overflow:auto}
+  .app-body{padding-bottom:24px}
+  pre{font-family:var(--mono);font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-all;
+    background:var(--led-bg);color:var(--led-fg);border-radius:10px;padding:10px}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span>诊断 · 日历为什么空</span>
+</header>
+<div class="app-body">
+  <div class="card"><h3>★ 结 果 ★</h3><pre id="out">跑着呢…</pre></div>
+  <div class="card"><h3>★ 说 明 ★</h3>
+    <div class="ph"><div class="d">这一页做的事：把日历 App 的每一句都单独跑一遍，
+    哪一句断了就记下来，最后写进 <code>phone/_archive/debug.data.json</code>，
+    好让外面的人读得到。用完可以删。</div></div>
+  </div>
+</div>
+
+<script src="../engine/theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  // 上报前擦掉 origin 与平台的 __auth 令牌：只留项目内路径
+  function safePath(u) {
+    var s = String(u == null ? "" : u);
+    var i = s.indexOf("/phone/");
+    if (i >= 0) return s.slice(i);
+    try { var x = new URL(s, location.href); s = x.pathname + x.search + x.hash; } catch (e) {}
+    var j = s.indexOf("/phone/");
+    if (j >= 0) return s.slice(j);
+    return s.replace(/\/__auth\/[^/]+/g, "/__auth/***");
+  }
+  var report = { at: new Date().toISOString(), href: safePath(location.href), steps: [] };
+  function step(name, value) {
+    report.steps.push(name + " → " + (value == null ? "(空)" : String(value)));
+    document.getElementById("out").textContent = report.steps.join("\n");
+  }
+  window.onerror = function (m, s, l, c) { step("!! window.onerror", m + " @行" + l + ":" + c); };
+  window.addEventListener("unhandledrejection", function (e) {
+    step("!! unhandledRejection", (e.reason && e.reason.message) || e.reason);
+  });
+
+  async function writeReport() {
+    // 两条路都试：先走引擎，再直接摸 SDK
+    try {
+      await phone.dataSet("phone/_archive/debug.data.json", "report", report);
+      report.saved = "phone.dataSet";
+      return;
+    } catch (e) { report.saved = "phone.dataSet 失败: " + String(e.message || e); }
+    try {
+      await spherse.data.set({ file: "phone/_archive/debug.data.json", key: "report", value: report });
+      report.saved = "spherse.data.set";
+    } catch (e2) { report.saved += " / spherse.data.set 也失败: " + String(e2.message || e2); }
+  }
+
+  (async function () {
+    step("hasSdk", !!(window.spherse && window.spherse.data));
+    step("isShell", !!window.__PHONE_SHELL__);
+    step("inIframe", window.parent !== window);
+    try { report.mode = await phone.mode(); step("phone.mode()", report.mode); } catch (e) { step("phone.mode() 失败", e.message); }
+
+    try { step("phone.FILES.CAL", phone.FILES.CAL); } catch (e) { step("phone.FILES.CAL 失败", e.message); }
+    try { step("phone.worldId()", phone.worldId()); } catch (e) { step("worldId 失败", e.message); }
+    try { step("phone.world().name", phone.world().name); } catch (e) { step("world() 失败", e.message); }
+    try { step("phone.pageTitle(\"calendar\")", phone.pageTitle("calendar", "日历")); } catch (e) { step("pageTitle 失败", e.message); }
+    try { step("typeof prompt.calendarNote", typeof (phone.prompt && phone.prompt.calendarNote)); } catch (e) {}
+
+    try {
+      var sh = await phone.loadShared();
+      step("loadShared()", "成功；characters=" + ((sh.characters || []).length) + "；theme=" + JSON.stringify(sh.theme));
+    } catch (e) { step("loadShared() 失败", String(e.message || e)); }
+
+    try {
+      step("worldNow()", phone.worldNow().toISOString());
+      step("todayKey", (function (d) {
+        return d.getFullYear() + "-" + phone.pad(d.getMonth() + 1) + "-" + phone.pad(d.getDate());
+      })(phone.worldNow()));
+    } catch (e) { step("worldNow() 失败", String(e.message || e)); }
+
+    try {
+      var d = await phone.entries(phone.FILES.CAL);
+      report.docKeys = Object.keys(d || {});
+      step("entries(FILES.CAL)", "成功；顶层键 = " + report.docKeys.join(", ") +
+        "；events=" + (((d || {}).events || []).length) + "；marks=" + (((d || {}).marks || []).length) +
+        "；第一条 = " + JSON.stringify(((d || {}).events || [])[0] || null));
+    } catch (e) { step("entries(FILES.CAL) 失败", String(e.message || e)); }
+
+    try {
+      var r = await phone.entriesRaw ? null : null;   // 占位，下面单独测
+    } catch (e) {}
+
+    await writeReport();
+    document.getElementById("out").textContent = JSON.stringify(report, null, 2);
+  })();
+})();
+</script>
+</body>
+</html>

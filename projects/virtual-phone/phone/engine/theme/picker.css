@@ -1,0 +1,49 @@
+/* 小手机 · 「从项目里挑一个」面板（相册 / 电台共用一份，别在 App 里各写一遍）
+ *
+ * 为什么要有这条路：上传（spherse.uploadFile）需要**写**权限，实测 web 宿主会被拒（forbidden）。
+ * 而"挑一个已经在项目里的"只需要**读** —— phone.rpc("content.listDir") 哪端都能用。
+ * 所以文件可以先由别的途径进项目（桌面端上传 / 拖进文件面板 / 让 Agent 放），再用这里选进来。
+ *
+ * 用法（页面自己渲染内容，样式走这些 class）：
+ *   <div class="pick-sheet" id="pick-sheet">
+ *     <div class="pick-head"><b>标题</b><button id="pick-close">关上</button></div>
+ *     <div class="pick-hint" id="pick-hint"></div>
+ *     <div class="pick-grid" id="pick-grid"></div>      ← 网格（图片）
+ *     <div class="pick-list" id="pick-list"></div>      ← 列表（音频等没有缩略图的）
+ *   </div>
+ * 数据用 phone.listWorldAssets("image" | "audio") 取（只读）。
+ */
+.pick-sheet{
+  position:fixed;inset:0;z-index:80;display:none;flex-direction:column;
+  background:var(--page-bg);padding:18px 14px;
+}
+.pick-sheet.open{display:flex}
+.pick-head{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:14px;font-weight:800;color:var(--text);
+}
+.pick-head button{
+  font:inherit;font-size:12px;font-weight:800;cursor:pointer;padding:5px 12px;
+  border:var(--border-w) solid var(--border);border-radius:999px;background:var(--input-bg);color:var(--text);
+}
+.pick-hint{font-size:11.5px;font-weight:700;line-height:1.7;color:var(--text-dim);margin:10px 0 12px}
+.pick-grid{
+  flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-content:start;
+}
+.pick-item{
+  padding:0;border:var(--border-w) solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer;
+  background:var(--tint-chip);box-shadow:var(--shadow-row);color:var(--text);font:inherit;
+}
+.pick-item img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
+.pick-item span{
+  display:block;font-family:var(--mono);font-size:8.5px;font-weight:700;color:var(--text-dim);
+  padding:3px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* 列表版（音频）：一行一个 */
+.pick-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;align-content:start}
+.pick-list .pick-item{
+  display:block;width:100%;text-align:left;padding:9px 11px;
+  font-size:12.5px;font-weight:700;line-height:1.5;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pick-list .pick-item:active{box-shadow:var(--shadow-press);transform:var(--press)}

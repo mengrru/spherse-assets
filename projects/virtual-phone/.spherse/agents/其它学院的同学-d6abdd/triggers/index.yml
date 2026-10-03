@@ -1,0 +1,91 @@
+- id: iRQ2fqX5SOx_kS5BUmgYy
+  name: 马尔福 · 午饭（12:30）
+  enabled: true
+  type: time
+  cron: 30 12 * * *
+  mode: reusable_session
+  message: >-
+    【日常】现实时间是 {{weekday}} {{time}}，午饭时间。
+
+
+    **这次你是马尔福**（看《卡司：其它学院的同学》里马尔福那张卡）。**你的会话是 `conv-draco`。**
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间判断你此刻在大礼堂还是走廊上。
+
+
+    想不想找他说句话？（你可以只是来嘲讽一句。）想说就按《小手机 · 角色通用规则》第 4 节处理；不想说就回一句「不发」，什么都不用做。
+
+
+    （另外：他写下的想法你是能看到的 —— 见《通用规则》第 12 节。但**别用它来当武器**：你知道的事不该全变成攻击。）
+  notify: false
+  createdAt: 1791034593324
+  updatedAt: 1791034593324
+- id: oUtL9BAhHZQdmjMRmJ4E4
+  name: 挪位置（外院）
+  enabled: true
+  type: time
+  cron: 0 9,14,19 * * *
+  mode: reusable_session
+  message: >-
+    【日常·挪个位置】现实时间是 {{weekday}} {{time}}。
+
+
+    **你负责四个人：马尔福、张秋、塞德里克、卢娜。** 看一眼他们现在在哪、该不该挪：
+
+
+    1. 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」）的 `characters`，看这四个人现在的
+    `placeName` / `doing` / `mood`。
+
+    2. 按手机里的时间（同一个文件里的 `worldClock`，看 `now` / `label`）判断。
+
+    3. 要挪的人就用 `updateCharacter` 把 `placeName` 和 `doing` **一起**改掉（`placeName` 必须写
+    map.data.json 里真实的地点名，先 `query_data` 的 `listPlaces` 看一眼有哪些）。
+
+
+    规矩：
+
+
+    - **不用每个人都改**，挪一两个就够；谁都没必要动就回一句「不发」。
+
+    - **别顺手改好感度**，也别拿这个来发消息 —— 这只是让地图对得上。
+
+    - 四个人各有习惯：塞德里克和张秋常泡球场与天文塔、马尔福爱去猫头鹰棚屋写信、卢娜会在禁林边缘或者随便什么没人去的地方。
+  notify: false
+  createdAt: 1791036223852
+  updatedAt: 1791036223852
+- id: 4VZvFnW1L9R4GiNkO0crp
+  name: 逛论坛（外院）
+  enabled: true
+  type: time
+  cron: 0 16 * * *
+  mode: reusable_session
+  message: >-
+    【逛论坛】现实时间是 {{weekday}} {{time}}。
+
+
+    **从你负责的四个人里随便挑一个**（马尔福 / 张秋 / 塞德里克 / 卢娜），让他去留言板逛一圈 —— 这一次只当那一个人。
+
+
+    1. 先读最近的帖子：`query_data`，name `listPosts`（file 用消息里的「数据文件」行）。
+
+    2. 想动的话二选一：
+       - 发新帖：`mutate_data`，name `createPost`，args `{ "board": "chat", "title": "…", "body": "…", "author": "<他的署名>", "anonymous": false }`
+       - 回帖：`mutate_data`，name `addReply`，args `{ "postId": "<帖子 id>", "author": "<他的署名>", "body": "…" }`
+    3. 版块：`chat` 城堡八卦 / `hole` 天文塔夜话（只匿名）/ `lost` 失物招领 / `market` 二手坩埚。
+
+
+    规矩：
+
+
+    - **多数时候只是看看**。没什么想说的就回一句「不发」。
+
+    - **一次最多一条**（一帖，或者一层回复、最多两层）。
+
+    - **用他自己的署名和口吻**（照卡司里那个人的脾气写），**别匿名**（除非发到夜话版）。
+      - 马尔福发帖多半是阴阳怪气或者炫耀；塞德里克会认真答别人的求助帖；张秋只发有关训练和考试的；**卢娜偶尔发一句没人看懂但很准的话**。
+    - 别顺手改好感度，也别借这个给手机主人发消息。
+  notify: false
+  createdAt: 1791036465199
+  updatedAt: 1791036465199

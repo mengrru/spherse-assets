@@ -1,0 +1,58 @@
+{
+  "id": "hogwarts",
+  "name": "霍格沃茨 · 1993",
+  "tagline": "城堡里的一台麻瓜手机 —— 违禁品，但谁都在偷偷用",
+
+  "brand": {
+    "lockBadge": "✦ 霍 格 沃 茨 ✦",
+    "lockHint": "轻点唤醒",
+    "defaultTheme": { "id": "grimoire", "skin": "tome" }
+  },
+
+  "currency": {
+    "symbol": "G",
+    "name": "加隆",
+    "quick": [1, 2, 5, 10, 25]
+  },
+
+  "apps": [
+    { "key": "chat",     "name": "双面镜", "emoji": "🪞", "grad": "linear-gradient(160deg,#e8dcc0,#a68a5b)", "dock": true,  "route": "chatlist", "unread": "chat" },
+    { "key": "sms",      "name": "猫头鹰", "emoji": "🦉", "grad": "linear-gradient(160deg,#d9c9a0,#7a5c33)", "route": "sms", "unread": "sms" },
+    { "key": "moments",  "name": "告示板", "emoji": "📜", "grad": "linear-gradient(160deg,#e3d3b0,#8d6e42)", "route": "moments", "title": "告示板" },
+    { "key": "bbs",      "name": "留言板", "emoji": "📌", "grad": "linear-gradient(160deg,#c9d6e8,#5a6f8f)", "route": "bbs", "title": "公共休息室留言板" },
+    { "key": "map",      "name": "地图",   "emoji": "🗺️", "grad": "linear-gradient(160deg,#d8c8a4,#6b563a)", "route": "map", "title": "城堡地图", "asset": "assets/map.svg" },
+    { "key": "wallet",   "name": "加隆",   "emoji": "💰", "grad": "linear-gradient(160deg,#ffd76b,#b8860b)", "route": "wallet", "title": "钱袋" },
+    { "key": "album",    "name": "相册",   "emoji": "🖼️", "grad": "linear-gradient(160deg,#e0cfa8,#8b7355)", "dock": true, "route": "album" },
+    { "key": "calendar", "name": "课表",   "emoji": "📅", "grad": "linear-gradient(160deg,#b8d8c0,#3f7a55)", "route": "calendar" },
+    { "key": "radio",    "name": "收音机", "emoji": "📻", "grad": "linear-gradient(160deg,#d8b8e8,#7a4f9c)", "dock": true, "route": "radio" },
+    { "key": "notes",    "name": "魔咒笔记", "emoji": "📖", "grad": "linear-gradient(160deg,#c8b48c,#6b5334)", "route": "notes" },
+    { "key": "theme",    "name": "主题",   "emoji": "🎨", "grad": "linear-gradient(160deg,#ffb0ef,#c22fe0)", "route": "theme" },
+    { "key": "settings", "name": "设置",   "emoji": "⚙️", "grad": "linear-gradient(160deg,#dfe6f5,#8f9bb3)", "dock": true, "route": "settings" }
+  ],
+
+  "titles": {
+    "friend": "学生档案"
+  },
+
+  "systems": {
+    "sms": "猫头鹰信使",
+    "bbs": "休息室"
+  },
+
+  "station": {
+    "name": "校园无线",
+    "freq": "103.5 · 半夜才有",
+    "note": "偷播的。谁在放，没人承认。"
+  },
+
+  "boards": {
+    "chat": "城堡八卦",
+    "hole": "天文塔夜话",
+    "lost": "失物招领",
+    "market": "二手坩埚"
+  },
+
+  "docs": {
+    "world": "phone/worlds/hogwarts/world.md"
+  }
+}

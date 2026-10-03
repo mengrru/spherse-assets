@@ -1,0 +1,233 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 短信：会话与短信内容（另一条通道，区别于微信）",
+    "queries": {
+      "listSmsThreads": {
+        "desc": "列出短信会话，最新在前，可按类型过滤（char=好友号码 system=机构号 unknown=陌生号码）",
+        "path": "smsThreads",
+        "identity": "id",
+        "params": {
+          "kind": {
+            "type": "enum",
+            "values": [
+              "char",
+              "system",
+              "unknown"
+            ]
+          },
+          "characterId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 30
+      },
+      "listSms": {
+        "desc": "读取某个会话的短信，默认按时间升序",
+        "path": "sms",
+        "identity": "id",
+        "params": {
+          "threadId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "enum",
+            "values": [
+              "user",
+              "character"
+            ]
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "createSmsThread": {
+        "desc": "新建一个短信会话",
+        "op": "append",
+        "path": "smsThreads",
+        "fields": {
+          "kind": {
+            "type": "enum",
+            "values": [
+              "char",
+              "system",
+              "unknown"
+            ],
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "number": {
+            "type": "string"
+          },
+          "characterId": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "appendSms": {
+        "desc": "往会话追加一条短信。role: user=手机主人发的, character=对方发的",
+        "op": "append",
+        "path": "sms",
+        "fields": {
+          "threadId": {
+            "type": "string",
+            "required": true
+          },
+          "role": {
+            "type": "enum",
+            "values": [
+              "user",
+              "character"
+            ],
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "required": true
+          },
+          "sender": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "setSmsAgentSession": {
+        "desc": "记录短信局这个 Agent 的会话 id（所有短信共用同一个会话）",
+        "op": "set",
+        "path": "agent",
+        "fields": {
+          "sessionId": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "removeSms": {
+        "desc": "删除一条短信",
+        "op": "remove",
+        "path": "sms",
+        "match": "id"
+      }
+    }
+  },
+  "agent": {
+    "sessionId": null,
+    "updatedAt": null
+  },
+  "smsThreads": [
+    {
+      "id": "sms-suwan",
+      "kind": "char",
+      "name": "苏晚",
+      "number": "138 0013 8000",
+      "characterId": "char-suwan",
+      "createdAt": "2026-10-02T13:38:00.000Z"
+    },
+    {
+      "id": "sms-10086",
+      "kind": "system",
+      "name": "10086",
+      "number": "10086",
+      "createdAt": "2026-10-01T09:10:00.000Z"
+    },
+    {
+      "id": "sms-bank",
+      "kind": "system",
+      "name": "临江银行",
+      "number": "95588",
+      "createdAt": "2026-10-01T20:03:00.000Z"
+    },
+    {
+      "id": "sms-stranger",
+      "kind": "unknown",
+      "name": "未知号码",
+      "number": "159 2207 8843",
+      "createdAt": "2026-10-02T11:28:00.000Z"
+    }
+  ],
+  "sms": [
+    {
+      "id": "sms-1",
+      "threadId": "sms-suwan",
+      "role": "character",
+      "sender": "苏晚",
+      "text": "（这个号是我备机）手机在店里摔了，屏幕黑了一半。微信发不出去，先发短信。",
+      "createdAt": "2026-10-02T13:38:20.000Z"
+    },
+    {
+      "id": "sms-2",
+      "threadId": "sms-suwan",
+      "role": "user",
+      "sender": "我",
+      "text": "摔得重吗，明天还得去店里？",
+      "createdAt": "2026-10-02T13:41:05.000Z"
+    },
+    {
+      "id": "sms-3",
+      "threadId": "sms-suwan",
+      "role": "character",
+      "sender": "苏晚",
+      "text": "还能用。就是打字费劲，一条得打半天。你去不去拿书。",
+      "createdAt": "2026-10-02T13:43:40.000Z"
+    },
+    {
+      "id": "sms-4",
+      "threadId": "sms-10086",
+      "role": "character",
+      "sender": "10086",
+      "text": "【中国移动】您本月流量已使用 87%，剩余 1.3GB。回复 TD 退订。",
+      "createdAt": "2026-10-01T09:12:00.000Z"
+    },
+    {
+      "id": "sms-5",
+      "threadId": "sms-bank",
+      "role": "character",
+      "sender": "临江银行",
+      "text": "【临江银行】您尾号 0621 账户 10 月 1 日代扣水电费 128.40 元，余额 3204.97 元。",
+      "createdAt": "2026-10-01T20:05:00.000Z"
+    },
+    {
+      "id": "sms-6",
+      "threadId": "sms-stranger",
+      "role": "character",
+      "sender": "未知号码",
+      "text": "你好，昨天在二号线捡到一个耳机盒，里面便利贴上写着这个号。是不是你的？",
+      "createdAt": "2026-10-02T11:30:00.000Z"
+    }
+  ]
+}

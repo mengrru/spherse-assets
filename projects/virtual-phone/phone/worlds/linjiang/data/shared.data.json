@@ -1,0 +1,294 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 公共数据：手机主人、世界时钟、好友与会话（所有 App 共用）",
+    "queries": {
+      "listCharacters": {
+        "desc": "列出手机里所有好友",
+        "path": "characters",
+        "identity": "id",
+        "defaultLimit": 50
+      },
+      "getCharacter": {
+        "desc": "按 id 获取单个好友（含好感度、心情、正在做什么）",
+        "path": "characters",
+        "identity": "id",
+        "defaultLimit": 1
+      },
+      "listConversations": {
+        "desc": "列出会话，可按好友过滤",
+        "path": "conversations",
+        "identity": "id",
+        "params": {
+          "characterId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "createCharacter": {
+        "desc": "往手机里新增一个好友",
+        "op": "append",
+        "path": "characters",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "agentSlug": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "avatarEmoji": {
+            "type": "string"
+          },
+          "avatarColor": {
+            "type": "string"
+          },
+          "mood": {
+            "type": "string"
+          },
+          "doing": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updateCharacter": {
+        "desc": "更新好友状态：好感度、心情、此刻在做什么",
+        "op": "update",
+        "path": "characters",
+        "match": "id",
+        "fields": {
+          "affection": {
+            "type": "integer"
+          },
+          "mood": {
+            "type": "string"
+          },
+          "doing": {
+            "type": "string"
+          },
+          "lastActiveAt": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "personaFile": {
+            "type": "string"
+          },
+          "agentSlug": {
+            "type": "string"
+          },
+          "placeName": {
+            "type": "string"
+          },
+          "background": {
+            "type": "string"
+          }
+        }
+      },
+      "createConversation": {
+        "desc": "为某个好友新建一个会话",
+        "op": "append",
+        "path": "conversations",
+        "fields": {
+          "characterId": {
+            "type": "string",
+            "required": true
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "setConversationSession": {
+        "desc": "记录会话绑定的 agent 会话 id 与最近活跃时间",
+        "op": "update",
+        "path": "conversations",
+        "match": "id",
+        "fields": {
+          "sessionId": {
+            "type": "string"
+          },
+          "lastActiveAt": {
+            "type": "string"
+          }
+        }
+      },
+      "setWorldClock": {
+        "desc": "设置手机世界时钟：基准时刻与流速（页面用，好友只读）",
+        "op": "set",
+        "path": "worldClock",
+        "fields": {
+          "anchorReal": {
+            "type": "string"
+          },
+          "anchorWorld": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "number"
+          },
+          "now": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "setTheme": {
+        "desc": "切换整台手机的配色主题与设计语言",
+        "op": "set",
+        "path": "theme",
+        "fields": {
+          "id": {
+            "type": "string"
+          },
+          "skin": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "setWallpaper": {
+        "desc": "把手机壁纸换成相册里的某张照片：src 是**世界目录内**的相对路径（如 assets/xxx.jpg）。src 传空字符串 = 用回主题自带的壁纸",
+        "op": "set",
+        "path": "wallpaper",
+        "fields": {
+          "src": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string"
+          }
+        }
+      },
+      "setWhere": {
+        "desc": "记录手机主人现在在哪（地点 id 与名字，名字冗余存一份方便各处显示）",
+        "op": "set",
+        "path": "where",
+        "fields": {
+          "placeId": {
+            "type": "string"
+          },
+          "placeName": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "where": {
+    "placeId": "place-my-flat",
+    "placeName": "你的公寓",
+    "updatedAt": "2026-10-03T15:00:00.000Z"
+  },
+  "wallpaper": {
+    "src": "",
+    "at": "2026-10-03T15:00:00.000Z"
+  },
+  "theme": {
+    "id": "y2k",
+    "skin": "chunky",
+    "updatedAt": "2026-10-03T15:00:00.000Z"
+  },
+  "profile": {
+    "displayName": "小柚",
+    "avatarEmoji": "🍊",
+    "avatarColor": "linear-gradient(150deg,#ffb36b,#ff7a45)",
+    "updatedAt": "2026-10-03T15:00:00.000Z",
+    "lastSeen": {
+      "conv-suwan": "2026-10-03T15:00:00.000Z",
+      "4b372e7b-26f4-49f6-a1e8-6ed257d735ef": "2026-10-03T15:00:00.000Z",
+      "sms-suwan": "2026-10-03T15:00:00.000Z",
+      "sms-bank": "2026-10-03T15:00:00.000Z",
+      "sms-10086": "2026-10-03T15:00:00.000Z",
+      "sms-stranger": "2026-10-03T15:00:00.000Z"
+    }
+  },
+  "worldClock": {
+    "anchorReal": "2026-10-03T15:00:00.000Z",
+    "anchorWorld": "2026-10-03T15:00:00.000Z",
+    "rate": 1,
+    "now": "2026-10-03T17:36:52.206Z",
+    "label": "10月4日 星期日 凌晨 01:36",
+    "updatedAt": "2026-10-03T17:36:52.206Z"
+  },
+  "characters": [
+    {
+      "id": "char-suwan",
+      "placeName": "巷口馄饨摊",
+      "name": "苏晚",
+      "agentSlug": "苏晚-571653",
+      "personaFile": "phone/worlds/linjiang/characters/苏晚.md",
+      "tagline": "旧书店店员 / 插画师 · 深夜在线",
+      "avatarEmoji": "🎧",
+      "avatarColor": "linear-gradient(150deg,#8b7bf7,#5b4bd6)",
+      "affection": 66,
+      "mood": "被夜风吹得清醒",
+      "doing": "在馄饨摊吃夜宵",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "55fe1857-02cc-4458-bf42-0175235cb7a4",
+      "name": "沈笑",
+      "agentSlug": "沈笑-f3c163",
+      "personaFile": "phone/worlds/linjiang/characters/沈笑.md",
+      "tagline": "音像店店员 · 大嗓门吐槽役",
+      "avatarEmoji": "🎸",
+      "avatarColor": "linear-gradient(150deg,#ffb84d,#ef6f2c)",
+      "affection": 62,
+      "mood": "困但警觉",
+      "doing": "刚到家，坐沙发上",
+      "placeName": "打口音像店",
+      "createdAt": "2026-10-03T13:00:00.000Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv-suwan",
+      "characterId": "char-suwan",
+      "title": "苏晚",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "4b372e7b-26f4-49f6-a1e8-6ed257d735ef",
+      "characterId": "55fe1857-02cc-4458-bf42-0175235cb7a4",
+      "title": "沈笑",
+      "createdAt": "2026-10-03T13:00:00.000Z"
+    }
+  ]
+}

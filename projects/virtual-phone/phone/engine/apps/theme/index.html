@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>主题商店</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  .app-header.theme{background:var(--app-hue-theme)}
+  body{position:relative}
+  .tgrid{padding:14px 14px 32px}
+  .theme-card{
+    display:flex;gap:12px;align-items:center;width:100%;padding:11px;margin-bottom:12px;cursor:pointer;
+    text-align:left;font:inherit;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));
+    border:var(--border-w) solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-card);
+  }
+  .theme-card:active{transform:var(--press);box-shadow:var(--shadow-press)}
+  .theme-card.on{outline:2.5px solid var(--accent-heart);outline-offset:2px}
+  .tc-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .tc-meta b{font-size:14.5px;color:var(--text)}
+  .tc-meta span{font-size:11px;font-weight:700;color:var(--text-dim);line-height:1.5}
+  .tc-def{
+    align-self:flex-start;font-size:9.5px;font-weight:800;color:var(--pill-fg);background:var(--pill);
+    border:1.5px solid var(--border);border-radius:999px;padding:1px 8px;
+  }
+  .tc-now{
+    align-self:flex-start;font-size:9.5px;font-weight:800;color:#fff;background:var(--accent-heart);
+    border:1.5px solid var(--border);border-radius:999px;padding:1px 8px;
+  }
+
+  /* 迷你手机预览：给它一个 data-theme，里面的变量就按那套主题解析 —— 真·实时预览 */
+  .pv{
+    position:relative;width:66px;height:108px;flex:none;border-radius:12px;padding:4px;
+    border:var(--border-w) solid var(--border);background:var(--screen-bg);box-shadow:var(--shadow-row);
+    overflow:hidden;
+    /* 预览要吃掉 data-theme / data-skin 才能实时渲染，但它不该成为点击目标 */
+    pointer-events:none;
+  }
+  .pv-wall{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(58% 44% at 16% 6%,var(--wall-1),transparent 62%),
+      radial-gradient(52% 40% at 90% 13%,var(--wall-2),transparent 62%),
+      radial-gradient(70% 48% at 50% 106%,var(--wall-3),transparent 62%),
+      linear-gradient(165deg,var(--wall-base));
+  }
+  .pv-hdr{
+    position:relative;height:15px;margin:2px 1px 0;border:var(--border-w) solid var(--border);border-radius:3px;
+    background:var(--app-hue-main);
+    font-family:var(--font-header);font-style:var(--h-style);font-weight:var(--h-weight);
+  }
+  .pv-grid{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin:6px 1px 0}
+  .pv-grid i{display:block;height:15px;border:var(--border-w) solid var(--border);border-radius:var(--icon-radius);
+    box-shadow:var(--shadow-row);filter:var(--icon-filter)}
+  .pv-bt{
+    position:relative;margin:5px 1px 0;height:16px;border:var(--border-w) solid var(--border);
+    border-radius:var(--radius-sm);background:var(--btn-grad);
+    font-family:var(--font-header);font-size:9px;font-weight:var(--h-weight);font-style:var(--h-style);
+    display:grid;place-items:center;color:var(--btn-fg);letter-spacing:var(--h-tracking);
+  }
+  .sec-title{
+    font-family:var(--font-header);font-size:11.5px;font-weight:var(--h-weight);font-style:var(--h-style);
+    letter-spacing:1.5px;color:var(--accent-ink);margin:6px 0 10px 2px;
+  }
+  .sec-note{font-size:10.5px;font-weight:700;color:var(--text-dim);margin:-4px 0 10px 2px;line-height:1.6}
+  .pv-cd{
+    position:relative;margin:6px 1px 0;height:20px;border:var(--border-w) solid var(--border);
+    border-radius:var(--radius-sm);background:linear-gradient(180deg,var(--card-1),var(--card-2));
+    box-shadow:var(--shadow-row);
+  }
+</style>
+</head>
+<body>
+<header class="app-header theme">
+  <button class="back" id="back">‹</button>
+  <span>主题商店</span>
+  <button class="ghost" id="random">随机</button>
+</header>
+<div class="app-body tgrid" id="list"></div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var shared = {};
+
+  async function load() {
+    shared = await phone.loadShared();
+    render();
+  }
+
+  async function boot() { await load(); }
+  boot().catch(phone.fatal);
+
+  function render() {
+    var curT = phone.themeId(), curS = phone.skinId();
+    var def = phone.defaultLook();     // 这个世界包声明的出厂外观
+    $("list").innerHTML =
+      '<div class="sec-title">★ 配 色 ★</div>' +
+      phone.THEMES.map(function (t) {
+        return cardHtml(t, t.id === curT, "theme", t.id, curS, t.id === def.id);
+      }).join("") +
+      '<div class="sec-title">★ 设 计 语 言 ★</div>' +
+      '<div class="sec-note">配色决定颜色，设计语言决定形状 —— 两者可以任意组合。</div>' +
+      phone.SKINS.map(function (s) {
+        return cardHtml(s, s.id === curS, "skin", curT, s.id, s.id === def.skin);
+      }).join("");
+  }
+
+  // 一枚卡片：预览同时带上 data-theme 与 data-skin，所以看到的就是那个组合的真实样子
+  function cardHtml(item, on, kind, themeId, skinId, isWorldDefault) {
+    return '<button class="theme-card' + (on ? " on" : "") + '" data-' + kind + '="' + item.id + '">' +
+      '<div class="pv" data-theme="' + themeId + '" data-skin="' + skinId + '">' +
+        '<div class="pv-wall"></div>' +
+        '<div class="pv-hdr"></div>' +
+        '<div class="pv-grid">' + previewDots() + "</div>" +
+        '<div class="pv-cd"></div>' +
+        '<div class="pv-bt">Aa</div>' +
+      "</div>" +
+      '<div class="tc-meta">' +
+      (isWorldDefault ? '<span class="tc-def">世界默认</span>' : "") +
+      (on ? '<span class="tc-now">使用中</span>' : "") +
+      "<b>" + phone.esc(item.name) + "</b>" +
+      "<span>" + phone.esc(item.hint) + "</span></div></button>";
+  }
+
+  function previewDots() {
+    var grads = ["linear-gradient(160deg,#7dffb0,#12c25e)", "linear-gradient(160deg,#8ff5e6,#12c9b6)",
+                 "linear-gradient(160deg,#b39bff,#6b3fe0)", "linear-gradient(160deg,#8ee7ff,#1f9be0)"];
+    return grads.map(function (g) { return '<i style="background:' + g + '"></i>'; }).join("");
+  }
+
+  async function apply(kind, id) {
+    if (kind === "theme" && phone.themeId() === id) return;
+    if (kind === "skin" && phone.skinId() === id) return;
+    var item = kind === "theme" ? phone.themeById(id) : phone.skinById(id);
+    phone.toast({ variant: "success", message: (kind === "theme" ? "配色：" : "设计语言：") + item.name });
+    try {
+      if (kind === "theme") await phone.setTheme(id); else await phone.setSkin(id);
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没存上", description: String(e.message || e) });
+    }
+    render();   // 让「使用中」标记跟上（换肤本身是立刻生效的）
+  }
+
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("random").addEventListener("click", function () {
+    var kind = Math.random() < 0.5 ? "theme" : "skin";
+    var cur = kind === "theme" ? phone.themeId() : phone.skinId();
+    var list = (kind === "theme" ? phone.THEMES : phone.SKINS).filter(function (x) { return x.id !== cur; });
+    apply(kind, list[Math.floor(Math.random() * list.length)].id);
+  });
+  $("list").addEventListener("click", function (e) {
+    // 只认卡片本身：预览里也有 data-theme / data-skin（那是给 CSS 用的）
+    var card = e.target.closest(".theme-card");
+    if (!card) return;
+    if (card.dataset.theme) { apply("theme", card.dataset.theme); return; }
+    if (card.dataset.skin) { apply("skin", card.dataset.skin); }
+  });
+
+  load().catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.SHARED], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

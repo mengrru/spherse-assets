@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+  <rect width="100" height="100" fill="#f0e6d2"/>
+  <!-- 禁林 -->
+  <path d="M72,8 C86,14 96,30 98,48 C99,66 92,80 84,92 L104,104 L104,0 Z" fill="#b9d3a3" opacity=".95"/>
+  <circle cx="80" cy="24" r="3" fill="#96b47f"/><circle cx="88" cy="42" r="3.6" fill="#96b47f"/>
+  <circle cx="82" cy="62" r="3" fill="#96b47f"/><circle cx="90" cy="78" r="3.4" fill="#96b47f"/>
+  <!-- 黑湖 -->
+  <path d="M0,58 C14,54 30,60 40,70 C48,78 52,90 50,104 L0,104 Z" fill="#a9c9d6" opacity=".9"/>
+  <path d="M0,58 C14,54 30,60 40,70 C48,78 52,90 50,104" stroke="#7ba8ba" stroke-width=".7" fill="none"/>
+  <!-- 魁地奇球场 -->
+  <ellipse cx="22" cy="20" rx="15" ry="10" fill="#d9e2c4" stroke="#9aa877" stroke-width=".8"/>
+  <line x1="22" y1="10" x2="22" y2="30" stroke="#9aa877" stroke-width=".5"/>
+  <circle cx="22" cy="20" r="2" fill="#c7b07a"/>
+  <!-- 城堡 -->
+  <rect x="34" y="30" width="30" height="26" rx="1" fill="#dbcdaf" stroke="#8a7855" stroke-width="1"/>
+  <rect x="40" y="22" width="8" height="12" rx="1" fill="#e5d8bd" stroke="#8a7855" stroke-width=".9"/>
+  <rect x="54" y="24" width="7" height="10" rx="1" fill="#e5d8bd" stroke="#8a7855" stroke-width=".9"/>
+  <circle cx="36" cy="32" r="3.2" fill="#cfbf9d" stroke="#8a7855" stroke-width=".8"/>
+  <circle cx="62" cy="32" r="3.2" fill="#cfbf9d" stroke="#8a7855" stroke-width=".8"/>
+  <circle cx="49" cy="42" r="4.4" fill="#cfbf9d" stroke="#8a7855" stroke-width=".9"/>
+  <circle cx="49" cy="42" r="1.6" fill="#f0e6d2"/>
+  <!-- 霍格莫德 -->
+  <rect x="24" y="82" width="8" height="7" rx="1" fill="#e0c9a8" stroke="#8a7855" stroke-width=".8"/>
+  <rect x="34" y="86" width="7" height="6" rx="1" fill="#e0c9a8" stroke="#8a7855" stroke-width=".8"/>
+  <rect x="43" y="82" width="9" height="7" rx="1" fill="#e0c9a8" stroke="#8a7855" stroke-width=".8"/>
+  <!-- 小径 -->
+  <path d="M49,55 C48,66 40,72 33,82" stroke="#b3a184" stroke-width="1.4" fill="none" stroke-dasharray="3 2"/>
+  <path d="M64,46 C72,52 76,62 78,74" stroke="#b3a184" stroke-width="1.2" fill="none" stroke-dasharray="3 2"/>
+  <path d="M34,44 C28,40 26,32 24,30" stroke="#b3a184" stroke-width="1.2" fill="none" stroke-dasharray="3 2"/>
+</svg>

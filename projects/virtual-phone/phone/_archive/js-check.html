@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>自检：引擎页面的 JS 语法</title>
+<link rel="stylesheet" href="../engine/theme/base.css">
+<style>
+  body{overflow:auto}
+  .app-body{padding-bottom:24px}
+  pre{font-family:var(--mono);font-size:10.5px;line-height:1.55;white-space:pre-wrap;word-break:break-all;
+    background:var(--led-bg);color:var(--led-fg);border-radius:10px;padding:10px}
+  .ok{color:var(--accent-in)}
+  .bad{color:var(--warn-fg);background:var(--warn)}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span>自检 · JS 语法</span>
+</header>
+<div class="app-body">
+  <div class="card"><h3>★ 结 果 ★</h3><pre id="out">跑着呢…</pre></div>
+  <div class="card"><h3>★ 它查什么 ★</h3>
+    <div class="ph"><div class="d">
+      把每个页面里的行内 &lt;script&gt; 抠出来：(1) 用 <code>new Function()</code> 试解析，语法错了就报出来；
+      (2) 逐行数单引号，**奇数**的那行就是"引号配错了"（我踩过的坑）；
+      (3) <b>扫裸标识符赋值</b> —— 给一个没声明过的变量赋值，严格模式下是运行时 ReferenceError，
+      <code>new Function()</code> 查不出来（删了变量忘删赋值，为此烧过两轮排查）。<br>
+      结果写进 <code>phone/_archive/debug.data.json</code> 的 <code>jscheck</code>，供外面读。
+    </div></div>
+  </div>
+</div>
+
+<script src="../engine/theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var PAGES = [
+    "index.html",
+    "apps/chat/index.html", "apps/sms/index.html", "apps/bbs/index.html",
+    "apps/map/index.html", "apps/moments/index.html", "apps/wallet/index.html",
+    "apps/calendar/index.html", "apps/notes/index.html", "apps/radio/index.html", "apps/album/index.html",
+    "apps/friends/index.html", "apps/settings/index.html",
+    "apps/theme/index.html", "apps/blank/index.html"
+  ];
+  // 纯脚本文件（没有 HTML 包装），整份当一段代码来查 —— phone.js 坏了会拖垮所有页面
+  var SCRIPTS = ["theme/phone.js"];
+  var report = { at: new Date().toISOString(), pages: [], problems: [] };
+  var out = document.getElementById("out");
+
+  function show(text) { out.textContent = text; }
+
+  // 抠出行内 <script>（跳过带 src 的），并算出每块在文件里的起始行
+  function blocksOf(text) {
+    var re = /<script(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi;
+    var list = [], m;
+    while ((m = re.exec(text))) {
+      var openTag = m[0].slice(0, m[0].indexOf(">") + 1);
+      var lineOfTag = text.slice(0, m.index).split("\n").length;      // 1 起
+      var codeStartLine = lineOfTag + (openTag.match(/\n/g) || []).length;
+      list.push({ code: m[1], startLine: codeStartLine });
+    }
+    return list;
+  }
+
+  // 奇数单引号的行（引号配错的典型症状）
+  function oddQuoteLines(code) {
+    var lines = code.split("\n"), bad = [];
+    lines.forEach(function (ln, i) {
+      var n = (ln.match(/'/g) || []).length;
+      if (n % 2 === 1) bad.push({ line: i + 1, text: ln.trim().slice(0, 120) });
+    });
+    return bad;
+  }
+
+  // ★ 给未声明的变量赋值（严格模式下直接抛 ReferenceError，而且是**运行时**才炸 ——
+  //   new Function() 只查语法，抓不到；我为此烧掉过两轮排查）：静态扫一遍裸标识符赋值。
+  //   典型来源：删了一个变量，却忘了删对它的赋值。
+  var GLOBALS_OK = ["window", "document", "location", "top", "self", "parent", "frames", "history",
+    "screen", "navigator", "name", "status", "event", "onload", "console", "spherse", "phone"];
+
+  // 把字符串字面量与注释整段挖空（保留换行 → 行号不变）。
+  // 不挖空的话，`'<span class="cursor">'` 这类 HTML 片段会被当成一次赋值 class = …（第一版误报了 476 处）。
+  function stripLiterals(raw) {
+    var out = "", i = 0, n = raw.length;
+    while (i < n) {
+      var c = raw[i], c2 = raw[i + 1];
+      if (c === "/" && c2 === "/") { while (i < n && raw[i] !== "\n") { out += " "; i++; } continue; }
+      if (c === "/" && c2 === "*") {
+        out += "  "; i += 2;
+        while (i < n && !(raw[i] === "*" && raw[i + 1] === "/")) { out += raw[i] === "\n" ? "\n" : " "; i++; }
+        out += "  "; i += 2; continue;
+      }
+      if (c === "'" || c === '"' || c === "`") {
+        var q = c; out += " "; i++;                    // 开引号也挖掉
+        while (i < n) {
+          if (raw[i] === "\\") { out += "  "; i += 2; continue; }
+          var t = raw[i]; i++;
+          out += t === "\n" ? "\n" : " ";              // 闭引号同样补一个字符
+          if (t === q) break;                          // ★ 长度必须一致，否则偏移/行号全错位
+        }
+        continue;
+      }
+      out += c; i++;
+    }
+    return out;
+  }
+
+  function declaredNames(raw) {
+    var code = stripLiterals(raw), set = {};
+    function add(s) {
+      s.split("=")[0].replace(/[A-Za-z_$][\w$]*/g, function (w) { set[w] = 1; return w; });
+    }
+    // 按行收声明：var/let/const 之后，按**顶层逗号**切开，每段取 = 前面的标识符。
+    // 只在行内扫（不做花括号配平）—— 第一版那样遇到 `var x = (function () { … })();` 会吞到文件尾，
+    // 后面的声明全漏，于是满屏误报。宁可少报，不要噪音。
+    code.split("\n").forEach(function (line) {
+      var m = /\b(?:var|let|const)\s+/.exec(line);
+      if (!m) return;
+      var rest = line.slice(m.index + m[0].length), depth = 0, buf = "";
+      for (var i = 0; i < rest.length; i++) {
+        var ch = rest.charAt(i);
+        if (ch === "(" || ch === "[" || ch === "{") depth++;
+        else if (ch === ")" || ch === "]" || ch === "}") { if (depth) depth--; }
+        else if ((ch === "," || ch === ";") && !depth) { add(buf); buf = ""; continue; }
+        buf += ch;
+      }
+      add(buf);
+    });
+    function params(list) {
+      list.split(",").forEach(function (x) {
+        var t = x.trim().replace(/^\.\.\./, "").split("=")[0].trim();
+        if (/^[A-Za-z_$][\w$]*$/.test(t)) set[t] = 1;
+      });
+    }
+    code.replace(/function\s+([A-Za-z_$][\w$]*)/g, function (all, n) { set[n] = 1; return all; });
+    code.replace(/function\s*[A-Za-z_$]*\s*\(([^)]*)\)/g, function (all, p) { params(p); return all; });
+    code.replace(/\(([^()]*)\)\s*=>/g, function (all, p) { params(p); return all; });
+    code.replace(/\bcatch\s*\(\s*([A-Za-z_$][\w$]*)\s*\)/g, function (all, n) { set[n] = 1; return all; });
+    return set;
+  }
+
+  // allCode：整份文件（跨 script 块）—— 声明在别处也算数，只报"整个文件都没声明过"的名字
+  function undeclaredAssigns(raw, allCode) {
+    var code = stripLiterals(raw), declared = declaredNames(allCode || raw), bad = [];
+    var re = /(^|[;{}\n)\s])([A-Za-z_$][\w$]*)\s*=(?![=>])/g, m;
+    while ((m = re.exec(code))) {
+      var name = m[2], idStart = m.index + m[1].length;
+      if (declared[name] || GLOBALS_OK.indexOf(name) >= 0) continue;
+      if (code.charAt(idStart - 1) === ".") continue;      // a.b = 1 是属性赋值，不是裸标识符
+      bad.push({
+        name: name,
+        line: code.slice(0, idStart).split("\n").length,
+        text: raw.slice(idStart, idStart + 90).split("\n")[0].trim()
+      });
+    }
+    return bad;
+  }
+
+  // ★ 块注释里包着 function 声明 = 注释少了收尾 `*/`，把后面的代码整段吃掉了。
+  //   我踩过：改注释时顺手删了 `*/` → uploadFile 等函数被吞 → phone.js 报 ReferenceError
+  //   → `phone` 没定义 → 整个外壳死掉（时间不跳、点不动）。**光靠 new Function() 查不出来**（注释是合法语法）。
+  function commentSwallowedCode(code) {
+    var bad = [], re = /\/\*[\s\S]*?\*\//g, m;
+    while ((m = re.exec(code))) {
+      if (/(^|\n)\s*(?:async\s+)?function\s+[A-Za-z_$]/.test(m[0])) {
+        bad.push({ line: code.slice(0, m.index).split("\n").length, text: m[0].slice(0, 70).replace(/\n/g, " ⏎ ") });
+      }
+    }
+    return bad;
+  }
+
+  (async function () {
+    // 自检器本身也得自检：拿我踩过的那个真 bug 当样本（声明删了、赋值还在）
+    var probe = undeclaredAssigns('(function () { "use strict";\n  wallOkSrc = ok ? url : "";\n})();');
+    if (!probe.length || probe[0].name !== "wallOkSrc") {
+      report.problems.push("⚠ 自检器失效：没扫出「给未声明变量赋值」的样本（wallOkSrc）—— 这条规则本身坏了");
+    }
+    var probe3 = commentSwallowedCode("/* 说明\n   async function uploadFile() {}\n*/");
+    if (!probe3.length) {
+      report.problems.push("⚠ 自检器失效：没扫出「块注释里包着 function」的样本（uploadFile）");
+    }
+    for (var i = 0; i < PAGES.length; i++) {
+      var page = PAGES[i], text = "", row = { page: page };
+      try {
+        var res = await fetch("../engine/" + page);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        text = await res.text();
+      } catch (e) {
+        row.fetch = "读不到: " + String(e.message || e);
+        report.pages.push(row); report.problems.push(page + " → " + row.fetch);
+        continue;
+      }
+      var blocks = blocksOf(text);
+      row.blocks = blocks.length;
+      var fileCode = blocks.map(function (x) { return x.code; }).join("\n");   // 跨块收集声明
+      var sw = commentSwallowedCode(fileCode + text.replace(/<script[\s\S]*?<\/script>/gi, ""));   // 顺带查注释吞代码
+      if (sw.length) {
+        row.swallowed = sw;
+        sw.forEach(function (x) {
+          report.problems.push(page + " 第 " + x.line + " 行附近的块注释里包着 function：注释可能少了收尾 `*/` → " + x.text);
+        });
+      }
+      // 结构：.pick-sheet 里只该有自己的几个孩子。写错 </div> 会把后面整段 HTML 吞进这个面板里，
+      // 而面板默认 display:none —— 症状是"大图 / 播放器凭空不见了"，很难联想到闭合标签。
+      try {
+        var doc = new DOMParser().parseFromString(text, "text/html");
+        var ps = doc.querySelector(".pick-sheet");
+        if (ps) {
+          var names = [].slice.call(ps.children).map(function (c) { return c.className || c.tagName; }).join(",");
+          row.pickSheet = ps.children.length + " 个孩子: " + names;
+          if (ps.children.length > 4) {
+            report.problems.push(page + " 的 .pick-sheet 里挤进了 " + ps.children.length + " 个孩子（应 3~4 个）→ 多半是少了 </div>，后面的内容被吞进面板：" + names);
+          }
+        }
+      } catch (e) {}
+      blocks.forEach(function (b, bi) {
+        var tag = page + " 脚本#" + (bi + 1);
+        try { new Function(b.code); row.parse = "ok"; }
+        catch (e2) {
+          row.parse = "语法错: " + String(e2.message || e2);
+          report.problems.push(tag + " → " + row.parse);
+        }
+        var odd = oddQuoteLines(b.code);
+        if (odd.length) {
+          row.oddQuotes = odd;
+          odd.forEach(function (o) {
+            report.problems.push(tag + " 第 " + b.startLine + o.line + " 行引号是奇数个：" + o.text);
+          });
+        }
+        var ua = undeclaredAssigns(b.code, fileCode);
+        if (ua.length) {
+          row.undeclared = (row.undeclared || []).concat(ua);
+          ua.forEach(function (u) {
+            report.problems.push(tag + " 第 " + (b.startLine + u.line - 1) + " 行给未声明的变量赋值：<b>" + u.name + "</b> → " + u.text);
+          });
+        }
+      });
+      report.pages.push(row);
+      show(report.pages.map(function (r) {
+        return r.page + "  脚本" + (r.blocks == null ? "?" : r.blocks) + "  " + (r.parse || r.fetch || "-");
+      }).join("\n"));
+    }
+
+    for (var s = 0; s < SCRIPTS.length; s++) {
+      var file = SCRIPTS[s], row2 = { page: file };
+      try {
+        var res2 = await fetch("../engine/" + file);
+        if (!res2.ok) throw new Error("HTTP " + res2.status);
+        var code = await res2.text();
+        try { new Function(code); row2.parse = "ok"; }
+        catch (e3) {
+          row2.parse = "语法错: " + String(e3.message || e3);
+          report.problems.push(file + " → " + row2.parse);
+        }
+        var sw2 = commentSwallowedCode(code);
+        if (sw2.length) {
+          row2.swallowed = sw2;
+          sw2.forEach(function (x) {
+            report.problems.push(file + " 第 " + x.line + " 行附近的块注释里包着 function：注释可能少了收尾 `*/` → " + x.text);
+          });
+        }
+        var odd2 = oddQuoteLines(code);
+        if (odd2.length) {
+          row2.oddQuotes = odd2;
+          odd2.forEach(function (o) { report.problems.push(file + " 第 " + o.line + " 行引号是奇数个：" + o.text); });
+        }
+        var ua2 = undeclaredAssigns(code, code);
+        if (ua2.length) {
+          row2.undeclared = (row2.undeclared || []).concat(ua2);
+          ua2.forEach(function (u) {
+            report.problems.push(file + " 第 " + u.line + " 行给未声明的变量赋值：<b>" + u.name + "</b> → " + u.text);
+          });
+        }
+      } catch (e4) { row2.fetch = "读不到: " + String(e4.message || e4); report.problems.push(file + " → " + row2.fetch); }
+      report.pages.push(row2);
+    }
+
+    report.verdict = report.problems.length ? ("发现 " + report.problems.length + " 处问题") : "全部通过";
+    try {
+      await phone.dataSet("phone/_archive/debug.data.json", "jscheck", report);
+      report.saved = "ok";
+    } catch (e) {
+      try {
+        await spherse.data.set({ file: "phone/_archive/debug.data.json", key: "jscheck", value: report });
+        report.saved = "ok(sdk)";
+      } catch (e2) { report.saved = "写不回去: " + String(e2.message || e2); }
+    }
+    show(report.verdict + "\n\n" + report.pages.map(function (r) {
+      return r.page + "  脚本" + (r.blocks == null ? "?" : r.blocks) + "  " + (r.parse || r.fetch || "-") +
+        (r.oddQuotes ? "\n    ↳ 引号奇数行：" + r.oddQuotes.map(function (o) { return o.line; }).join(", ") : "");
+    }).join("\n") + "\n\n" + report.problems.join("\n"));
+  })();
+})();
+</script>
+</body>
+</html>

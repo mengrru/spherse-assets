@@ -1,0 +1,59 @@
+{
+  "id": "linjiang",
+  "name": "临江 · 2000",
+  "tagline": "南方沿江的老城，手机还是新鲜东西的那几年",
+
+  "owner": {
+    "gender": "female",
+    "pronoun": "她"
+  },
+
+  "brand": {
+    "lockBadge": "✦ 千 禧 年 2 0 0 0 ✦",
+    "lockHint": "轻点解锁",
+    "defaultTheme": { "id": "y2k", "skin": "chunky" }
+  },
+
+  "currency": {
+    "symbol": "¥",
+    "name": "元",
+    "quick": [5.2, 13.14, 52, 66, 88, 520]
+  },
+
+  "apps": [
+    { "key": "chat",     "name": "消息",   "emoji": "💬", "grad": "linear-gradient(160deg,#7dffb0,#12c25e)", "dock": true,  "route": "chatlist", "unread": "chat" },
+    { "key": "sms",      "name": "短信",   "emoji": "✉️", "grad": "linear-gradient(160deg,#8ff5e6,#12c9b6)", "route": "sms", "unread": "sms" },
+    { "key": "moments",  "name": "朋友圈", "emoji": "📷", "grad": "linear-gradient(160deg,#b39bff,#6b3fe0)", "route": "moments", "title": "朋友圈" },
+    { "key": "bbs",      "name": "论坛",   "emoji": "🗯️", "grad": "linear-gradient(160deg,#9fd0ff,#3f6ba8)", "route": "bbs", "title": "临江论坛" },
+    { "key": "map",      "name": "地图",   "emoji": "🗺️", "grad": "linear-gradient(160deg,#8fd9a2,#2f9e63)", "route": "map", "title": "临江地图", "asset": "assets/map.svg" },
+    { "key": "wallet",   "name": "钱包",   "emoji": "💳", "grad": "linear-gradient(160deg,#8ee7ff,#1f9be0)", "route": "wallet" },
+    { "key": "album",    "name": "相册",   "emoji": "🖼️", "grad": "linear-gradient(160deg,#ffc46b,#ff6a1f)", "dock": true, "route": "album" },
+    { "key": "calendar", "name": "日历",   "emoji": "📅", "grad": "linear-gradient(160deg,#ff9ab5,#e03f74)", "route": "calendar" },
+    { "key": "radio",    "name": "电台",   "emoji": "📻", "grad": "linear-gradient(160deg,#ffb0ef,#c22fe0)", "dock": true, "route": "radio" },
+    { "key": "notes",    "name": "备忘录", "emoji": "📝", "grad": "linear-gradient(160deg,#fff08a,#efb020)", "route": "notes" },
+    { "key": "theme",    "name": "主题",   "emoji": "🎨", "grad": "linear-gradient(160deg,#ffb0ef,#c22fe0)", "route": "theme" },
+    { "key": "settings", "name": "设置",   "emoji": "⚙️", "grad": "linear-gradient(160deg,#dfe6f5,#8f9bb3)", "dock": true, "route": "settings" }
+  ],
+
+  "systems": {
+    "sms": "短信局",
+    "bbs": "临江论坛"
+  },
+
+  "station": {
+    "name": "临江电台",
+    "freq": "FM 88.7 · 深夜档",
+    "note": "点歌、天气、念听众来信。台里的人好像知道得有点多。"
+  },
+
+  "boards": {
+    "chat": "临江杂谈",
+    "hole": "深夜树洞",
+    "lost": "找人·失物",
+    "market": "二手"
+  },
+
+  "docs": {
+    "world": "phone/worlds/linjiang/world.md"
+  }
+}

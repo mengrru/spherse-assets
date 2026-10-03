@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>端到端：日历真的渲染出东西了吗</title>
+<!-- 注意：在「卡片预览」环境里 iframe 的 contentDocument 是 null（沙箱跨域），
+     所以这个探针在那里读不到内层页面的 DOM，只能看到上面那个 iframe 里显示的结果。
+     要在真手机里用才有意义。要机械核对请用 js-check.html。 -->
+<link rel="stylesheet" href="../engine/theme/base.css">
+<style>
+  body{overflow:auto}
+  .app-body{padding-bottom:24px}
+  pre{font-family:var(--mono);font-size:10.5px;line-height:1.55;white-space:pre-wrap;word-break:break-all;
+    background:var(--led-bg);color:var(--led-fg);border-radius:10px;padding:10px}
+  .stage{border:var(--border-w) solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-card)}
+  .stage iframe{display:block;width:100%;height:560px;border:0}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <span>端到端 · 日历</span>
+</header>
+<div class="app-body">
+  <div class="card"><h3>★ 它渲染出来的东西 ★</h3><pre id="out">等它跑…</pre></div>
+  <div class="card"><h3>★ 日历页本体 ★</h3>
+    <div class="stage"><iframe id="fr" src="../engine/apps/calendar/index.html?world=linjiang"></iframe></div>
+  </div>
+</div>
+
+<script src="../engine/theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var out = document.getElementById("out");
+  var probe = { at: new Date().toISOString(), errors: [] };
+
+  window.addEventListener("error", function (e) { probe.errors.push("本页: " + e.message); });
+
+  var fr = document.getElementById("fr");
+  var tries = 0, nullDocs = 0;
+
+  function readIt() {
+    tries++;
+    var doc = null;
+    try { doc = fr.contentDocument; } catch (e) { probe.fatal = "读不到 iframe: " + e.message; }
+    if (!doc) nullDocs++;
+    // 等到页面真的把节点画出来（date/list 都存在）再取样；最多试 30 次（9 秒）
+    var ready = doc && doc.getElementById("day-list") && doc.getElementById("month");
+    if (!ready && tries < 30) { setTimeout(readIt, 300); return; }
+
+    if (doc) {
+      function txt(id) {
+        var n = doc.getElementById(id);
+        return n ? String(n.textContent).replace(/\s+/g, " ").trim().slice(0, 300) : "（没有 #" + id + "）";
+      }
+      try {
+        probe.tries = tries;
+        probe.nullDocs = nullDocs;
+        probe.title = doc.title;
+        probe.today = txt("top");
+        probe.monthHead = txt("month").slice(0, 60);
+        probe.dots = doc.querySelectorAll(".cell .dots i").length;
+        probe.todayCell = (function () {
+          var c = doc.querySelector(".cell.today");
+          return c && c.querySelector(".n") ? ("第 " + c.querySelector(".n").textContent + " 格") : "（没有今天的格子）";
+        })();
+        probe.marks = txt("marks");
+        probe.dayHead = txt("day-head");
+        probe.dayList = txt("day-list");
+        probe.events = doc.querySelectorAll("#day-list .ev").length;
+        probe.fatalBox = doc.getElementById("fatal-box") ? txt("fatal-box") : "（没有报错框）";
+      } catch (e) { probe.sampleError = String(e.message || e); }
+    }
+
+    var payload = JSON.parse(JSON.stringify(probe));
+    function fallback(err) {
+      try {
+        spherse.data.set({ file: "phone/_archive/debug.data.json", key: "calprobe", value: payload }).then(
+          function () { out.textContent = JSON.stringify(payload, null, 2); },
+          function (e2) { out.textContent = "写不回去: " + err + " / " + e2.message + "\n\n" + JSON.stringify(payload, null, 2); }
+        );
+      } catch (e3) { out.textContent = JSON.stringify(payload, null, 2); }
+    }
+    try {
+      phone.dataSet("phone/_archive/debug.data.json", "calprobe", payload).then(
+        function () { out.textContent = JSON.stringify(payload, null, 2); },
+        function (e) { fallback(String(e.message || e)); }
+      );
+    } catch (e) { fallback(String(e.message || e)); }
+  }
+
+  fr.addEventListener("load", function () { setTimeout(readIt, 800); });
+  setTimeout(readIt, 800);     // 万一 load 事件已经错过了
+})();
+</script>
+</body>
+</html>

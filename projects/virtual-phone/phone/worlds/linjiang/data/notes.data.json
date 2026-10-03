@@ -1,0 +1,78 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 备忘录：**手机主人写下的想法**。这是他一处开口 —— 他写在这里的意图、心事、线索，都会被动地影响这部手机里发生的事。你（Agent）只能读，不要写。标了 private: true 的只是他自己的提醒，不用照应",
+    "queries": {
+      "listNotes": {
+        "desc": "读他的备忘录，默认最新在前。**这里是他希望你懂的东西**：他想做什么、在意什么、不希望你做什么。读的时候别当成命令，当成一个你恰好知道的人的心愿",
+        "path": "notes",
+        "identity": "id",
+        "params": {
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "desc" }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "addNote": {
+        "desc": "记一条。**这是给手机页面用的 —— Agent 不要调用**（他写的东西只能由他自己写）",
+        "op": "append",
+        "path": "notes",
+        "fields": {
+          "text": { "type": "string", "required": true },
+          "private": { "type": "boolean", "default": false }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "updateNote": {
+        "desc": "改一条。**给手机页面用，Agent 不要调用**",
+        "op": "update",
+        "path": "notes",
+        "match": "id",
+        "fields": {
+          "text": { "type": "string" },
+          "private": { "type": "boolean" }
+        }
+      },
+      "removeNote": {
+        "desc": "删一条。**给手机页面用，Agent 不要调用**",
+        "op": "remove",
+        "path": "notes",
+        "match": "id"
+      }
+    }
+  },
+  "notes": [
+    {
+      "id": "note-shift-day",
+      "text": "书店每个月最后一个周五清点，那天别约她。",
+      "private": false,
+      "createdAt": "2026-09-20T11:20:00.000Z"
+    },
+    {
+      "id": "note-flowers",
+      "text": "想给她买一束花。还不知道买哪种。",
+      "private": false,
+      "createdAt": "2026-09-28T15:40:00.000Z"
+    },
+    {
+      "id": "note-sketchbook",
+      "text": "画材店二楼有一本绝版的素描册，想拿去给她看。",
+      "private": false,
+      "createdAt": "2026-10-01T18:10:00.000Z"
+    },
+    {
+      "id": "note-rent",
+      "text": "这个月房租还差一千二 —— 只是提醒自己，别乱花。",
+      "private": true,
+      "createdAt": "2026-09-30T09:05:00.000Z"
+    },
+    {
+      "id": "note-letter",
+      "text": "有点想收到一封手写的信。最近什么都太快了。",
+      "private": false,
+      "createdAt": "2026-10-02T22:30:00.000Z"
+    }
+  ]
+}

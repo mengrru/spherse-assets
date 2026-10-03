@@ -1,0 +1,18 @@
+- id: quIedWHVKY8lzZ56GVK50
+  name: 刷一下论坛（每 6 小时）
+  enabled: true
+  type: time
+  cron: 30 */6 * * *
+  mode: reusable_session
+  message: >-
+    【刷新】现实时间是 {{weekday}} {{time}}。
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间判断"这个点论坛上有人在干什么"。
+
+
+    按《临江论坛 · 行为规则》处理：想动就发一条新帖、或者回一两层；觉得论坛该安静就回一句「不发」，什么都不做。
+  notify: false
+  createdAt: 1790960628935
+  updatedAt: 1791048248173

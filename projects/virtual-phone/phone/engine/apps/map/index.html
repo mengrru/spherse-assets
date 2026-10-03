@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>临江地图</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  .app-header.map{background:var(--app-hue-map)}
+  body{position:relative;overflow:hidden}
+  .mapwrap{padding:12px 12px 0;flex:none}
+  .youare{
+    display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:9px 11px;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));
+    border:var(--border-w) solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-row);
+  }
+  .youare b{font-size:14px;color:var(--text)}
+  .youare span{font-size:11px;font-weight:700;color:var(--text-dim)}
+  .mapbox{
+    position:relative;width:100%;height:44vh;min-height:210px;max-height:330px;
+    border:var(--border-w) solid var(--border);border-radius:var(--radius);overflow:hidden;
+    box-shadow:var(--shadow-card);background:var(--map-bg);
+  }
+  .mapsvg{position:absolute;inset:0;width:100%;height:100%}
+  .pin{
+    position:absolute;transform:translate(-50%,-100%);
+    border:none;background:none;padding:0;cursor:pointer;line-height:0;
+    filter:drop-shadow(1.5px 1.5px 0 rgba(26,20,32,.55));
+  }
+  .pin .ball{
+    display:grid;place-items:center;width:26px;height:26px;font-size:14px;
+    border:var(--border-w) solid var(--border);border-radius:50% 50% 50% 4px;transform:rotate(-45deg);
+    background:var(--pill);
+  }
+  .pin .ball span{transform:rotate(45deg);line-height:1}
+  .pin.here .ball{background:var(--btn-pink);animation:herepulse 1.8s ease-in-out infinite}
+  .pin.sel .ball{background:var(--btn-gold)}
+  @keyframes herepulse{0%,100%{transform:rotate(-45deg) scale(1)}50%{transform:rotate(-45deg) scale(1.14)}}
+  .pin .tag{
+    position:absolute;left:50%;top:-16px;transform:translateX(-50%);
+    font-size:9px;font-weight:800;color:#fff;background:var(--accent-heart);border:1.5px solid var(--ink);
+    border-radius:999px;padding:0 5px;white-space:nowrap;
+  }
+  .mapbody{flex:1;min-height:0;overflow-y:auto;padding:12px 12px 32px}
+  .kindtag{
+    display:inline-block;font-size:9.5px;font-weight:800;border:1.5px solid var(--ink);
+    border-radius:5px;padding:0 5px;background:var(--btn-gold);color:var(--btn-gold-fg);margin-left:6px;
+  }
+  .pdesc{font-size:12.5px;line-height:1.65;color:var(--text);margin:8px 0 10px}
+  .charshere{
+    margin-top:8px;padding:8px 10px;font-size:12px;font-weight:700;line-height:1.65;
+    border:1.5px dashed currentColor;border-radius:10px;color:var(--accent-in);
+  }
+  .charstatic{font-size:11px;font-weight:700;color:var(--text-dim);margin-top:7px}
+  /* 谁现在在哪：一条可以横滑的小纸片 */
+  .whostrip{display:flex;gap:7px;overflow-x:auto;padding:10px 12px 2px;margin:0 -12px}
+  .whostrip::-webkit-scrollbar{display:none}
+  .whochip{
+    flex:none;display:flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;
+    border:var(--border-w) solid var(--border);border-radius:999px;padding:4px 10px;
+    background:var(--pill);color:var(--pill-fg);font:inherit;font-size:11.5px;font-weight:800;
+    box-shadow:var(--shadow-row);
+  }
+  .whochip .whoat{font-size:10px;font-weight:700;opacity:.72}
+  .whochip:active{transform:var(--press);box-shadow:var(--shadow-press)}
+</style>
+</head>
+<body>
+<header class="app-header map">
+  <button class="back" id="back">‹</button>
+  <span id="map-title">地图</span>
+</header>
+<div class="mapwrap">
+  <div class="youare" id="youare"></div>
+  <div class="mapbox" id="mapbox"></div>
+  <div class="whostrip" id="who"></div>
+</div>
+<div class="mapbody" id="body"></div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var KIND = { shop: "商店", food: "吃的", home: "住处", transit: "交通", view: "景", public: "公共" };
+
+  var shared = {}, places = [], visits = [];
+  var selected = null;
+  var svgLoaded = false;
+
+  // 地图美术（SVG）由世界包提供，运行时取回来贴在图上 —— 换世界就换一张地图
+  async function loadMapArt() {
+    if (svgLoaded) return;
+    var meta = phone.appMeta("map") || {};
+    if (!meta.asset) return;
+    try {
+      var res = await fetch(phone.assetUrl(meta.asset));
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var text = await res.text();
+      if (text.indexOf("<svg") < 0) throw new Error("不是 SVG");
+      $("mapbox").insertAdjacentHTML("afterbegin", text.replace("<svg ",
+        '<svg class="mapsvg" preserveAspectRatio="none" '));
+      svgLoaded = true;
+    } catch (e) {
+      // 没有美术也能用，只是没底图 —— 但要说清楚为什么
+      phone.toast({ variant: "warning", message: "地图没画出来", description: phone.assetUrl(meta.asset) });
+    }
+  }
+
+  async function load() {
+    shared = await phone.loadShared();
+    var d = await phone.entries(phone.FILES.MAP);
+    places = d.places || [];
+    visits = d.visits || [];
+    var meta = phone.appMeta("map") || {};
+    var title = meta.title || "地图";
+    $("map-title").textContent = title;
+    document.title = title;
+    await loadMapArt();
+    var here = (shared.where && shared.where.placeId) || null;
+    if (!selected || !places.some(function (p) { return p.id === selected; })) {
+      selected = here || (places[0] && places[0].id) || null;
+    }
+    render();
+  }
+
+  function place(id) { return places.filter(function (p) { return p.id === id; })[0] || null; }
+  function visitsOf(id) { return visits.filter(function (v) { return v.placeId === id; }); }
+  function hereId() { return (shared.where && shared.where.placeId) || null; }
+
+  function render() {
+    var here = place(hereId());
+    $("youare").innerHTML = "<span style='font-size:18px'>📍</span><div><b>你在：" +
+      phone.esc(here ? here.name : "还不确定") + "</b><br><span>" +
+      phone.esc(here ? "更新于 " + phone.fmtAgo((shared.where || {}).updatedAt) : "去一个地方看看") + "</span></div>";
+
+    renderPins();
+    renderWho();
+    renderBody();
+  }
+
+  function renderPins() {
+    var box = $("mapbox");
+    Array.prototype.slice.call(box.querySelectorAll(".pin")).forEach(function (n) { n.remove(); });
+    places.forEach(function (p) {
+      var b = document.createElement("button");
+      b.className = "pin" + (p.id === hereId() ? " here" : "") + (p.id === selected ? " sel" : "");
+      b.style.left = (p.x || 50) + "%";
+      b.style.top = (p.y || 50) + "%";
+      b.dataset.place = p.id;
+      b.innerHTML = '<span class="ball"><span>' + phone.esc(p.emoji || "📍") + "</span></span>" +
+        (p.id === hereId() ? '<span class="tag">你在这里</span>' : "");
+      box.appendChild(b);
+    });
+  }
+
+  function renderWho() {
+    var list = phone.characters().filter(function (c) { return c.placeName; });
+    if (!list.length) { $("who").innerHTML = ""; return; }
+    $("who").innerHTML = list.map(function (c) {
+      return '<button class="whochip" data-goto="' + phone.esc(c.placeName) + '">' +
+        phone.esc(c.avatarEmoji || "🙂") + " " + phone.esc(c.name) +
+        '<span class="whoat">' + phone.esc(c.placeName) + "</span></button>";
+    }).join("");
+  }
+
+  function renderBody() {
+    var p = place(selected);
+    if (!p) { $("body").innerHTML = '<div class="ph"><div class="t">地图上还没有地点</div></div>'; return; }
+    var vs = visitsOf(p.id);
+    var last = vs.sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); })[0];
+    var ch = p.characterId ? phone.charById(p.characterId) : null;
+    var isHere = p.id === hereId();
+
+    $("body").innerHTML =
+      '<div class="card"><h3>' + phone.esc(p.emoji || "📍") + " 地点" + "</h3>" +
+      "<div style='font-size:17px;font-weight:800;font-style:italic;color:var(--text)'>" + phone.esc(p.name) +
+      '<span class="kindtag">' + phone.esc(KIND[p.kind] || p.kind || "地点") + "</span></div>" +
+      '<div class="pdesc">' + phone.esc(p.desc || "——") + "</div>" +
+      '<div class="kv"><span class="k">营业</span><span>' + phone.esc(p.hours || "不详") + "</span></div>" +
+      '<div class="kv"><span class="k">来过</span><span>' + vs.length + " 次" +
+      (last ? " · 上次 " + phone.esc(phone.fmtAgo(last.createdAt)) : "") + "</span></div>" +
+      (function () {
+        var here = phone.characters().filter(function (c) { return c.placeName && c.placeName === p.name; });
+        if (here.length) {
+          return '<div class="charshere"><b>现在在这里</b><br>' + here.map(function (c) {
+            return phone.esc(c.avatarEmoji || "🙂") + " " + phone.esc(c.name) +
+              "（" + phone.esc(c.doing || "不知道在做什么") + "）";
+          }).join("<br>") + "</div>";
+        }
+        if (p.characterId) {
+          var reg = phone.charById(p.characterId);
+          if (reg) return '<div class="charstatic">' + phone.esc(reg.avatarEmoji || "🙂") + " " +
+            phone.esc(reg.name) + " 常在这里</div>";
+        }
+        return "";
+      })() +
+      '<div class="fbtns" style="margin-top:12px">' +
+      (isHere
+        ? '<button class="secondary" disabled style="opacity:.6">你已经在这里</button>'
+        : '<button class="primary" id="go">我在这里</button>') +
+      "</div></div>" +
+
+      (ch ? "<div class='card'><h3>★ " + phone.esc(ch.name) + " 现在 ★</h3>" +
+        '<div class="kv"><span class="k">心情</span><span>' + phone.esc(ch.mood || "—") + "</span></div>" +
+        '<div class="kv"><span class="k">正在做</span><span>' + phone.esc(ch.doing || "—") + "</span></div>" +
+        '<div class="wchint">走到 TA 常在的地方，TA 可能会说话 —— 也可能不会。</div></div>' : "");
+
+    var goBtn = $("go");
+    if (goBtn) goBtn.addEventListener("click", function () { goThere(p); });
+  }
+
+  async function goThere(p) {
+    var now = new Date().toISOString();
+    try {
+      await phone.mutate(phone.FILES.SHARED, "setWhere",
+        { placeId: p.id, placeName: p.name, updatedAt: now });
+      await phone.mutate(phone.FILES.MAP, "addVisit", { placeId: p.id, note: "" },
+        "visit:" + p.id + ":" + Date.now());
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没走过去", description: String(e.message || e) });
+      return;
+    }
+    phone.toast({ variant: "success", message: "你现在在「" + p.name + "」" });
+    if (p.characterId) {
+      var ch = phone.charById(p.characterId);
+      if (ch) phone.notify(ch, phone.prompt.mapMove(ch, p));
+    }
+  }
+
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("who").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-goto]");
+    if (!b) return;
+    var target = places.filter(function (x) { return x.name === b.dataset.goto; })[0];
+    if (target) { selected = target.id; render(); }
+  });
+  $("mapbox").addEventListener("click", function (e) {
+    var pin = e.target.closest("[data-place]");
+    if (!pin) return;
+    selected = pin.dataset.place;
+    render();
+  });
+
+  load().catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.MAP, phone.FILES.SHARED], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>钱包</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 本页专属：信用卡与账单行 */
+  body{position:relative;overflow:hidden}
+  .wbody{flex:1;min-height:0;overflow-y:auto;padding:14px 14px 92px;
+    background-image:radial-gradient(rgba(26,20,32,.07) 1px,transparent 1px);background-size:14px 14px}
+  .wcard{
+    position:relative;border:var(--border-w) solid var(--border);border-radius:18px;padding:14px 16px 16px;
+    background:var(--card-face);
+    box-shadow:var(--shadow-card),var(--inner-gloss);
+  }
+  .wcard-top{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:800;letter-spacing:1px;color:var(--card-face-sub)}
+  .wcard-top .no{font-family:var(--mono);letter-spacing:1.5px;opacity:.75}
+  .wbalance{margin-top:10px;font-family:var(--mono);font-size:40px;font-weight:800;letter-spacing:-1px;
+    color:var(--card-face-fg);text-shadow:var(--card-face-shadow)}
+  .wbalance .cur{font-size:20px;margin-right:2px;opacity:.7}
+  .wcard-note{margin-top:8px;font-size:10.5px;font-weight:700;color:var(--card-face-sub);letter-spacing:.5px}
+  .wbtns{display:flex;gap:10px;margin:14px 0 18px}
+  .wbtn{flex:1;border:var(--border-w) solid var(--border);border-radius:15px;padding:13px 10px;cursor:pointer;
+    font:inherit;font-size:14px;font-weight:800;font-style:italic;color:var(--btn-pink-fg);box-shadow:var(--shadow-card)}
+  .wbtn:active{transform:var(--press);box-shadow:var(--shadow-press)}
+  .wbtn.transfer{background:var(--btn-pink)}
+  .wbtn.red{background:var(--btn-gold);color:var(--btn-gold-fg)}
+  .wsec{font-size:11px;font-weight:800;font-style:italic;letter-spacing:1.5px;color:var(--accent-ink);margin:0 0 9px 2px}
+  .wtx{display:flex;gap:10px;align-items:center;padding:10px;margin-bottom:10px;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));border:var(--border-w) solid var(--border);border-radius:14px;
+    box-shadow:2px 2px 0 rgba(26,20,32,.85)}
+  .wtx-ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:none;
+    border:var(--border-w) solid var(--border);background:var(--icon-tint)}
+  .wtx-main{flex:1;min-width:0}
+  .wtx-title{font-size:13.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .wtx-sub{font-size:11.5px;color:var(--text-dim);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wtx-amt{font-family:var(--mono);font-size:15px;font-weight:800;flex:none}
+  .wtx-amt.out{color:var(--accent-out)}
+  .wtx-amt.in{color:var(--accent-in)}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span>钱包</span>
+  <button class="ghost" id="topup">充值</button>
+</header>
+<div class="wbody" id="body"></div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-head"><span id="sheet-title">转账</span><button id="sheet-cancel">取消</button></div>
+  <div class="wtargets" id="targets"></div>
+  <input id="amount" class="winput" inputmode="decimal" placeholder="金额（元）">
+  <div class="wquick" id="quick"></div>
+  <input id="note" class="winput" placeholder="说点什么（备注）">
+  <button class="sheet-send" id="sheet-send">确认转账</button>
+</div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var shared = {}, wallet = {}, txs = [];
+  var kind = "transfer", targetId = null;
+  var snapshot = {};
+
+  async function load(first) {
+    shared = await phone.loadShared();
+    var d = await phone.entries(phone.FILES.WALLET);
+    wallet = d.wallet || {};
+    txs = d.transactions || [];
+    if (first) {
+      txs.forEach(function (t) { snapshot[t.id] = t.status; });
+    } else {
+      trackStatus();
+    }
+    render();
+  }
+
+  // 余额不存字段，从流水推导：基数 + 转入 − 转出（未退回的）
+  function balance() {
+    var bal = typeof wallet.initial === "number" ? wallet.initial : 0;
+    txs.forEach(function (t) {
+      var amt = Number(t.amount) || 0;
+      if (t.direction === "in") bal += amt;
+      else if (t.status !== "returned") bal -= amt;
+    });
+    return bal;
+  }
+  function icon(t) { return t.kind === "redPacket" ? "🧧" : (t.kind === "topup" ? "🏧" : "💸"); }
+  function title(t) {
+    var name = t.counterpartyName || "对方";
+    if (t.direction === "in") return t.kind === "topup" ? "零钱充值" : name + (t.kind === "redPacket" ? " 发的红包" : " 转来");
+    return (t.kind === "redPacket" ? "红包 · " : "转账给 ") + name;
+  }
+  function statusTag(t) {
+    if (t.direction === "in") return "";
+    if (t.status === "pending") return '<span class="wtag">待收</span>';
+    if (t.status === "accepted") return '<span class="wtag accepted">已收款</span>';
+    if (t.status === "returned") return '<span class="wtag returned">已退回</span>';
+    return "";
+  }
+  function trackStatus() {
+    txs.forEach(function (t) {
+      var prev = snapshot[t.id];
+      snapshot[t.id] = t.status;
+      if (prev !== "pending" || t.status === "pending") return;
+      var name = t.counterpartyName || "对方";
+      phone.toast({
+        variant: t.status === "returned" ? "warning" : "success",
+        message: (t.status === "returned" ? name + " 退回了 " : name + " 收下了 ") + phone.money(t.amount) + " 元",
+        description: t.note || ""
+      });
+    });
+  }
+
+  function render() {
+    var cur = phone.currency();
+    var list = txs.slice().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
+    var rows = list.length ? list.map(function (t) {
+      var sign = t.direction === "in" ? "+" : "-";
+      return '<div class="wtx"><div class="wtx-ico">' + icon(t) + "</div>" +
+        '<div class="wtx-main"><div class="wtx-title">' + phone.esc(title(t)) + statusTag(t) + "</div>" +
+        '<div class="wtx-sub">' + phone.esc((t.note ? t.note + " · " : "") + phone.fmtAgo(t.createdAt)) + "</div></div>" +
+        '<div class="wtx-amt ' + (t.direction === "in" ? "in" : "out") + '">' + sign + phone.money(t.amount) + "</div></div>";
+    }).join("")
+      : '<div class="ph"><div class="big">💰</div><div class="t">还没有账目</div><div class="d">转一笔试试，看看 TA 收不收。</div></div>';
+
+    $("body").innerHTML =
+      '<div class="wcard"><div class="wcard-top"><span>' + phone.esc(cur.name) + "</span>" +
+      '<span class="no">NO. 8888 5210 1314</span></div>' +
+      '<div class="wbalance"><span class="cur">' + phone.esc(cur.symbol) + "</span>" +
+      phone.esc(phone.money(balance())) + "</div>" +
+      '<div class="wcard-note">余额由账目自动结算 · 共 ' + txs.length + " 笔</div></div>" +
+      '<div class="wbtns">' +
+      '<button class="wbtn transfer" data-wallet="transfer">💸 转账</button>' +
+      '<button class="wbtn red" data-wallet="redPacket">🧧 红包</button></div>' +
+      '<div class="wsec">★ 账 目 ★</div>' + rows;
+  }
+
+  /* ---------- 弹层 ---------- */
+  function openSheet(which) {
+    kind = which;
+    var chs = phone.characters();
+    if (!chs.length) { phone.toast({ variant: "warning", message: "还没有好友" }); return; }
+    if (!targetId || !phone.charById(targetId)) targetId = chs[0].id;
+
+    $("sheet-title").textContent = which === "redPacket" ? "发红包" : "转账";
+    $("sheet-send").textContent = which === "redPacket" ? "塞进红包" : "确认转账";
+    $("amount").value = "";
+    $("note").value = "";
+    $("note").placeholder = which === "redPacket" ? "恭喜发财，大吉大利" : "说点什么（备注）";
+    $("targets").innerHTML = chs.map(function (c) {
+      return '<button class="wchip' + (c.id === targetId ? " on" : "") + '" data-target="' + phone.esc(c.id) + '">' +
+        phone.esc(c.avatarEmoji || "🙂") + " " + phone.esc(c.name) + "</button>";
+    }).join("");
+    $("quick").innerHTML = phone.currency().quick.map(function (v) {
+      return '<button data-quick="' + v + '">' + v + "</button>";
+    }).join("");
+    $("sheet").classList.add("open");
+    setTimeout(function () { $("amount").focus(); }, 90);
+  }
+  function closeSheet() { $("sheet").classList.remove("open"); }
+
+  async function send() {
+    var amount = Math.round(parseFloat(($("amount").value || "").replace(/[^\d.]/g, "")) * 100) / 100;
+    if (!amount || amount <= 0) { phone.toast({ variant: "warning", message: "金额不对" }); return; }
+    if (Math.round(amount * 100) > Math.round(balance() * 100)) {
+      phone.toast({ variant: "warning", message: "零钱不够了", description: "点右上角可以先充点" });
+      return;
+    }
+    var ch = phone.charById(targetId);
+    if (!ch) return;
+    var note = ($("note").value || "").trim();
+    var which = kind;
+    closeSheet();
+    try {
+      var saved = await phone.mutate(phone.FILES.WALLET, "sendMoney", {
+        kind: which, direction: "out", amount: amount,
+        counterpartyId: ch.id, counterpartyName: ch.name, note: note, status: "pending"
+      }, "tx:" + which + ":" + ch.id + ":" + Date.now());
+      phone.toast({
+        variant: "success",
+        message: (which === "redPacket" ? "已包出 " : "已转出 ") + phone.money(amount) + " " + phone.currency().name,
+        description: ch.name + " 收不收看 TA"
+      });
+      render();
+      await phone.notify(ch, phone.prompt.wallet(ch, saved));
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没转出去", description: String(e.message || e) });
+    }
+  }
+
+  async function topUp() {
+    try {
+      await phone.mutate(phone.FILES.WALLET, "sendMoney", {
+        kind: "topup", direction: "in", amount: 5,
+        counterpartyId: "system", counterpartyName: "充值", note: "补一点", status: "accepted"
+      }, "topup:" + Date.now());
+      phone.toast({ variant: "success", message: "进了 5 " + phone.currency().name });
+      render();
+    } catch (e) {
+      phone.toast({ variant: "error", message: "没成功" });
+    }
+  }
+
+  /* ---------- 事件 ---------- */
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("topup").addEventListener("click", topUp);
+  $("sheet-cancel").addEventListener("click", closeSheet);
+  $("sheet-send").addEventListener("click", send);
+  $("body").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-wallet]");
+    if (b) openSheet(b.dataset.wallet);
+  });
+  $("targets").addEventListener("click", function (e) {
+    var c = e.target.closest("[data-target]");
+    if (!c) return;
+    targetId = c.dataset.target;
+    Array.prototype.forEach.call($("targets").children, function (n) {
+      n.classList.toggle("on", n.dataset.target === targetId);
+    });
+  });
+  $("quick").addEventListener("click", function (e) {
+    var q = e.target.closest("[data-quick]");
+    if (q) $("amount").value = q.dataset.quick;
+  });
+  phone.bindEscape(function () {
+    if ($("sheet").classList.contains("open")) { closeSheet(); return true; }
+    return false;
+  });
+
+  load(true).catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.WALLET, phone.FILES.SHARED], function () { load(false).catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

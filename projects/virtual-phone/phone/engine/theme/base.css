@@ -1,0 +1,295 @@
+@import url("./themes.css");
+@import url("./skins.css");
+@import url("./picker.css");   /* 「从项目里挑一个」面板：相册与电台共用一份 */
+
+/* 小手机 · 共用样式（所有 App 页面引这份，机身相关样式在 shell.css） */
+/* 引擎自用：等宽字体。
+   颜色与形状一律由 主题 / 设计语言 提供 —— 别在这里重复定义 --ink（会盖掉主题的值）。 */
+:root{
+  --mono:"Courier New",monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;height:100%;display:flex;flex-direction:column;
+  /* App 页面是固定视口：滚动都发生在内部区域（.app-body / .chat-body / .feed…），
+     页面本身不该能滚 —— 否则藏在屏幕外的弹层会被整页滚动翻出来。 */
+  overflow:hidden;
+  font-family:var(--font);
+  background:var(--page-bg);color:var(--text);
+  background-image:radial-gradient(rgba(26,20,32,.07) 1px,transparent 1px);
+  background-size:14px 14px;
+}
+
+/* ---------- 标题栏（顶部留 46px 给外壳的状态栏） ---------- */
+.app-header{
+  display:flex;align-items:center;gap:9px;height:var(--header-h);padding:46px 14px 0;flex:none;
+  font-family:var(--font-header);font-size:16px;font-weight:var(--h-weight);font-style:var(--h-style);letter-spacing:var(--h-tracking);color:#fff;
+  background:var(--app-hue-main);
+  border-bottom:var(--border-w) solid var(--border);
+  text-shadow:var(--h-shadow);
+  box-shadow:var(--h-bevel);
+}
+.app-header.chat{background:var(--app-hue-chat)}
+.app-header .back{
+  border:var(--border-w) solid var(--border);background:var(--pill);color:var(--pill-fg);
+  width:28px;height:28px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer;
+  display:grid;place-items:center;padding:0 0 4px;box-shadow:2px 2px 0 rgba(26,20,32,.85);flex:none;
+}
+.app-header .ghost{
+  margin-left:auto;border:var(--border-w) solid var(--border);border-radius:999px;
+  background:var(--btn-grad-soft);color:var(--btn-fg);
+  font:inherit;font-size:12px;font-weight:800;padding:4px 11px;cursor:pointer;
+  box-shadow:var(--shadow-row);text-shadow:none;flex:none;
+}
+.app-header .ghost:disabled{opacity:.6;cursor:default}
+.app-header .hint{
+  margin-left:auto;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.8);text-shadow:none;
+}
+
+/* ---------- 滚动区 ---------- */
+.app-body{flex:1;min-height:0;overflow-y:auto;padding:14px 14px 32px}
+
+/* ---------- 头像 ---------- */
+.avatar{
+  width:48px;height:48px;border-radius:var(--icon-radius);display:grid;place-items:center;
+  font-size:22px;flex:none;border:var(--border-w) solid var(--border);
+  box-shadow:var(--inner-gloss);
+}
+
+/* ---------- 卡片 / 键值 / 输入 ---------- */
+.card{
+  background:linear-gradient(180deg,var(--card-1),var(--card-2));
+  border:var(--border-w) solid var(--border);border-radius:var(--radius);padding:var(--card-pad);margin-bottom:14px;
+  box-shadow:var(--shadow-card);
+}
+.card h3{margin:0 0 10px;font-size:11.5px;font-weight:800;font-style:italic;letter-spacing:1.5px;color:var(--accent-ink)}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--text);padding:8px 0;border-bottom:1.5px dashed rgba(26,20,32,.22)}
+.kv:last-child{border-bottom:none}
+.kv .k{opacity:.55;font-weight:700;flex:none}
+.kv span:last-child{text-align:right;word-break:break-all}
+.field{display:flex;gap:8px}
+.field input{
+  flex:1;background:var(--input-bg);border:var(--border-w) solid var(--border);border-radius:11px;outline:none;
+  color:var(--input-fg);font:inherit;font-size:14px;padding:9px 11px;box-shadow:inset 2px 2px 0 rgba(26,20,32,.08);
+}
+.field button{
+  border:var(--border-w) solid var(--border);border-radius:11px;background:var(--btn-grad);
+  color:var(--btn-fg);font:inherit;font-size:13.5px;font-weight:800;padding:9px 13px;cursor:pointer;
+  box-shadow:var(--shadow-row);
+}
+.led{
+  font-family:var(--mono);font-size:30px;font-weight:800;letter-spacing:5px;text-align:center;
+  color:var(--led-fg);background:var(--led-bg);border:var(--border-w) solid var(--border);border-radius:10px;padding:8px 0 10px;
+  box-shadow:inset 0 0 16px var(--led-glow),2px 2px 0 var(--ink);
+}
+.led-cap{text-align:center;font-size:10.5px;font-weight:700;color:var(--text-dim);margin-top:9px}
+.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:36px 22px;gap:12px}
+.ph .big{font-size:50px;filter:drop-shadow(3px 3px 0 rgba(26,20,32,.9))}
+.ph .t{font-size:17px;font-weight:800;font-style:italic;color:var(--text)}
+.ph .d{font-size:12.5px;font-weight:600;color:var(--text-dim);line-height:1.7}
+.errbox{
+  margin:4px 0;padding:14px;border-radius:14px;font-size:13px;line-height:1.7;color:var(--warn-fg);
+  background:var(--warn);border:var(--border-w) solid var(--border);box-shadow:3px 3px 0 var(--ink);
+}
+.cursor{display:inline-block;animation:blink2 1s steps(1) infinite}
+@keyframes blink2{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* ---------- 好感度段条 ---------- */
+.segbar{display:flex;gap:2px;height:11px;align-items:stretch}
+.segbar i{flex:1;background:var(--tint-chip);border:1.5px solid var(--border);border-radius:2px}
+.segbar i.on{background:var(--seg-on);box-shadow:0 0 5px var(--seg-on)}
+.segbar i.hot{background:var(--seg-hot);box-shadow:0 0 6px var(--seg-hot)}
+
+/* ---------- 聊天页的状态栏 ---------- */
+.status-strip{
+  display:flex;align-items:center;gap:8px;padding:7px 12px;flex:none;cursor:pointer;
+  background:var(--tint-strip);
+  border-bottom:var(--border-w) solid var(--border);
+  font-size:11px;font-weight:800;color:var(--note-fg);
+}
+.status-strip .heart{color:var(--accent-heart);font-size:13px;text-shadow:0 0 7px var(--accent-heart);flex:none}
+.status-strip .num{font-family:var(--mono);color:var(--accent-ink);flex:none}
+.status-strip .sep{opacity:.3;flex:none}
+.status-strip .mood{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32%}
+.status-strip .doing{color:var(--accent-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.status-strip .arrow{margin-left:auto;opacity:.45;font-size:10px;flex:none}
+.status-strip .segbar{flex:0 0 68px}
+
+/* ---------- 会话列表 ---------- */
+.conv{
+  display:flex;gap:11px;align-items:center;padding:10px;margin-bottom:10px;
+  background:linear-gradient(180deg,var(--card-1),var(--card-2));
+  border:var(--border-w) solid var(--border);border-radius:var(--radius-sm);cursor:pointer;
+  box-shadow:var(--shadow-row);
+}
+.conv:active{transform:var(--press);box-shadow:var(--shadow-press)}
+.conv-main{flex:1;min-width:0}
+.conv-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.conv-name{font-size:15px;font-weight:800;color:var(--text)}
+.conv-right{display:flex;align-items:center;gap:6px;flex:none}
+.conv-time{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-dim)}
+.conv-badge{
+  min-width:15px;height:15px;padding:0 4px;border-radius:8px;border:1.5px solid var(--border);
+  background:radial-gradient(circle at 35% 30%,#fff,#ff2f57 65%);color:#fff;
+  font-family:var(--mono);font-size:9.5px;font-weight:800;display:grid;place-items:center;
+}
+.conv-last{font-size:12.5px;color:var(--text-dim);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-tag{
+  display:inline-block;margin-top:7px;font-size:10.5px;font-weight:700;color:var(--accent-ink);
+  border:1.5px dashed currentColor;border-radius:999px;padding:1px 8px;
+}
+
+/* ---------- 聊天 ---------- */
+.chat-body{
+  flex:1;min-height:0;overflow-y:auto;padding:16px 13px 10px;display:flex;flex-direction:column;gap:11px;
+  background:var(--tint-chat);background-image:radial-gradient(var(--tint-dots) 1px,transparent 1px);background-size:16px 16px;
+}
+.day{
+  align-self:center;font-size:10.5px;font-weight:800;font-style:italic;color:var(--note-fg);
+  background:var(--note);border:var(--border-w) solid var(--border);
+  border-radius:var(--radius-pill);padding:3px 12px;box-shadow:var(--shadow-row);margin:2px 0 4px;
+}
+.row{display:flex;gap:8px;align-items:flex-end;max-width:88%}
+.row.me{align-self:flex-end;flex-direction:row-reverse}
+.row .avatar{width:38px;height:38px;border-radius:12px;font-size:18px;box-shadow:2px 2px 0 var(--ink)}
+.bubble{
+  padding:8px 12px;font-size:14.5px;line-height:1.5;word-break:break-word;
+  background:var(--bubble-them);color:var(--bubble-them-fg);
+  border:var(--border-w) solid var(--border);border-radius:15px;border-top-left-radius:4px;
+  box-shadow:var(--shadow-row);
+}
+.row.me .bubble{
+  background:var(--bubble-me);color:var(--bubble-me-fg);font-weight:600;
+  border-top-left-radius:15px;border-top-right-radius:4px;
+}
+.row.me .bubble.sending{opacity:.72}
+.row.me .bubble.failed{background:var(--warn);color:var(--warn-fg)}
+.bubble .msg-state{font-size:10px;margin-left:7px;opacity:.6;vertical-align:middle}
+.bubble .msg-state.fail{
+  display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;
+  background:#ff2f57;color:#fff;font-weight:800;font-size:10px;opacity:1;cursor:pointer;
+  border:1.5px solid var(--border);animation:pulse .9s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.bubble.typing{display:flex;gap:5px;align-items:center;padding:12px}
+.bubble.typing i{width:6px;height:6px;border-radius:50%;background:var(--accent-ink);display:block;animation:blinkdots 1.2s infinite}
+.bubble.typing i:nth-child(2){animation-delay:.2s}
+.bubble.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blinkdots{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+.composer{
+  display:flex;gap:8px;align-items:flex-end;padding:9px 10px 26px;flex:none;
+  background:var(--tint-composer);border-top:var(--border-w) solid var(--border);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.8);
+}
+.composer textarea{
+  flex:1;resize:none;outline:none;font:inherit;font-size:14.5px;line-height:1.45;
+  background:var(--input-bg);color:var(--input-fg);border:var(--border-w) solid var(--border);border-radius:12px;
+  padding:9px 12px;max-height:92px;box-shadow:inset 2px 2px 0 rgba(26,20,32,.1);
+}
+.composer textarea::placeholder{color:var(--text-dim)}
+.composer textarea:disabled{opacity:.6}
+.send{
+  border:var(--border-w) solid var(--border);border-radius:12px;padding:9px 14px;
+  font:inherit;font-size:13.5px;font-weight:800;font-style:italic;
+  background:var(--btn-grad);color:var(--btn-fg);cursor:pointer;flex:none;
+  box-shadow:var(--shadow-row);
+}
+.send:active{transform:var(--press);box-shadow:var(--shadow-press)}
+.send:disabled{opacity:.45;cursor:default}
+/* 按钮统一配色：主题没自带 --btn-grad 时靠这个滤镜重着色（自带的话把 --btn-filter 设 none） */
+.send,.app-header .ghost,.sheet-send,.field button,.fbtns button,.wchip,.mact,.wbtn,.boardbar button,.post{
+  filter:var(--btn-filter);
+}
+.afffloat{
+  position:absolute;left:50%;bottom:106px;z-index:55;pointer-events:none;
+  transform:translate(-50%,8px);opacity:0;transition:opacity .25s,transform .25s;
+  font-size:12px;font-weight:800;color:#fff;
+  background:var(--accent-heart);
+  border:var(--border-w) solid var(--border);border-radius:999px;padding:5px 14px;
+  box-shadow:2px 2px 0 var(--ink),0 0 18px var(--accent-heart);
+}
+.afffloat.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- 好友档案 ---------- */
+.fhead{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0 4px}
+.favatar{
+  width:84px;height:84px;border-radius:24px;font-size:38px;display:grid;place-items:center;
+  border:var(--border-w) solid var(--border);box-shadow:3px 3px 0 var(--ink),inset 0 3px 0 rgba(255,255,255,.55);
+}
+.fname{font-size:20px;font-weight:800;font-style:italic;color:var(--text)}
+.ftag{font-size:11px;font-weight:700;color:var(--accent-ink);border:1.5px dashed currentColor;border-radius:999px;padding:2px 10px}
+.fmeta{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;color:var(--text-dim);margin-top:12px}
+.fmeta .lv{color:var(--accent-heart)}
+.fbtns{display:flex;gap:10px;margin-top:4px}
+.fbtns button{
+  flex:1;border:var(--border-w) solid var(--border);border-radius:14px;padding:12px;
+  font:inherit;font-size:13.5px;font-weight:800;font-style:italic;cursor:pointer;
+  box-shadow:var(--shadow-card);
+}
+.fbtns button:active{transform:var(--press);box-shadow:var(--shadow-press)}
+.fbtns .primary{background:var(--btn-pink);color:var(--btn-pink-fg)}
+.fbtns .secondary{background:var(--btn-grad);color:var(--btn-fg)}
+.fnote{font-size:10.5px;font-weight:700;color:var(--text-dim);text-align:center;margin-top:10px;line-height:1.7}
+
+/* ---------- 底部弹出面板 ---------- */
+.sheet{
+  /* 必须用 fixed：absolute + translateY(118%) 会把页面撑出一块可滚动区域，
+     于是整页能往下滚、滚出这个本该藏起来的面板。fixed 不产生滚动溢出。 */
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  background:linear-gradient(180deg,var(--card-1),var(--card-2));
+  border-top:var(--border-w) solid var(--border);border-radius:var(--radius) var(--radius) 0 0;padding:14px 14px 28px;
+  transform:translateY(118%);transition:transform .26s cubic-bezier(.3,1.15,.5,1);
+  box-shadow:0 -8px 24px rgba(26,20,32,.32);
+}
+.sheet.open{transform:translateY(0)}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sheet-head span{font-size:12.5px;font-weight:800;font-style:italic;letter-spacing:1px;color:var(--accent-ink)}
+.sheet-head button{border:none;background:none;font:inherit;font-size:12px;font-weight:800;color:var(--text-dim);cursor:pointer}
+.sheet textarea{
+  width:100%;min-height:78px;resize:none;outline:none;font:inherit;font-size:14.5px;line-height:1.5;
+  background:var(--input-bg);color:var(--input-fg);border:var(--border-w) solid var(--border);border-radius:12px;padding:10px 12px;
+  box-shadow:inset 2px 2px 0 rgba(26,20,32,.08);
+}
+.sheet-send{
+  margin-top:10px;width:100%;border:var(--border-w) solid var(--border);border-radius:13px;padding:11px;
+  font:inherit;font-size:14px;font-weight:800;font-style:italic;cursor:pointer;
+  background:var(--btn-grad);color:var(--btn-fg);box-shadow:var(--shadow-card);
+}
+.sheet-send:active{transform:var(--press);box-shadow:var(--shadow-press)}
+
+/* ---------- 右下角悬浮按钮（＋） ----------
+   4 个 App 都用它，所以放在共用样式里。要换颜色/光晕就在页面里加一条
+   `.fab.xxx{background:…;color:…}` 覆写（比如论坛用 --app-hue-bbs）。 */
+.fab{
+  position:absolute;right:18px;bottom:34px;width:56px;height:56px;border-radius:50%;z-index:30;
+  border:var(--border-w) solid var(--border);cursor:pointer;padding-bottom:3px;
+  background:var(--btn-pink);color:var(--btn-pink-fg);font-size:26px;line-height:1;
+  box-shadow:var(--shadow-card),0 0 18px var(--accent-heart);display:grid;place-items:center;
+}
+.fab:active{transform:var(--press);box-shadow:var(--shadow-press)}
+
+/* ---------- 小标签 / 选择块 / 输入 ---------- */
+.wtag{
+  font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:999px;
+  border:1.5px solid var(--border);background:var(--btn-gold);color:var(--btn-gold-fg);
+}
+.wtag.accepted{background:var(--btn-grad);color:var(--btn-fg)}
+.wtag.returned{background:var(--warn);color:var(--warn-fg)}
+.wchip{
+  border:var(--border-w) solid var(--border);border-radius:999px;padding:5px 12px;cursor:pointer;
+  font:inherit;font-size:12.5px;font-weight:800;background:var(--pill);color:var(--pill-fg);
+  box-shadow:var(--shadow-row);
+}
+.wchip.on{background:var(--btn-pink);color:var(--btn-pink-fg)}
+.wtargets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.winput{
+  width:100%;margin-bottom:9px;background:var(--input-bg);color:var(--input-fg);font:inherit;font-size:14.5px;
+  border:var(--border-w) solid var(--border);border-radius:12px;padding:10px 12px;outline:none;
+  box-shadow:inset 2px 2px 0 rgba(26,20,32,.08);
+}
+.wquick{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.wquick button{
+  border:2px dashed currentColor;border-radius:999px;background:var(--input-bg);color:var(--accent-ink);
+  font:inherit;font-size:11.5px;font-weight:800;padding:4px 10px;cursor:pointer;
+}

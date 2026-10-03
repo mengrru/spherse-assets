@@ -1,0 +1,255 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "霍格沃茨 · 留言板：帖子与楼层回复（匿名夜话也在这里）",
+    "queries": {
+      "listPosts": {
+        "desc": "读取帖子，最新在前，可按版块过滤（chat=城堡八卦 hole=天文塔夜话 lost=失物招领 market=二手坩埚）",
+        "path": "posts",
+        "identity": "id",
+        "params": {
+          "board": {
+            "type": "enum",
+            "values": [
+              "chat",
+              "hole",
+              "lost",
+              "market"
+            ]
+          },
+          "author": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 20
+      },
+      "listReplies": {
+        "desc": "读取某个帖子的回复，按时间升序（楼层顺序）",
+        "path": "replies",
+        "identity": "id",
+        "params": {
+          "postId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "createPost": {
+        "desc": "发一条新帖。anonymous=true 时按匿名夜话处理",
+        "op": "append",
+        "path": "posts",
+        "fields": {
+          "board": {
+            "type": "enum",
+            "values": [
+              "chat",
+              "hole",
+              "lost",
+              "market"
+            ],
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "body": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "anonymous": {
+            "type": "boolean",
+            "default": false
+          },
+          "likeCount": {
+            "type": "integer",
+            "default": 0
+          },
+          "likedByMe": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "addReply": {
+        "desc": "在帖子里回复一层",
+        "op": "append",
+        "path": "replies",
+        "fields": {
+          "postId": {
+            "type": "string",
+            "required": true
+          },
+          "author": {
+            "type": "string",
+            "required": true
+          },
+          "body": {
+            "type": "string",
+            "required": true
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "likePost": {
+        "desc": "点赞或取消赞",
+        "op": "update",
+        "path": "posts",
+        "match": "id",
+        "fields": {
+          "likeCount": {
+            "type": "integer"
+          },
+          "likedByMe": {
+            "type": "boolean"
+          }
+        }
+      },
+      "removePost": {
+        "desc": "删帖",
+        "op": "remove",
+        "path": "posts",
+        "match": "id"
+      },
+      "removeReply": {
+        "desc": "删一层回复",
+        "op": "remove",
+        "path": "replies",
+        "match": "id"
+      },
+      "setBbsAgentSession": {
+        "desc": "记录休息室这个 Agent 的会话 id",
+        "op": "set",
+        "path": "agent",
+        "fields": {
+          "sessionId": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "agent": {
+    "sessionId": null,
+    "updatedAt": null
+  },
+  "posts": [
+    {
+      "id": "hpost-1",
+      "board": "chat",
+      "title": "三楼走廊半夜有人的脚步声，谁知道？",
+      "body": "连续三天了，大概一点多。不是皮皮鬼（没有笑声），也不像费尔奇（没那么沉）。有人在数台阶。",
+      "author": "格兰芬多五楼",
+      "anonymous": false,
+      "likeCount": 9,
+      "likedByMe": false,
+      "createdAt": "2025-01-01T01:00:00.000Z"
+    },
+    {
+      "id": "hpost-2",
+      "board": "hole",
+      "title": "六年级了还是不敢跟人说话，是不是没救了",
+      "body": "不是不会说，是每次想开口就觉得对方其实不想听。就这样过了五年。",
+      "author": "匿名",
+      "anonymous": true,
+      "likeCount": 31,
+      "likedByMe": false,
+      "createdAt": "2025-01-01T01:10:00.000Z"
+    },
+    {
+      "id": "hpost-3",
+      "board": "lost",
+      "title": "球场看台捡到一只手套，缝着姓名缩写 A.P.",
+      "body": "第三排，靠近栏杆。手套挺旧的，但缝过好几遍，看着有用。放失物招领的柜子里了。",
+      "author": "扫帚间常客",
+      "anonymous": false,
+      "likeCount": 4,
+      "likedByMe": false,
+      "createdAt": "2025-01-01T01:20:00.000Z"
+    },
+    {
+      "id": "hpost-4",
+      "board": "market",
+      "title": "出二手坩埚，黄铜的，三加隆",
+      "body": "一年级买的，锅底有点黑，咒语清过三次清不掉。不影响用。宿舍楼下自取。",
+      "author": "穷学生",
+      "anonymous": false,
+      "likeCount": 2,
+      "likedByMe": false,
+      "createdAt": "2025-01-01T01:30:00.000Z"
+    }
+  ],
+  "replies": [
+    {
+      "id": "hrep-1",
+      "postId": "hpost-1",
+      "author": "地下室常客",
+      "body": "你数一下台阶数。如果每层都一样那就不是人。",
+      "createdAt": "2025-01-01T02:00:00.000Z"
+    },
+    {
+      "id": "hrep-2",
+      "postId": "hpost-1",
+      "author": "匿名",
+      "body": "别是有人在背魔咒吧，我上次背魔咒也是边走边念。",
+      "createdAt": "2025-01-01T02:10:00.000Z"
+    },
+    {
+      "id": "hrep-3",
+      "postId": "hpost-2",
+      "author": "匿名",
+      "body": "有。",
+      "createdAt": "2025-01-01T02:20:00.000Z"
+    },
+    {
+      "id": "hrep-4",
+      "postId": "hpost-2",
+      "author": "匿名",
+      "body": "我五年级，也是这样。后来发现很多人都在等别人先开口。你先说，多半就有人接。",
+      "createdAt": "2025-01-01T02:30:00.000Z"
+    },
+    {
+      "id": "hrep-5",
+      "postId": "hpost-3",
+      "author": "格兰芬多路过",
+      "body": "A.P. 我们队里有一个，我明天问问。",
+      "createdAt": "2025-01-01T02:40:00.000Z"
+    }
+  ]
+}

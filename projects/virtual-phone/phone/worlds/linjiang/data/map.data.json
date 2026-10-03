@@ -1,0 +1,249 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 临江地图：地点与到访记录（「你现在在哪」存在 shared.data.json 的 where）",
+    "queries": {
+      "listPlaces": {
+        "desc": "列出所有地点",
+        "path": "places",
+        "identity": "id",
+        "defaultLimit": 50
+      },
+      "listVisits": {
+        "desc": "读取到访记录，最新在前，可按地点过滤",
+        "path": "visits",
+        "identity": "id",
+        "params": {
+          "placeId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 30
+      }
+    },
+    "mutations": {
+      "createPlace": {
+        "desc": "在地图上新增一个地点（角色发现新地方时也能用）",
+        "op": "append",
+        "path": "places",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "kind": {
+            "type": "enum",
+            "values": [
+              "shop",
+              "food",
+              "home",
+              "transit",
+              "view",
+              "public"
+            ],
+            "default": "shop"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "desc": {
+            "type": "string"
+          },
+          "hours": {
+            "type": "string"
+          },
+          "characterId": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updatePlace": {
+        "desc": "改一个地点的描述、营业时间等",
+        "op": "update",
+        "path": "places",
+        "match": "id",
+        "fields": {
+          "desc": {
+            "type": "string"
+          },
+          "hours": {
+            "type": "string"
+          },
+          "characterId": {
+            "type": "string"
+          }
+        }
+      },
+      "addVisit": {
+        "desc": "记一次到访",
+        "op": "append",
+        "path": "visits",
+        "fields": {
+          "placeId": {
+            "type": "string",
+            "required": true
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "removeVisit": {
+        "desc": "删一条到访记录",
+        "op": "remove",
+        "path": "visits",
+        "match": "id"
+      }
+    }
+  },
+  "places": [
+    {
+      "id": "place-bookstore",
+      "name": "白鹿书店",
+      "kind": "shop",
+      "emoji": "📚",
+      "x": 22,
+      "y": 28,
+      "desc": "老城区一条小巷里的旧书店。柜台底下真的会给人留书，规矩是「先来的人有」。",
+      "hours": "10:00 – 19:00",
+      "characterId": "char-suwan",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "place-wonton",
+      "name": "巷口馄饨摊",
+      "kind": "food",
+      "emoji": "🥟",
+      "x": 40,
+      "y": 64,
+      "desc": "只在深夜开，塑料棚，两张折叠桌。老板记性很好，记得每个熟客要不要葱。",
+      "hours": "21:00 – 03:00",
+      "characterId": "char-suwan",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "place-suwan-home",
+      "name": "她家楼下",
+      "kind": "home",
+      "emoji": "🏢",
+      "x": 17,
+      "y": 76,
+      "desc": "六层老楼，没有电梯。三楼窗户外面常年晾着一件灰卫衣。楼道声控灯要跺两下脚。",
+      "hours": "—",
+      "characterId": "char-suwan",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "place-metro",
+      "name": "二号线 · 临江站",
+      "kind": "transit",
+      "emoji": "🚇",
+      "x": 58,
+      "y": 42,
+      "desc": "换乘的人很多，晚高峰挤不上第一班。上次有人在站台捡到一个耳机盒。",
+      "hours": "05:30 – 23:30",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "place-embankment",
+      "name": "江边堤岸",
+      "kind": "view",
+      "emoji": "🌊",
+      "x": 76,
+      "y": 74,
+      "desc": "风很大。晚上有人在这儿跑步、抽烟、以及哭。灯是黄的。",
+      "hours": "全天",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "place-library",
+      "name": "临江图书馆",
+      "kind": "public",
+      "emoji": "📖",
+      "x": 63,
+      "y": 16,
+      "desc": "三楼靠窗的座位最难抢，有人早上七点就来占。空调冷得像过冬。",
+      "hours": "09:00 – 20:00",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "place-store",
+      "name": "24 小时便利店",
+      "kind": "shop",
+      "emoji": "🏪",
+      "x": 45,
+      "y": 33,
+      "desc": "关东煮到凌晨两点就只剩萝卜了。店员值夜班的时候在偷偷看小说。",
+      "hours": "24 小时",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "place-my-flat",
+      "name": "你的公寓",
+      "kind": "home",
+      "emoji": "🪑",
+      "x": 31,
+      "y": 50,
+      "desc": "一把椅子一张桌子，冰箱里只有水。窗帘很久没拉开过。",
+      "hours": "—",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "0b562309-d2bf-49ec-96c0-7432e33cfa0a",
+      "name": "打口音像店",
+      "kind": "shop",
+      "emoji": "📼",
+      "x": 52,
+      "y": 24,
+      "desc": "步行街上一家卖磁带和 CD 的小店，玻璃门上贴着打折的盗版游戏碟。看店的姑娘嗓门很大，手里总在转一串钥匙。",
+      "hours": "10:30 – 19:30",
+      "characterId": "55fe1857-02cc-4458-bf42-0175235cb7a4",
+      "createdAt": "2026-10-03T16:08:38.546Z"
+    }
+  ],
+  "visits": [
+    {
+      "id": "visit-1",
+      "placeId": "place-wonton",
+      "note": "两点多，老板多给了一勺汤",
+      "createdAt": "2026-10-01T18:20:00.000Z"
+    },
+    {
+      "id": "visit-2",
+      "placeId": "place-bookstore",
+      "note": "书还在柜台底下",
+      "createdAt": "2026-09-30T07:10:00.000Z"
+    },
+    {
+      "id": "visit-3",
+      "placeId": "place-embankment",
+      "note": "",
+      "createdAt": "2026-09-29T15:40:00.000Z"
+    }
+  ]
+}

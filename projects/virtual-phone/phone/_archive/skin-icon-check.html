@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>设计语言 × App 图标 对照（临时诊断页）</title>
+<link rel="stylesheet" href="../engine/theme/shell.css">
+<style>
+  body{display:block;padding:14px;background:#1b1526;color:#fff;font-family:system-ui,sans-serif}
+  h2{font-size:13px;margin:0 0 8px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .pane{width:250px}
+  .phone{width:250px;height:auto;min-height:260px;padding:8px;border-radius:26px}
+  .screen{height:auto;padding-bottom:14px}
+  .app-grid{padding:10px}
+  .app-label{color:#fff!important;text-shadow:0 1px 3px #000}
+  pre{font-size:10px;line-height:1.5;white-space:pre-wrap;background:#000a;padding:8px;border-radius:8px;margin:8px 0 0}
+</style>
+</head>
+<body>
+<h2>同一批 App 图标，分别套 chunky（描边贴纸）/ flat（扁平）/ tome（手抄本）</h2>
+<div class="row" id="row"></div>
+<script>
+  var SKINS = [
+    { id: "chunky", name: "描边贴纸" },
+    { id: "flat", name: "扁平" },
+    { id: "tome", name: "手抄本" }
+  ];
+  var GRADS = ["linear-gradient(160deg,#7dffb0,#12c25e)", "linear-gradient(160deg,#8ff5e6,#12c9b6)",
+               "linear-gradient(160deg,#b39bff,#6b3fe0)", "linear-gradient(160deg,#8ee7ff,#1f9be0)"];
+  var EMOJI = ["💬", "✉️", "📷", "💳"];
+
+  document.getElementById("row").innerHTML = SKINS.map(function (s) {
+    var icons = GRADS.map(function (g, i) {
+      return '<button class="app"><span class="iconwrap"><span class="icon" style="background:' + g + '">' +
+        EMOJI[i] + '</span></span></button>';
+    }).join("");
+    return '<div class="pane"><h2>' + s.name + "（data-skin=" + s.id + '）</h2>' +
+      '<div class="phone"><div class="screen" data-skin="' + s.id + '" data-theme="grimoire">' +
+        '<div class="app-grid" style="grid-template-columns:repeat(4,1fr)">' + icons + "</div>" +
+        '<div class="conv" style="margin:10px"><div class="conv-main"><div class="conv-name">会话行</div></div></div>' +
+        '<div class="card" style="margin:10px"><h3>★ 卡片标题 ★</h3></div>' +
+      '</div></div><pre id="out-' + s.id + '"></pre></div>';
+  }).join("");
+
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      SKINS.forEach(function (s) {
+        var root = document.querySelector('[data-skin="' + s.id + '"]');
+        var icon = root.querySelector(".icon");
+        var cs = getComputedStyle(icon);
+        var conv = getComputedStyle(root.querySelector(".conv"));
+        var out = [
+          ".icon  border       : " + cs.borderTopWidth + " " + cs.borderTopColor,
+          ".icon  border-radius: " + cs.borderTopLeftRadius,
+          ".icon  box-shadow  : " + cs.boxShadow,
+          ".icon  filter      : " + cs.filter,
+          ".icon  gloss(:after): " + getComputedStyle(icon, ":after").display,
+          ".conv  border-radius: " + conv.borderTopLeftRadius,
+          ".conv  box-shadow  : " + conv.boxShadow,
+          "--radius=" + cs.getPropertyValue("--radius").trim() +
+            "  --radius-sm=" + cs.getPropertyValue("--radius-sm").trim(),
+          "--icon-radius=" + cs.getPropertyValue("--icon-radius").trim() +
+            "  --bezel-radius=" + cs.getPropertyValue("--bezel-radius").trim(),
+          "--border-w=" + cs.getPropertyValue("--border-w").trim() +
+            "  --shadow-card=" + cs.getPropertyValue("--shadow-card").trim()
+        ].join("\n");
+        document.getElementById("out-" + s.id).textContent = out;
+      });
+    }, 120);
+  });
+</script>
+</body>
+</html>

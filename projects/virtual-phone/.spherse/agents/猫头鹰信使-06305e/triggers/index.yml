@@ -1,0 +1,18 @@
+- id: dmxLVzD0sKuaOwR5FM6jo
+  name: 送信（每天三次）
+  enabled: true
+  type: time
+  cron: 0 7,13,21 * * *
+  mode: reusable_session
+  message: >-
+    【掷骰子】现实时间是 {{weekday}} {{time}}。
+
+
+    手机里的时间另算 —— 用 read_data 读公共数据的 key="worldClock"（路径见消息里的「数据文件」行，这次没有的话就用
+    listSmsThreads 里的目录推），看 now / label，按那个时间判断"这个点该有什么信到"。
+
+
+    按《猫头鹰信使 · 行为规则》处理：想送就送一封（最多一封），觉得今天没有你的信就回一句「不发」，什么都不做。
+  notify: false
+  createdAt: 1790964739208
+  updatedAt: 1791048253140

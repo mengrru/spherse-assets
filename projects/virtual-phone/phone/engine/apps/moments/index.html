@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>朋友圈</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 本页专属：封面与动态卡片 */
+  body{position:relative;overflow:hidden}
+  .cover{
+    position:relative;height:148px;flex:none;border-bottom:var(--border-w) solid var(--border);
+    background:var(--cover);
+    display:flex;align-items:flex-end;padding:0 16px 12px;
+  }
+  .cover:before{
+    content:"";position:absolute;inset:0;opacity:.45;
+    background-image:linear-gradient(rgba(26,20,32,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(26,20,32,.1) 1px,transparent 1px);
+    background-size:18px 18px;
+  }
+  .cover-me{position:relative;display:flex;align-items:center;gap:10px;margin-left:auto;transform:translateY(36px)}
+  .cover-me .avatar{order:1;width:56px;height:56px;border-radius:18px;font-size:26px;box-shadow:var(--shadow-card)}
+  .cover-name{
+    order:2;font-size:12.5px;font-weight:800;font-style:italic;color:var(--note-fg);
+    background:var(--note);border:var(--border-w) solid var(--border);
+    border-radius:var(--radius-pill);padding:3px 11px;box-shadow:var(--shadow-row);
+  }
+  .feed{
+    flex:1;min-height:0;overflow-y:auto;padding:54px 14px 92px;
+    background-image:radial-gradient(rgba(26,20,32,.07) 1px,transparent 1px);background-size:14px 14px;
+  }
+  .moment{display:flex;gap:10px;margin-bottom:14px}
+  .moment .avatar{width:42px;height:42px;border-radius:13px;font-size:19px;box-shadow:2px 2px 0 var(--ink)}
+  .mmain{
+    flex:1;min-width:0;background:linear-gradient(180deg,var(--card-1),var(--card-2));
+    border:var(--border-w) solid var(--border);border-radius:15px;padding:10px 12px;box-shadow:var(--shadow-row);
+  }
+  .mname{font-size:13.5px;font-weight:800;color:var(--accent-ink)}
+  .mtext{font-size:14px;line-height:1.55;color:var(--text);margin-top:5px;word-break:break-word}
+  .memoji{
+    margin-top:9px;font-size:42px;line-height:1.1;text-align:center;padding:6px 0;
+    border:2px dashed currentColor;border-radius:12px;background:var(--note);color:var(--note-fg);
+  }
+  .mmeta{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--text-dim);margin-top:7px}
+  .mwait{font-size:10.5px;font-weight:800;color:var(--accent-heart);margin-top:6px}
+  .mlikes{margin-top:8px;font-size:11.5px;font-weight:700;color:var(--accent-heart);border-top:1.5px dashed rgba(26,20,32,.22);padding-top:7px}
+  .mcomment{font-size:12.5px;color:var(--text);margin-top:5px;line-height:1.5;word-break:break-word}
+  .mcomment b{color:var(--accent-ink)}
+  .macts{display:flex;gap:8px;margin-top:9px;border-top:1.5px dashed rgba(26,20,32,.22);padding-top:8px}
+  .mact{
+    border:var(--border-w) solid var(--border);border-radius:999px;background:var(--pill);
+    color:var(--pill-fg);font:inherit;font-size:11.5px;font-weight:800;padding:3px 12px;cursor:pointer;
+    box-shadow:2px 2px 0 rgba(26,20,32,.85);
+  }
+  .mact.on{background:var(--btn-pink);color:var(--btn-pink-fg)}
+  .mact:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(26,20,32,.85)}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span>朋友圈</span>
+  <button class="ghost" id="refresh">喊一声</button>
+</header>
+<div class="cover" id="cover"></div>
+<div class="feed" id="feed"></div>
+<button class="fab" id="fab" title="发一条">＋</button>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-head"><span id="sheet-title">发表动态</span><button id="sheet-cancel">取消</button></div>
+  <textarea id="sheet-input" rows="3" placeholder="这一刻的想法…"></textarea>
+  <button class="sheet-send" id="sheet-send">发送</button>
+</div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var shared = {}, moments = [], comments = [];
+  var sheetMode = null, sheetMomentId = null;
+  var reactionWait = null;
+
+  async function load() {
+    shared = await phone.loadShared();
+    var d = await phone.entries(phone.FILES.MOMENTS);
+    moments = d.moments || [];
+    comments = d.momentComments || [];
+    checkReaction();
+    render();
+  }
+
+  function sorted() {
+    return moments.slice().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
+  }
+  function commentsOf(id) {
+    return comments.filter(function (c) { return c.momentId === id; })
+      .sort(function (a, b) { return String(a.createdAt).localeCompare(String(b.createdAt)); });
+  }
+  function author(authorId, authorName) {
+    var ch = phone.charById(authorId);
+    if (ch) return { name: ch.name, emoji: ch.avatarEmoji, color: ch.avatarColor };
+    if (authorId === "me") {
+      return {
+        name: authorName || phone.myName(),
+        emoji: shared.profile.avatarEmoji,
+        color: shared.profile.avatarColor
+      };
+    }
+    return { name: authorName || "某人", emoji: "🙂", color: "#c9d3e6" };
+  }
+
+  function render() {
+    var me = { emoji: shared.profile.avatarEmoji, color: shared.profile.avatarColor };
+    $("cover").innerHTML = '<div class="cover-me">' + phone.avatarHtml(me.emoji, me.color) +
+      '<div class="cover-name">' + phone.esc(phone.myName()) + "</div></div>";
+
+    var list = sorted();
+    if (!list.length) {
+      $("feed").innerHTML = '<div class="ph"><div class="big">✦</div><div class="t">这里还空着</div>' +
+        '<div class="d">点右下角的 ＋ 发第一条，<br>或者点右上角「喊一声」看看好友在做什么。</div></div>';
+      return;
+    }
+    $("feed").innerHTML = list.map(function (m) {
+      var a = author(m.authorId, m.authorName);
+      var cms = commentsOf(m.id).map(function (c) {
+        var ca = author(c.authorId, c.authorName);
+        return '<div class="mcomment"><b>' + phone.esc(ca.name) + "</b>：" + phone.escLines(c.text) + "</div>";
+      }).join("");
+      var liked = (m.likeCount || 0) > 0 || m.likedByMe;
+      var likeLine = liked
+        ? '<div class="mlikes">♥ ' + phone.esc(m.likedByMe
+            ? (phone.myName() + ((m.likeCount || 0) > 1 ? " 等 " + m.likeCount + " 人" : ""))
+            : (m.likeCount + " 人")) + "觉得不错</div>"
+        : "";
+      var wait = (reactionWait && reactionWait.momentId === m.id) ? '<div class="mwait">◌ 等好友看到…</div>' : "";
+      return '<div class="moment">' + phone.avatarHtml(a.emoji, a.color) +
+        '<div class="mmain"><div class="mname">' + phone.esc(a.name) + "</div>" +
+        (m.text ? '<div class="mtext">' + phone.escLines(m.text) + "</div>" : "") +
+        (m.emoji ? '<div class="memoji">' + phone.esc(m.emoji) + "</div>" : "") +
+        '<div class="mmeta">' + phone.esc((m.place ? m.place + " · " : "") + phone.fmtAgo(m.createdAt)) + "</div>" +
+        wait + likeLine + cms +
+        '<div class="macts">' +
+        '<button class="mact' + (m.likedByMe ? " on" : "") + '" data-like="' + phone.esc(m.id) + '">' +
+        (m.likedByMe ? "♥ 已赞" : "♡ 赞") + "</button>" +
+        '<button class="mact" data-comment="' + phone.esc(m.id) + '">💬 评论</button>' +
+        "</div></div></div>";
+    }).join("");
+  }
+
+  /* ---------- 点赞（乐观） ---------- */
+  async function toggleLike(id) {
+    var m = moments.filter(function (x) { return x.id === id; })[0];
+    if (!m) return;
+    var wasLiked = !!m.likedByMe, wasCount = m.likeCount || 0;
+    var next = !wasLiked, count = Math.max(0, wasCount + (next ? 1 : -1));
+    m.likedByMe = next; m.likeCount = count;
+    render();
+    try {
+      await phone.mutate(phone.FILES.MOMENTS, "likeMoment", { id: id, likedByMe: next, likeCount: count });
+    } catch (e) {
+      m.likedByMe = wasLiked; m.likeCount = wasCount;
+      render();
+      phone.toast({ variant: "error", message: "点赞没存上" });
+    }
+  }
+
+  /* ---------- 弹层 ---------- */
+  function openSheet(mode, momentId) {
+    sheetMode = mode; sheetMomentId = momentId || null;
+    $("sheet-title").textContent = mode === "post" ? "发表动态" : "评论";
+    $("sheet-input").value = "";
+    $("sheet-input").placeholder = mode === "post" ? "这一刻的想法…" : "说点什么…";
+    $("sheet").classList.add("open");
+    setTimeout(function () { $("sheet-input").focus(); }, 90);
+  }
+  function closeSheet() { $("sheet").classList.remove("open"); sheetMode = null; sheetMomentId = null; }
+
+  async function sheetSend() {
+    var text = ($("sheet-input").value || "").trim();
+    if (!text) { phone.toast({ variant: "warning", message: "先写点什么" }); return; }
+    var mode = sheetMode, momentId = sheetMomentId;
+    closeSheet();
+
+    if (mode === "post") {
+      try {
+        var saved = await phone.mutate(phone.FILES.MOMENTS, "createMoment",
+          { authorId: "me", authorName: phone.myName(), text: text });
+        phone.toast({ variant: "success", message: "已发到朋友圈" });
+        askAboutMoment(saved);
+      } catch (e) {
+        phone.toast({ variant: "error", message: "没发出去", description: String(e.message || e) });
+      }
+      render();
+      return;
+    }
+    if (mode === "comment" && momentId) {
+      try {
+        await phone.mutate(phone.FILES.MOMENTS, "addMomentComment",
+          { momentId: momentId, authorId: "me", authorName: phone.myName(), text: text });
+        askAboutComment(momentId, text);
+      } catch (e) {
+        phone.toast({ variant: "error", message: "评论没发出去" });
+      }
+      render();
+    }
+  }
+
+  /* ---------- 通知角色 ---------- */
+  function clearReactionWait() {
+    if (reactionWait && reactionWait.timer) clearTimeout(reactionWait.timer);
+    reactionWait = null;
+  }
+  function setReactionWait(momentId) {
+    clearReactionWait();
+    reactionWait = { momentId: momentId, since: new Date().toISOString() };
+    reactionWait.timer = setTimeout(function () { reactionWait = null; render(); }, 90000);
+    render();
+  }
+  function checkReaction() {
+    if (!reactionWait) return;
+    var since = Date.parse(reactionWait.since) || 0;
+    var hit = comments.some(function (c) {
+      return c.momentId === reactionWait.momentId && c.authorId !== "me" && (Date.parse(c.createdAt) || 0) > since;
+    });
+    if (hit) clearReactionWait();
+  }
+
+  /* 发动态通知谁：**最亲近的 3 个 + 另外随机 2 个**。
+   * 以前是全员 —— 11 个角色就是 11 个 agent 会话，太费；而且真实世界里也是"亲近的人先看到"。
+   * 想调人数就改这两个数字。 */
+  var CLOSE_N = 3, RANDOM_N = 2;
+  function audience() {
+    var chs = phone.characters().slice();
+    if (!chs.length) return [];
+    var byAff = chs.slice().sort(function (a, b) {
+      return phone.clampAff(b.affection) - phone.clampAff(a.affection);
+    });
+    var close = byAff.slice(0, CLOSE_N);
+    var picked = {};
+    close.forEach(function (c) { picked[c.id] = 1; });
+    var rest = chs.filter(function (c) { return !picked[c.id]; });
+    for (var i = rest.length - 1; i > 0; i--) {          // Fisher–Yates 洗一下
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = rest[i]; rest[i] = rest[j]; rest[j] = t;
+    }
+    return close.concat(rest.slice(0, RANDOM_N));
+  }
+  async function notifyAll(build, momentId) {
+    var list = audience();
+    if (!list.length) return;
+    setReactionWait(momentId);
+    for (var i = 0; i < list.length; i++) await phone.notify(list[i], build(list[i]));
+  }
+  async function askAboutMoment(moment) {
+    if (!moment || !moment.id) return;
+    await notifyAll(function (ch) { return phone.prompt.momentNew(ch, moment, phone.myName()); }, moment.id);
+  }
+  async function askAboutComment(momentId, commentText) {
+    var m = moments.filter(function (x) { return x.id === momentId; })[0];
+    if (!m) return;
+    var ch = phone.charById(m.authorId);
+    if (!ch) return;                       // 自己的动态，不打扰别人
+    setReactionWait(momentId);
+    await phone.notify(ch, phone.prompt.momentComment(ch, m, phone.myName(), commentText));
+  }
+  /* ---------- 喊一声：随机挑一个人 ----------
+   * 以前用 activeCharacter()（= 最近活跃的那个），换卡司后就总是同一个人。
+   * 现在随机，但记住上一个，避免连着两次喊到同一个。 */
+  var WHO_KEY = "xiaoshouji:moments:who";
+  function pickSomeone() {
+    var chs = phone.characters();
+    if (!chs.length) return null;
+    var last = "";
+    try { last = localStorage.getItem(WHO_KEY) || ""; } catch (e) {}
+    var pool = chs.filter(function (c) { return c.id !== last; });
+    if (!pool.length) pool = chs;
+    var ch = pool[Math.floor(Math.random() * pool.length)];
+    try { localStorage.setItem(WHO_KEY, ch.id); } catch (e) {}
+    return ch;
+  }
+  async function refresh() {
+    var ch = pickSomeone();
+    if (!ch) { phone.toast({ variant: "warning", message: "还没有好友" }); return; }
+    clearReactionWait();
+    var ok = await phone.notify(ch, phone.prompt.momentRefresh(ch));
+    if (ok) {
+      phone.toast({
+        variant: "info",
+        message: "喊了 " + ch.name + " 一声",
+        description: "发不发看 TA 的心情"
+      });
+    }
+  }
+
+  /* ---------- 事件 ---------- */
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("refresh").addEventListener("click", refresh);
+  $("fab").addEventListener("click", function () { openSheet("post"); });
+  $("sheet-cancel").addEventListener("click", closeSheet);
+  $("sheet-send").addEventListener("click", sheetSend);
+  $("feed").addEventListener("click", function (e) {
+    var like = e.target.closest("[data-like]");
+    if (like) { toggleLike(like.dataset.like); return; }
+    var cm = e.target.closest("[data-comment]");
+    if (cm) openSheet("comment", cm.dataset.comment);
+  });
+  phone.bindEscape(function () {
+    if ($("sheet").classList.contains("open")) { closeSheet(); return true; }
+    return false;
+  });
+
+  load().catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.MOMENTS, phone.FILES.SHARED], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

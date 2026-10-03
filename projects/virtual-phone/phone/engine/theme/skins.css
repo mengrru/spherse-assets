@@ -1,0 +1,107 @@
+/* 小手机 · 设计语言（skins，管「形」）
+ * 与 themes.css（配色，管「色」）正交，两者可任意组合。
+ * 这里只放：描边、投影与按压反馈、排印（字重/字style/字距/字体）、质感、密度。
+ * 用法：<html data-theme="vapor" data-skin="flat">，由 phone.js 的 applyTheme() 设置。
+ */
+
+/* ---------- 设计语言的默认值：chunky（描边 + 硬投影 + 斜体粗标题） ---------- */
+:root{
+  /* 形状 */
+  --border-w:2px;
+  --border:var(--ink);
+  --radius-pill:999px;
+  --radius:16px;
+  --radius-sm:12px;
+  --icon-radius:18px;
+  --bezel-radius:54px;
+  --font:"Trebuchet MS",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  /* 投影（depth） */
+  --shadow-card:3px 3px 0 var(--ink);
+  --shadow-row:2px 2px 0 rgba(26,20,32,.85);
+  --shadow-press:1px 1px 0 var(--ink);
+  --press:translate(1px,1px);
+  /* 字（排印） */
+  --font-header:inherit;
+  --h-weight:800;
+  --h-style:italic;
+  --h-tracking:.6px;
+  /* 质感 */
+  --gloss-on:block;
+  --icon-bevel:inset 0 2px 0 rgba(255,255,255,.75),inset 0 -7px 10px rgba(0,0,0,.16);
+  --inner-gloss:inset 0 2px 0 rgba(255,255,255,.5);
+  --h-shadow:1.5px 1.5px 0 rgba(26,20,32,.6);
+  --h-bevel:inset 0 2px 0 rgba(255,255,255,.55),inset 0 -9px 14px rgba(0,0,0,.2);
+  /* 密度 */
+  --header-h:90px;
+  --card-pad:14px;
+}
+
+/* ---------- flat 扁平：无描边、柔和投影、正体字 ---------- */
+[data-skin="flat"]{
+  --border-w:0px;
+  --border:transparent;
+  --radius:14px;
+  --radius-sm:10px;
+  --bezel-radius:44px;
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --shadow-card:0 1px 3px rgba(26,20,32,.10);
+  --shadow-row:0 1px 2px rgba(26,20,32,.10);
+  --shadow-press:inset 0 2px 4px rgba(26,20,32,.12);
+  --press:translateY(1px);
+  --h-weight:700;
+  --h-style:normal;
+  --h-tracking:.2px;
+  --gloss-on:none;
+  --icon-bevel:none;
+  --inner-gloss:none;
+  --h-shadow:none;
+  --h-bevel:inset 0 -1px 0 rgba(0,0,0,.10);
+  --header-h:84px;
+  --card-pad:16px;
+  --icon-radius:14px;
+}
+/* ---------- tome 手抄本：衬线标题 + 双线内框 + 纸页横格（魔法世界的"形"） ---------- */
+[data-skin="tome"]{
+  --border-w:1px;                      /* 细如墨线 */
+  --border:rgba(74,54,32,.5);
+  --radius:10px;
+  --radius-sm:8px;
+  --bezel-radius:34px;
+  --font:"Songti SC","Noto Serif SC",Georgia,"PingFang SC",serif;
+  --shadow-card:0 2px 6px rgba(58,40,20,.18);      /* 暖色柔影，不做硬投影 */
+  --shadow-row:0 1px 3px rgba(58,40,20,.16);
+  --shadow-press:inset 0 2px 5px rgba(58,40,20,.22);
+  --press:translateY(1px);
+  --font-header:"Songti SC","Noto Serif SC",Georgia,"PingFang SC",serif;
+  --h-weight:700;
+  --h-style:normal;
+  --h-tracking:2px;                    /* 字距拉开，像刻上去的 */
+  --gloss-on:none;
+  --icon-bevel:inset 0 0 0 1px rgba(255,255,255,.4);
+  --inner-gloss:none;
+  --h-shadow:0 1px 2px rgba(0,0,0,.35);
+  --h-bevel:inset 0 -1px 0 rgba(0,0,0,.12);
+  --header-h:88px;
+  --card-pad:16px;
+  --icon-radius:11px;
+}
+/* 手抄本把卡片画成"有框的纸页"：淡淡横格 + 一圈内框 */
+[data-skin="tome"] .card{
+  position:relative;
+  background-image:repeating-linear-gradient(0deg,rgba(120,90,50,.055) 0 1px,transparent 1px 5px);
+}
+[data-skin="tome"] .card:before{
+  content:"";position:absolute;inset:4px;pointer-events:none;
+  border:1px solid rgba(74,54,32,.16);border-radius:inherit;
+}
+/* 分隔线也换成"书页上的细墨线" */
+[data-skin="tome"] .kv,
+[data-skin="tome"] .mlikes,
+[data-skin="tome"] .macts,
+[data-skin="tome"] .floor-head{ border-color:rgba(74,54,32,.22); }
+
+/* 扁平靠留白与层次分隔，不靠描边 */
+[data-skin="flat"] .card,
+[data-skin="flat"] .conv,
+[data-skin="flat"] .theme-card{ background-clip:padding-box; }
+[data-skin="flat"] .app-header{ box-shadow:inset 0 -1px 0 rgba(0,0,0,.12); }

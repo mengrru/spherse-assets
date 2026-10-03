@@ -1,0 +1,216 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "霍格沃茨 · 猫头鹰：来信与回信（一个 Agent 统一扮演所有信件来处）",
+    "queries": {
+      "listSmsThreads": {
+        "desc": "列出所有来信线程，最新在前，可按类型过滤（char=好友号码 system=机构 unknown=陌生人/送错的信）",
+        "path": "smsThreads",
+        "identity": "id",
+        "params": {
+          "kind": {
+            "type": "enum",
+            "values": [
+              "char",
+              "system",
+              "unknown"
+            ]
+          },
+          "characterId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 30
+      },
+      "listSms": {
+        "desc": "读取某个线程的信件，默认按时间升序",
+        "path": "sms",
+        "identity": "id",
+        "params": {
+          "threadId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "enum",
+            "values": [
+              "user",
+              "character"
+            ]
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "createSmsThread": {
+        "desc": "新开一个来信来处",
+        "op": "append",
+        "path": "smsThreads",
+        "fields": {
+          "kind": {
+            "type": "enum",
+            "values": [
+              "char",
+              "system",
+              "unknown"
+            ],
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "number": {
+            "type": "string"
+          },
+          "characterId": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "appendSms": {
+        "desc": "送一封信。role: user=手机主人寄出的, character=送到他手上的",
+        "op": "append",
+        "path": "sms",
+        "fields": {
+          "threadId": {
+            "type": "string",
+            "required": true
+          },
+          "role": {
+            "type": "enum",
+            "values": [
+              "user",
+              "character"
+            ],
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "required": true
+          },
+          "sender": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "removeSms": {
+        "desc": "删除一封信",
+        "op": "remove",
+        "path": "sms",
+        "match": "id"
+      },
+      "setSmsAgentSession": {
+        "desc": "记录猫头鹰信使这个 Agent 的会话 id",
+        "op": "set",
+        "path": "agent",
+        "fields": {
+          "sessionId": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "agent": {
+    "sessionId": null,
+    "updatedAt": null
+  },
+  "smsThreads": [
+    {
+      "id": "sms-h-owlery",
+      "kind": "system",
+      "name": "猫头鹰棚屋",
+      "number": "西塔 · 三层左数第四根柱子",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sms-h-school",
+      "kind": "system",
+      "name": "校务通告",
+      "number": "霍格沃茨",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sms-h-daily",
+      "kind": "system",
+      "name": "预言家日报",
+      "number": "晨版订阅",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sms-h-stranger",
+      "kind": "unknown",
+      "name": "没有署名的信",
+      "number": "蜡封是深绿色的",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ],
+  "sms": [
+    {
+      "id": "sms-h-1",
+      "threadId": "sms-h-owlery",
+      "role": "character",
+      "sender": "猫头鹰棚屋",
+      "text": "你的灰鸮今早扣在西塔窗台上不肯回棚，翅膀上沾了墨。来领一下，顺便带块肉。",
+      "createdAt": "2025-01-01T00:10:00.000Z"
+    },
+    {
+      "id": "sms-h-2",
+      "threadId": "sms-h-school",
+      "role": "character",
+      "sender": "校务通告",
+      "text": "【校务】本学期第三次提醒：宵禁后不得在走廊使用麻瓜电器。第三次警告将扣除学院分二十分。",
+      "createdAt": "2025-01-01T00:20:00.000Z"
+    },
+    {
+      "id": "sms-h-3",
+      "threadId": "sms-h-daily",
+      "role": "character",
+      "sender": "预言家日报",
+      "text": "【预言家日报 · 晨版】古灵阁今日起对麻瓜货币兑换加收三成手续费。魁地奇：普德米尔联队客场三连胜，找球手单场两次擒获飞贼。",
+      "createdAt": "2025-01-01T00:30:00.000Z"
+    },
+    {
+      "id": "sms-h-4",
+      "threadId": "sms-h-stranger",
+      "role": "character",
+      "sender": "没有署名的信",
+      "text": "你昨天在图书馆三楼拿走的那本书，我还需要其中一页。周五之前放回原处就行。\n—— 一个同样需要它的人",
+      "createdAt": "2025-01-01T00:40:00.000Z"
+    }
+  ]
+}

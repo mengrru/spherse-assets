@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小手机</title>
+<link rel="stylesheet" href="theme/shell.css">
+</head>
+<body>
+<div class="phone">
+  <div class="screen lighttext" id="screen">
+    <div class="wall"></div>
+    <div class="sparkles">
+      <i style="left:8%;top:11%;font-size:15px">✦</i>
+      <i style="left:79%;top:7%;font-size:11px;animation-delay:.4s">✧</i>
+      <i style="left:31%;top:22%;font-size:9px;animation-delay:.9s">✦</i>
+      <i style="left:89%;top:33%;font-size:13px;animation-delay:1.3s">★</i>
+      <i style="left:13%;top:50%;font-size:10px;animation-delay:1.7s">✧</i>
+      <i style="left:67%;top:60%;font-size:12px;animation-delay:.2s">✦</i>
+      <i style="left:39%;top:79%;font-size:9px;animation-delay:1.1s">✧</i>
+      <i style="left:85%;top:83%;font-size:14px;animation-delay:1.5s">✦</i>
+    </div>
+
+    <div class="statusbar">
+      <span class="sb-left">
+        <span id="clock">--:--</span>
+        <span class="rate" id="clock-rate" title="手机世界时钟流速"></span>
+      </span>
+      <span class="sb-right">
+        <span class="sig"><i></i><i></i><i></i><i></i></span>
+        <span style="font-size:11px">5G</span>
+        <span class="bar"></span>
+      </span>
+    </div>
+
+    <!-- 锁屏 -->
+    <section class="view active" id="v-lock">
+      <div class="lock-badge">✦ 千 禧 年 2 0 0 0 ✦</div>
+      <div class="lock-time" id="lock-time">--:--</div>
+      <div class="lock-date" id="lock-date"></div>
+      <div class="lock-bottom">
+        <div class="chev">︿</div>
+        <div class="lock-hint">轻点解锁 <span class="cursor">▮</span></div>
+      </div>
+    </section>
+
+    <!-- 桌面 -->
+    <section class="view" id="v-home">
+      <div>
+        <div class="home-greet" id="home-greet"></div>
+        <div class="home-sub" id="home-sub"></div>
+        <div class="marquee"><div class="marquee-text" id="marquee-text"></div></div>
+      </div>
+      <div class="app-grid" id="app-grid"></div>
+      <div class="dock" id="dock"></div>
+    </section>
+
+    <!-- App 宿主：所有应用都是独立页面，通过 iframe 载入 -->
+    <section class="view" id="v-app">
+      <div class="frame-loading" id="frame-loading">正在打开…</div>
+      <iframe id="app-frame" title="应用页面"></iframe>
+    </section>
+
+    <div class="homebar" id="homebar"></div>
+  </div>
+</div>
+
+<script>window.__PHONE_SHELL__ = true;</script>
+<script src="theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+
+  /* ---------- 桌面 App 注册表：由世界包提供 ---------- */
+  var APPS = [];
+
+  /* ---------- 状态 ---------- */
+  var VIEWS = ["lock", "home", "app"];
+  var ROUTE_KEY = "xiaoshouji:route:v2";
+  var route = "lock";
+  var routeStack = [];
+  var view = "lock";
+  var loaded = false;
+  var shared = {}, chat = {}, smsData = {};
+  var msgCursorTs = 0, smsCursorTs = 0;
+  var frameTimer = null;
+  var broadcastFileUpdate = null;
+
+  var store = (function () {
+    var mem = {}, native = false;
+    try { window.localStorage.setItem("__xsj__", "1"); window.localStorage.removeItem("__xsj__"); native = true; } catch (e) {}
+    return {
+      native: native,
+      get: function (k) { if (native) { try { return window.localStorage.getItem(k); } catch (e) {} } return mem[k] == null ? null : mem[k]; },
+      set: function (k, v) { mem[k] = v; if (native) { try { window.localStorage.setItem(k, v); } catch (e) {} } }
+    };
+  })();
+
+  function appByKey(key) { return APPS.filter(function (a) { return a.key === key; })[0] || null; }
+
+  // 世界包里的品牌文案：锁屏徽标、解锁提示、默认主题
+  function applyBrand(brand) {
+    brand = brand || {};
+    var badge = document.querySelector(".lock-badge");
+    var hint = document.querySelector(".lock-hint");
+    if (badge && brand.lockBadge) badge.textContent = brand.lockBadge;
+    if (hint) hint.innerHTML = (brand.lockHint || "轻点解锁") + ' <span class="cursor">▮</span>';
+  }
+  function readHash() { try { return String(location.hash || "").replace(/^#\/?/, ""); } catch (e) { return ""; } }
+  function parseRoute(str) {
+    var p = String(str || "").split("/");
+    var arg = p[1] || null;
+    // 历史上拼出过 "sms/null" 这种路由，认掉它
+    if (arg === "null" || arg === "undefined" || arg === "") arg = null;
+    return { name: p[0] || "", arg: arg };
+  }
+  function hasConv(id) {
+    if (!loaded) return true;
+    return (shared.conversations || []).some(function (c) { return c.id === id; });
+  }
+  function hasChar(id) {
+    if (!loaded) return true;
+    return (shared.characters || []).some(function (c) { return c.id === id; });
+  }
+
+  /* ---------- 路由 → 应用页面 ---------- */
+  // 路由 → 应用页面 URL。注意：参数为空时绝不能拼出 "?thread=null"
+  function frameUrl(str) {
+    var p = parseRoute(str);
+    function url(dir, params) {
+      var qs = ["world=" + encodeURIComponent(phone.worldId())];
+      Object.keys(params || {}).forEach(function (k) {
+        if (params[k]) qs.push(k + "=" + encodeURIComponent(params[k]));
+      });
+      return "apps/" + dir + "/index.html?" + qs.join("&");
+    }
+    if (p.name === "chatlist") return url("chat", { view: "list" });
+    if (p.name === "chat") return url("chat", { conv: p.arg });
+    if (p.name === "sms") return p.arg ? url("sms", { thread: p.arg }) : url("sms", { view: "list" });
+    if (p.name === "bbs") return p.arg ? url("bbs", { post: p.arg }) : url("bbs", { view: "list" });
+    if (p.name === "map") return url("map");
+    if (p.name === "moments") return url("moments");
+    if (p.name === "wallet") return url("wallet");
+    if (p.name === "calendar") return url("calendar");
+    if (p.name === "notes") return url("notes");
+    if (p.name === "radio") return url("radio");
+    if (p.name === "album") return url("album");
+    if (p.name === "settings") return url("settings");
+    if (p.name === "theme") return url("theme");
+    if (p.name === "friend") return url("friends", { id: p.arg });
+    if (p.name === "app") {
+      var a = appByKey(p.arg) || { key: p.arg, name: "应用", emoji: "📦" };
+      return url("blank", { key: a.key, name: a.name, emoji: a.emoji });
+    }
+    return null;
+  }
+  function isAppRoute(p) {
+    return ["chatlist", "chat", "sms", "bbs", "map", "moments", "wallet", "calendar", "notes", "radio", "album", "settings", "theme", "friend", "app"].indexOf(p.name) >= 0;
+  }
+  function hasSmsThread(id) {
+    if (!loaded) return true;
+    return (smsData.smsThreads || []).some(function (t) { return t.id === id; });
+  }
+
+  /* ---------- 渲染 ---------- */
+  function renderClock() {
+    var t = phone.worldNow();
+    var text = phone.pad(t.getHours()) + ":" + phone.pad(t.getMinutes());
+    $("clock").textContent = text;
+    $("lock-time").textContent = text;
+    $("lock-date").textContent = phone.dateLabel() + " · " + phone.worldDayPart(t);
+
+    var c = phone.clockCfg();
+    var rn = $("clock-rate");
+    if (c && c.rate !== 1) { rn.textContent = "⏩" + c.rate + "×"; rn.classList.add("on"); }
+    else rn.classList.remove("on");
+  }
+
+  function unreadTotal() { return phone.totalUnread(chat.messages || []); }
+
+  // 每个 App 自己的红点数
+  function unreadFor(key) {
+    if (key === "chat") return phone.totalUnread(chat.messages || []);
+    if (key === "sms") return phone.totalUnreadSms(smsData.smsThreads || [], smsData.sms || []);
+    return 0;
+  }
+  function badgeFor(key) {
+    var n = unreadFor(key);
+    if (!n) return "";
+    return '<span class="dot num">' + (n > 99 ? "99+" : n) + "</span>";
+  }
+
+  function renderHome() {
+    $("home-greet").textContent = phone.greeting() + "，";
+    var chs = shared.characters || [];
+    $("home-sub").textContent = phone.dateLabel() + " ★ " + chs.length + " 位好友在线";
+
+    var line = chs.length
+      ? chs.map(function (c) { return "★ " + c.name + " " + (c.mood || "在线"); }).join(" ")
+      : "★ 手机里还没有好友";
+    line += " ★ 别熬夜了 ★ 你的手机你做主 ★ ";
+    $("marquee-text").textContent = line + line;
+
+    var html = "";
+    APPS.filter(function (a) { return !a.dock; }).forEach(function (a) {
+      html += '<button class="app" data-app="' + a.key + '">' +
+        '<span class="iconwrap"><span class="icon" style="background:' + a.grad + '">' + a.emoji + "</span>" +
+        badgeFor(a.key) + "</span>" +
+        '<span class="app-label">' + a.name + "</span></button>";
+    });
+    $("app-grid").innerHTML = html;
+
+    var dock = "";
+    APPS.filter(function (a) { return a.dock; }).forEach(function (a) {
+      dock += '<button class="app" data-app="' + a.key + '">' +
+        '<span class="iconwrap"><span class="icon" style="background:' + a.grad + '">' + a.emoji + "</span>" +
+        badgeFor(a.key) + "</span>" +
+        '<span class="app-label">' + a.name + "</span></button>";
+    });
+    $("dock").innerHTML = dock;
+  }
+
+  function show(next) {
+    VIEWS.forEach(function (v) { $("v-" + v).classList.toggle("active", v === next); });
+    var light = next === "lock" || next === "home";
+    $("screen").classList.toggle("lighttext", light);
+    $("screen").classList.toggle("darktext", !light);
+  }
+
+  /* ---------- 导航 ---------- */
+  function go(str, opts) {
+    opts = opts || {};
+    var p = parseRoute(str);
+
+    if (!isAppRoute(p)) {
+      p = { name: (p.name === "lock" || p.name === "home") ? p.name : "home", arg: null };
+    }
+    if (p.name === "chat" && (!p.arg || !hasConv(p.arg))) p = { name: "chatlist", arg: null };
+    if (p.name === "sms" && p.arg && !hasSmsThread(p.arg)) p = { name: "sms", arg: null };
+    if (p.name === "friend" && (!p.arg || !hasChar(p.arg))) p = { name: "chatlist", arg: null };
+
+    var next = p.arg ? p.name + "/" + p.arg : p.name;
+    if (!opts.silent && next !== route) routeStack.push(route);
+
+    var url = frameUrl(next);
+
+    if (url) {
+      view = "app";
+      var frame = $("app-frame");
+      // 只在应用或参数变化时重设 src，避免每次渲染都重载
+      if (frame.getAttribute("data-route") !== next) {
+        frame.setAttribute("data-route", next);
+        $("frame-loading").classList.remove("hide");
+        armFrameTimeout();
+        frame.src = url;
+      }
+      show("app");
+    } else {
+      view = p.name;
+      show(p.name);
+    }
+
+    route = next;
+    store.set(ROUTE_KEY, route);
+    try { if (location.protocol !== "about:" && readHash() !== route) location.hash = "#/" + route; } catch (e) {}
+    renderClock();
+  }
+
+  function back(fallback) {
+    var prev = routeStack.pop();
+    go(prev || fallback || "home", { silent: true });
+  }
+
+  function armFrameTimeout() {
+    if (frameTimer) clearTimeout(frameTimer);
+    frameTimer = setTimeout(function () {
+      if (!$("frame-loading").classList.contains("hide")) {
+        $("frame-loading").innerHTML = '这个应用没能打开 <span class="cursor">▮</span><br>' +
+          '<span style="font-size:11px;font-weight:600">检查 apps/ 下是否有对应页面</span>';
+      }
+    }, 4000);
+  }
+
+  /* ---------- 数据 ---------- */
+  async function loadData() {
+    try {
+      shared = await phone.entries(phone.FILES.SHARED);
+      phone.setShared(shared);
+      chat = await phone.entries(phone.FILES.CHAT);
+      smsData = await phone.entries(phone.FILES.SMS);
+      loaded = true;
+      await phone.ensureSeenBaseline();
+      shared = phone.shared();
+      trackMessages();
+      trackSms();
+    } catch (e) {
+      phone.toast({ variant: "error", message: "读不到数据", description: String(e.message || e) });
+    }
+    renderHome();
+    renderClock();
+    try { applyWallpaper(); } catch (e) {
+      wallReport({ ok: false, reason: "applyWallpaper 抛错：" + String((e && e.message) || e) });
+    }
+    freshenWorldClock();     // 让 worldClock 的 now / label 别太旧（角色会读它）
+  }
+
+  /* ---------- 让 worldClock 的 now / label 保持新鲜 ----------
+     这两个字段是"给角色看的快照"（触发器里写着让角色 read_data 读 worldClock 的 now / label），
+     但从前只在设置页调时钟时写一次，之后就冻住了 —— 角色会读到一个几天前的时间 ✗。
+     这里按世界时间**每小时**刷一次；不到一小时就直接返回，避免和"文件变化 → loadData"绕成写循环。 */
+  async function freshenWorldClock() {
+    try {
+      var w = (phone.shared() || {}).worldClock;
+      if (!w || !w.anchorWorld) return;
+      var now = phone.worldNow();
+      var had = Date.parse(w.now || "");
+      if (isFinite(had) && Math.abs(now.getTime() - had) < 3600000) return;
+      await phone.mutate(phone.FILES.SHARED, "setWorldClock", {
+        anchorReal: w.anchorReal,
+        anchorWorld: w.anchorWorld,
+        rate: w.rate,
+        now: now.toISOString(),
+        label: phone.worldFullLabel(now),
+        updatedAt: new Date().toISOString()
+      });
+    } catch (e) {}
+  }
+
+  /* ---------- 自定义壁纸（相册里设的）----------
+     值存在公共数据的 key "wallpaper"：{ src }，世界目录内的相对路径。
+     外壳订阅了全部数据文件，任何变化都会走 loadData() —— 所以相册里一按，外壳立刻跟着换。
+
+     ★ 取址这一层不能写死相对路径：外壳页可能被直接打开、被当欢迎页嵌、或被再套一层，
+     基准就变了（App 页面在 iframe 里、"基准"由外壳决定，所以那边用 phone.assetUrl 是准的；
+     外壳自己没这个保证）。所以这里**逐个试**：用 Image 探测，能载入的才算数，
+     试出来的那条记进 _archive/debug.data.json（key: wallurl），下次排查有据可查。 */
+  var wallTriedSrc = "";
+
+  // 上报前把 URL 擦干净：只保留项目内路径，**去掉 origin 与平台的 __auth 令牌**。
+  // 为什么：诊断上报会记 location.href / baseURI / assetUrl，而这些绝对 URL 里嵌着预览地址的
+  //   `.../api/projects/<id>/preview/__auth/<token>/phone/...` —— 令牌是访问凭据，不该落进
+  //   会随项目分发的 .data.json。这里一律从 "/phone/" 起截，令牌就进不了记录。
+  function safePath(u) {
+    var s = String(u == null ? "" : u);
+    var i = s.indexOf("/phone/");
+    if (i >= 0) return s.slice(i);
+    try { var x = new URL(s, location.href); s = x.pathname + x.search + x.hash; } catch (e) {}
+    var j = s.indexOf("/phone/");
+    if (j >= 0) return s.slice(j);
+    return s.replace(/\/__auth\/[^/]+/g, "/__auth/***");   // 兜底：至少把令牌掩掉
+  }
+  function scrubUrls(obj) {
+    Object.keys(obj).forEach(function (k) {
+      var v = obj[k];
+      if (typeof v === "string") {
+        if (/^(https?:|\/|\.\.?\/)/.test(v)) obj[k] = safePath(v);
+      } else if (Array.isArray(v)) {
+        obj[k] = v.map(function (x) { return typeof x === "string" ? safePath(x) : x; });
+      }
+    });
+    return obj;
+  }
+  // 排查用：把"哪条路径取到了图 / 亮度多少 / 还是全都没取到 / 哪一步抛了错"记一笔。
+  // 外壳跑在用户的浏览器里，我看不到 —— 这是给自己装的 stdout：读 _archive/debug.data.json 的 wallurl 即可。
+  function wallReport(obj) {
+    try {
+      if (window.spherse && spherse.data && spherse.data.set) {
+        obj.at = new Date().toISOString();
+        scrubUrls(obj);
+        spherse.data.set({ file: "phone/_archive/debug.data.json", key: "wallurl", value: obj });
+      }
+    } catch (e) {}
+  }
+  function safeWorldId() {
+    try { return phone.worldId(); } catch (e) { return "?"; }
+  }
+
+  function wallpaperCandidates(src) {
+    var id = phone.worldId();
+    var raw = [];
+    try { raw.push(phone.assetUrl(src)); } catch (e) {}   // 引擎官方取址：App 页面全靠它，最可信
+    raw.push("../worlds/" + id + "/" + src);              // 外壳在 phone/engine/ 下
+    raw.push("worlds/" + id + "/" + src);                 // 外壳就在项目根下
+    raw.push("../../phone/worlds/" + id + "/" + src);
+    raw.push("/phone/worlds/" + id + "/" + src);
+    var seen = {}, out = [];
+    raw.forEach(function (u) { if (u && !seen[u]) { seen[u] = 1; out.push(u); } });
+    return out;
+  }
+
+  function applyWallpaper() {
+    var root = document.documentElement;
+    var w = (phone.shared() || {}).wallpaper || {};
+    var src = String(w.src || "").trim();
+
+    if (!src) {
+      wallTriedSrc = "";
+      root.removeAttribute("data-wallphoto");
+      root.style.removeProperty("--wall-photo");
+      return;
+    }
+    if (src === wallTriedSrc) return;   // 同一个文件不必反复探测（每次数据变化都会走到这儿）
+    wallTriedSrc = src;                 // 先占位：不然每条消息都会重开一轮探测、反复弹同一个错
+
+    function use(url, ok) {
+      if (!ok) {
+        root.removeAttribute("data-wallphoto");
+        ["--wall-photo", "--wall-scrim", "--wall-ink", "--wall-ink-shadow"].forEach(function (k) { root.style.removeProperty(k); });
+        var au = "";
+        try { au = phone.assetUrl(src); } catch (e2) {}
+        wallReport({
+          ok: false, reason: "候选路径全都取不到图", src: src, candidates: cands, assetUrl: au,
+          worldId: safeWorldId(), href: location.href, baseURI: document.baseURI
+        });
+        try {
+          phone.toast({ variant: "error", message: "那张壁纸取不到", description: "先换回主题自带的壁纸了" });
+        } catch (e) {}
+        return;
+      }
+      analyzeAndPaint(url);
+    }
+
+    // 照片的明暗完全不可控 —— 数一下平均亮度，决定压深色还是浅色遮罩、桌面文字用白还是黑。
+    // 不做这一步的后果正好踩过一次：暗调照片 + 固定的深色遮罩 = 一坨黑（看不出是照片）。
+    function analyzeAndPaint(url) {
+      var img = new Image();
+      img.onload = function () {
+        var lum = 0.5;
+        try {
+          var n = 24, c = document.createElement("canvas");
+          c.width = n; c.height = n;
+          var g = c.getContext("2d");
+          g.drawImage(img, 0, 0, n, n);
+          var d = g.getImageData(0, 0, n, n).data, sum = 0, cnt = 0;
+          for (var i = 0; i < d.length; i += 4) {
+            sum += (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) * (d[i + 3] / 255);
+            cnt++;
+          }
+          if (cnt) lum = (sum / cnt) / 255;
+        } catch (e) { lum = 0.5; }   // 读不到像素（画布被污染）就用保守的中间值
+        paint(url, lum);
+      };
+      img.onerror = function () { paint(url, 0.5); };
+      img.src = url;
+    }
+
+    function paint(url, lum) {
+      var r = document.documentElement;
+      var dark = lum < 0.55;        // 照片偏暗 → 白字 + 几乎不压的深色遮罩；偏亮 → 黑字 + 浅色遮罩
+      r.style.setProperty("--wall-photo", 'url("' + url.replace(/"/g, "%22") + '")');
+      r.style.setProperty("--wall-scrim", dark
+        ? "linear-gradient(rgba(6,4,10,.18),rgba(6,4,10,.36))"
+        : "linear-gradient(rgba(255,255,255,.36),rgba(255,255,255,.2))");
+      r.style.setProperty("--wall-ink", dark ? "#ffffff" : "#1a1420");
+      r.style.setProperty("--wall-ink-shadow", dark ? "0 1px 6px rgba(0,0,0,.8)" : "0 1px 4px rgba(255,255,255,.9)");
+      r.setAttribute("data-wallphoto", "1");
+      wallReport({
+        ok: true, url: url, lum: Math.round(lum * 1000) / 1000, dark: dark,
+        worldId: safeWorldId(), href: location.href, baseURI: document.baseURI
+      });
+    }
+
+    var cands = wallpaperCandidates(src);
+    (function tryNext(i) {
+      if (i >= cands.length) return use("", false);
+      var im = new Image(), done = false;
+      // 既不 onload 也不 onerror（请求挂住）也要往下走，不能卡在一条候选上
+      var t = setTimeout(function () {
+        if (done) return; done = true; tryNext(i + 1);
+      }, 4000);
+      im.onload = function () { if (done) return; done = true; clearTimeout(t); use(cands[i], true); };
+      im.onerror = function () { if (done) return; done = true; clearTimeout(t); tryNext(i + 1); };
+      im.src = cands[i];
+    })(0);
+  }
+
+  // 新短信来了、而你没在看那条会话，就弹一条提醒
+  function trackSms() {
+    var list = smsData.sms || [];
+    var newestTs = 0;
+    list.forEach(function (m) { var t = Date.parse(m.createdAt) || 0; if (t > newestTs) newestTs = t; });
+    if (!smsCursorTs) { smsCursorTs = newestTs; return; }
+    if (newestTs <= smsCursorTs) return;
+
+    var fresh = list.filter(function (m) {
+      return m.role === "character" && (Date.parse(m.createdAt) || 0) > smsCursorTs;
+    });
+    smsCursorTs = newestTs;
+
+    fresh.forEach(function (m) {
+      if (route === "sms/" + m.threadId) return;
+      var th = (smsData.smsThreads || []).filter(function (t) { return t.id === m.threadId; })[0];
+      var sender = m.sender || (th ? th.name : "短信");
+      var text = String(m.text).replace(/\s*\n\s*/g, " ");
+      if (text.length > 26) text = text.slice(0, 26) + "…";
+      phone.toast({ variant: "info", message: sender + "：" + text, description: "新短信" });
+    });
+  }
+
+  // 新消息来了、而你没在看那个聊天，就弹一条提醒
+  function trackMessages() {
+    var msgs = chat.messages || [];
+    var newestTs = 0;
+    msgs.forEach(function (m) { var t = Date.parse(m.createdAt) || 0; if (t > newestTs) newestTs = t; });
+    if (!msgCursorTs) { msgCursorTs = newestTs; return; }
+    if (newestTs <= msgCursorTs) return;
+
+    var fresh = msgs.filter(function (m) {
+      return m.role === "character" && (Date.parse(m.createdAt) || 0) > msgCursorTs;
+    });
+    msgCursorTs = newestTs;
+
+    fresh.forEach(function (m) {
+      if (route === "chat/" + m.conversationId) return;   // 正在看的聊天不用提醒
+      var conv = (shared.conversations || []).filter(function (c) { return c.id === m.conversationId; })[0];
+      var ch = conv ? phone.charById(conv.characterId) : null;
+      var text = String(m.text).replace(/\s*\n\s*/g, " ");
+      if (text.length > 26) text = text.slice(0, 26) + "…";
+      phone.toast({
+        variant: "info",
+        message: (ch ? ch.name : "有人") + "：" + text,
+        description: "点开消息看看"
+      });
+    });
+  }
+
+  /* ---------- 事件 ---------- */
+  function bind() {
+    $("v-lock").addEventListener("click", function () { go("home"); });
+    $("homebar").addEventListener("click", function () { go("home"); });
+
+    function iconClick(e) {
+      var b = e.target.closest("[data-app]");
+      if (!b) return;
+      var a = appByKey(b.dataset.app);
+      go(a && a.route ? a.route : "app/" + b.dataset.app);
+    }
+    $("app-grid").addEventListener("click", iconClick);
+    $("dock").addEventListener("click", iconClick);
+
+    $("app-frame").addEventListener("load", function () {
+      if (frameTimer) clearTimeout(frameTimer);
+      $("frame-loading").classList.add("hide");
+    });
+
+    // 应用页面发来的请求：导航 + 数据代理（iframe 里没有 SDK，统一由外壳代劳）
+    window.addEventListener("message", async function (e) {
+      var d = e.data;
+      if (!d || d.ns !== "phone") return;
+
+      if (d.type === "ready") { $("frame-loading").classList.add("hide"); return; }
+      if (d.type === "navigate" && d.to) { go(d.to); return; }
+      // 应用要求重启整个手机（比如换了世界）
+      if (d.type === "reload") { try { location.reload(); } catch (err) {} return; }
+      // 应用页面问"上面是外壳吗？"—— 答一声，它就知道该请外壳代办数据
+      if (d.type === "hello") {
+        try { e.source.postMessage({ ns: "phone", type: "shellHello" }, "*"); } catch (err) {}
+        return;
+      }
+
+      var source = e.source;
+      function reply(ok, data, error) {
+        try { source.postMessage({ ns: "phone", type: "reply", reqId: d.reqId, ok: ok, data: data, error: error }, "*"); } catch (err) {}
+      }
+      try {
+        if (d.type === "data.entries") return reply(true, await spherse.data.entries({ file: d.file }));
+        if (d.type === "data.mutate") {
+          return reply(true, await spherse.data.mutate({
+            file: d.file, name: d.name, args: d.args, idempotencyKey: d.idempotencyKey
+          }));
+        }
+        if (d.type === "data.set") return reply(true, await spherse.data.set({ file: d.file, key: d.key, value: d.value }));
+        if (d.type === "content.listDir") return reply(true, await spherse.api.content.listDir(d.path));
+        // 上传文件（Blob/File 经 postMessage 克隆过来；落到 spherse.uploadFile —— 哪端都能用）
+        if (d.type === "content.upload") {
+          return reply(true, await spherse.uploadFile({ data: d.data, name: d.name, dirPath: d.dirPath }));
+        }
+        if (d.type === "toast") { spherse.toast(d.params); return reply(true, null); }
+        // 用文件预览打开项目里的文件（诊断工具页用；SDK 的 openFile 是单向的）
+        if (d.type === "openFile") { spherse.openFile(d.path); return reply(true, null); }
+        if (d.type === "session.ensure") {
+          var ch = phone.charById(d.characterId);
+          if (!ch) throw new Error("找不到这位好友");
+          var ctx = await phone.ensureAgentSession(ch);
+          return reply(true, { sessionId: ctx.sessionId, conv: ctx.conv });
+        }
+        if (d.type === "session.notify") {
+          var ch2 = phone.charById(d.characterId);
+          if (!ch2) throw new Error("找不到这位好友");
+          var ctx2 = await phone.ensureAgentSession(ch2);
+          await spherse.sendMessage({ sessionId: ctx2.sessionId, message: d.message, open: false });
+          return reply(true, null);
+        }
+        // 系统 Agent（比如短信局）：按名字找到它，开一个会话给它
+        if (d.type === "agent.session") {
+          var agents = await spherse.api.agents.list();
+          var found = (agents || []).filter(function (a) { return a.name === d.name; })[0];
+          if (!found) throw new Error("找不到「" + d.name + "」这个 Agent");
+          var created = await spherse.createSession({
+            agentSlug: found.slug || found.id, open: false, name: d.sessionName || d.name
+          });
+          if (!created || !created.sessionId) throw new Error("会话创建失败");
+          return reply(true, { sessionId: created.sessionId });
+        }
+        if (d.type === "session.send") {
+          await spherse.sendMessage({ sessionId: d.sessionId, message: d.message, open: false });
+          return reply(true, null);
+        }
+        reply(false, null, "unknown_rpc:" + d.type);
+      } catch (err) {
+        reply(false, null, String((err && err.message) || err));
+      }
+    });
+
+    // 数据文件变了：自己刷新 + 广播给当前 App
+    // （订阅在启动时世界解析完之后注册，见 boot；这里只定义广播函数）
+    broadcastFileUpdate = function (e) {
+      var frame = $("app-frame");
+      try {
+        if (frame.contentWindow && e && e.path) {
+          frame.contentWindow.postMessage({ ns: "phone", type: "fileUpdate", path: e.path }, "*");
+        }
+      } catch (err) {}
+      loadData();
+    };
+
+    window.addEventListener("hashchange", function () {
+      var h = readHash();
+      if (h && h !== route) go(h, { silent: true });
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && view !== "lock" && view !== "home") back("home");
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  bind();
+  renderHome();
+  // 先把世界包读进来：App 注册表、品牌文案、数据文件路径都由它决定
+  phone.ensureWorld().then(function (w) {
+    APPS = w.apps || [];
+    applyBrand(w.brand || {});
+    renderHome();
+    // 订阅要在世界解析完之后再注册，否则盯的是错的路径
+    phone.onFileUpdate(phone.allFiles(), function (e) {
+      if (broadcastFileUpdate) broadcastFileUpdate(e);
+    });
+    go(readHash() || store.get(ROUTE_KEY) || "lock", { silent: true });
+    renderClock();
+    loadData();
+  }).catch(function (e) {
+    phone.toast({ variant: "error", message: "读不到世界包", description: String(e.message || e) });
+    go("home", { silent: true });
+  });
+  setInterval(renderClock, 1000);
+})();
+</script>
+</body>
+</html>

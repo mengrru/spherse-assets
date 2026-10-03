@@ -1,0 +1,250 @@
+/* 小手机 · 机身外壳样式（只有 phone/index.html 引这份） */
+@import url("./themes.css");
+@import url("./skins.css");   /* ★ 机身/锁屏/桌面同样要「形」。曾经漏了这份 —— 贴纸语言在桌面上整份没生效 */
+/* 引擎自用：等宽字体。
+   颜色与形状一律由 主题 / 设计语言 提供 —— 这里再定义 --ink 会盖掉主题的值
+   （:root 与 [data-theme] 权重相同，导入的内容在本规则之前）。 */
+:root{
+  --mono:"Courier New",monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--font);
+  background:
+    radial-gradient(45% 38% at 12% 8%,rgba(255,79,216,.28),transparent 62%),
+    radial-gradient(45% 38% at 88% 16%,rgba(56,232,255,.26),transparent 62%),
+    radial-gradient(60% 40% at 50% 108%,rgba(198,255,69,.18),transparent 62%),
+    linear-gradient(160deg,#150c24,#1d1338 45%,#0b0814);
+  display:grid;place-items:center;
+}
+
+/* ---------- 机身 ---------- */
+.phone{
+  position:relative;
+  width:min(100%,404px);height:min(100%,852px);
+  padding:10px;border-radius:var(--bezel-radius);
+  background:conic-gradient(from 205deg,
+    #ffffff,#b6c1d6 12%,#f6f9ff 26%,#8d97ad 42%,#ffffff 56%,#c8d2e6 70%,#f9fbff 84%,#a9b3c8 94%,#ffffff);
+  box-shadow:
+    0 26px 60px rgba(0,0,0,.6),
+    0 0 0 2px var(--ink),
+    0 0 34px rgba(255,79,216,.45),
+    0 0 70px rgba(56,232,255,.22),
+    inset 0 0 0 3px rgba(255,255,255,.7);
+}
+.screen{
+  position:relative;width:100%;height:100%;border-radius:calc(var(--bezel-radius) - 10px);overflow:hidden;
+  border:var(--border-w) solid var(--border);
+  background:var(--screen-bg);color:#241a33;
+  --sb:#2a1b3d;
+}
+.screen:after{
+  content:"";position:absolute;inset:0;z-index:80;pointer-events:none;opacity:var(--scan);
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.16) 0 1px,rgba(255,255,255,0) 1px 3px);
+}
+@media (max-width:520px){
+  .phone{padding:0;border-radius:0;width:100%;height:100%;box-shadow:none}
+  .screen{border-radius:0;border:none}
+}
+
+/* ---------- 壁纸 ---------- */
+.wall{
+  position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(58% 44% at 16% 6%,var(--wall-1) 0%,rgba(255,154,232,0) 62%),
+    radial-gradient(52% 40% at 90% 13%,var(--wall-2) 0%,rgba(142,242,255,0) 62%),
+    radial-gradient(70% 48% at 50% 106%,var(--wall-3) 0%,rgba(211,255,107,0) 62%),
+    linear-gradient(165deg,var(--wall-base));
+}
+.wall:before{
+  content:"";position:absolute;inset:0;opacity:var(--grid-op);
+  background-image:
+    linear-gradient(rgba(26,20,32,.10) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(26,20,32,.10) 1px,transparent 1px);
+  background-size:20px 20px;
+}
+.wall:after{
+  content:"";position:absolute;left:50%;top:47%;width:236px;height:236px;
+  transform:translate(-50%,-50%);border-radius:50%;opacity:var(--petal-op);filter:blur(1px);
+  background:var(--petal);
+}
+.sparkles{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;display:var(--sparkles)}
+.sparkles i{
+  position:absolute;font-style:normal;color:var(--sparkle);
+  text-shadow:0 0 6px var(--sparkle-glow),0 0 14px var(--sparkle-glow);
+  animation:tw 2.6s ease-in-out infinite;
+}
+@keyframes tw{0%,100%{opacity:.2;transform:scale(.7) rotate(0deg)}50%{opacity:1;transform:scale(1.15) rotate(12deg)}}
+
+/* ---------- 状态栏 / 底部条 ---------- */
+.statusbar{
+  position:absolute;top:0;left:0;right:0;height:52px;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 26px 0;font-family:var(--mono);font-size:13.5px;font-weight:700;
+  letter-spacing:.5px;color:var(--sb);transition:color .2s;pointer-events:none;
+}
+.screen.lighttext{--sb:var(--sb-on-light)}
+.screen.lighttext .statusbar{text-shadow:0 1px 3px rgba(0,0,0,.45)}
+.screen.darktext{--sb:var(--sb-on-dark)}
+.screen.darktext .statusbar{text-shadow:1px 1px 0 rgba(26,20,32,.55)}
+.sb-left{display:flex;align-items:center;gap:5px}
+.sb-left .rate{
+  font-size:9px;font-weight:800;letter-spacing:0;padding:1px 4px;border-radius:5px;
+  border:1.5px solid var(--border);background:linear-gradient(180deg,#ffe08a,#ff9d1f);color:#3a1a00;display:none;
+}
+.sb-left .rate.on{display:inline-block}
+.sb-right{display:flex;align-items:center;gap:6px}
+.sig{display:flex;align-items:flex-end;gap:1.5px;height:11px}
+.sig i{width:2.5px;background:currentColor;border-radius:1px;display:block}
+.sig i:nth-child(1){height:4px}.sig i:nth-child(2){height:6px}
+.sig i:nth-child(3){height:8px}.sig i:nth-child(4){height:11px}
+.bar{width:17px;height:9px;border:1.6px solid currentColor;border-radius:2px;position:relative}
+.bar:after{content:"";position:absolute;top:1px;bottom:1px;left:1px;right:4px;background:currentColor}
+.homebar{
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:196px;height:22px;z-index:60;cursor:pointer;display:grid;place-items:center;
+}
+.homebar:after{
+  content:"";width:126px;height:8px;border-radius:999px;border:var(--border-w) solid var(--border);
+  background:linear-gradient(180deg,#ffffff,#c4cee2);
+  box-shadow:0 2px 0 rgba(26,20,32,.45),inset 0 1px 0 #fff;transition:filter .2s;
+}
+.homebar:hover:after{filter:brightness(1.12) saturate(1.4)}
+
+/* ---------- 视图 ---------- */
+.view{position:absolute;inset:0;display:none;flex-direction:column;z-index:10}
+.view.active{display:flex}
+
+/* ---------- 锁屏 ---------- */
+#v-lock{align-items:center;justify-content:center;cursor:pointer;text-align:center;gap:14px}
+.lock-badge{
+  font-size:10.5px;font-weight:800;font-style:italic;letter-spacing:2.5px;color:#3a2b52;
+  border:var(--border-w) solid var(--border);border-radius:999px;padding:4px 12px;
+  background:linear-gradient(180deg,#ffffff,#ffd9f4);
+  box-shadow:var(--shadow-row);transform:rotate(-2.5deg);
+}
+.lock-time{
+  font-family:var(--mono);font-size:86px;font-weight:700;letter-spacing:-5px;line-height:.96;
+  background:linear-gradient(180deg,#ffffff 0%,#d3dcf0 34%,#6d7a95 52%,#ffffff 70%,#a3b0cb 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 0 rgba(26,20,32,.9)) drop-shadow(0 8px 16px rgba(26,20,32,.35));
+}
+.lock-date{
+  font-size:14px;font-weight:800;font-style:italic;color:#33244a;
+  border:var(--border-w) solid var(--border);border-radius:8px;padding:3px 12px;
+  background:linear-gradient(180deg,#fff8b8,#ffe08a);box-shadow:var(--shadow-row);
+}
+.lock-bottom{position:absolute;bottom:44px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:10px}
+.chev{
+  width:26px;height:26px;border-radius:50%;border:var(--border-w) solid var(--border);
+  display:grid;place-items:center;font-size:12px;color:#2a1b3d;
+  background:linear-gradient(180deg,#ffffff,#c9d3e6);box-shadow:var(--shadow-row);
+  animation:bounce 1.8s ease-in-out infinite;
+}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.lock-hint{
+  font-family:var(--font-header);font-size:12px;font-weight:var(--h-weight);font-style:var(--h-style);letter-spacing:1px;color:#2a1b3d;
+  border:var(--border-w) solid var(--border);border-radius:999px;padding:5px 14px;
+  background:linear-gradient(180deg,#e8ffe0,#b6ff3d);box-shadow:var(--shadow-row);
+}
+.cursor{display:inline-block;animation:blink2 1s steps(1) infinite}
+@keyframes blink2{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* ---------- 桌面 ---------- */
+#v-home{padding:62px 18px 28px;justify-content:space-between}
+.home-greet{font-family:var(--font-header);font-size:25px;font-weight:var(--h-weight);font-style:var(--h-style);color:var(--on-wall);text-shadow:var(--on-wall-shadow)}
+.home-sub{margin-top:5px;font-size:12.5px;font-weight:700;color:var(--on-wall);opacity:.85;text-shadow:var(--on-wall-shadow)}
+.marquee{
+  margin-top:12px;border:var(--border-w) solid var(--border);border-radius:8px;overflow:hidden;
+  background:linear-gradient(90deg,#fff8b8,#ffe0f7,#d9f7ff);
+  box-shadow:var(--shadow-row);padding:4px 0;
+}
+.marquee-text{
+  display:inline-block;white-space:nowrap;font-size:12px;font-weight:800;letter-spacing:1px;color:#2a1b3d;
+  animation:slide 18s linear infinite;
+}
+@media (prefers-reduced-motion:reduce){ .marquee-text{animation:none} }
+@keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.app-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 6px}
+.app{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;border:none;background:none;font:inherit;padding:0}
+.icon{
+  position:relative;width:58px;height:58px;border-radius:var(--icon-radius);display:grid;place-items:center;
+  font-size:26px;border:var(--border-w) solid var(--border);
+  /* 别加 overflow:hidden —— 会把右上角的未读角标裁掉（高光本来就在图标内部，不需要裁） */
+  box-shadow:var(--shadow-card),var(--icon-bevel);
+  transition:transform .14s;
+  filter:var(--icon-filter);   /* 换肤：整体重新着色图标（角标在 .iconwrap 里，不受影响） */
+}
+.icon:after{
+  content:"";position:absolute;left:7%;right:7%;top:5%;height:36%;
+  border-radius:calc(var(--icon-radius) - 4px) calc(var(--icon-radius) - 4px) 60% 60%;display:var(--gloss-on);
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0));
+}
+.app:active .icon{transform:var(--press);box-shadow:var(--shadow-press)}
+.app-label{
+  font-family:var(--font-header);font-size:11.5px;font-weight:var(--h-weight);letter-spacing:var(--h-tracking);
+  color:var(--on-wall);text-shadow:var(--on-wall-shadow);
+}
+.iconwrap{position:relative;display:block;line-height:0}
+.dot{
+  position:absolute;top:-4px;right:-4px;width:13px;height:13px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#ff2f57 60%);
+  border:var(--border-w) solid var(--border);z-index:9;
+}
+.dot.num{
+  width:auto;min-width:15px;height:15px;border-radius:9px;padding:0 4px;
+  color:#fff;font-weight:800;font-family:var(--mono);font-size:9.5px;
+  display:grid;place-items:center;line-height:1;
+}
+.dock{
+  display:flex;justify-content:space-around;padding:12px 8px;border-radius:var(--radius);
+  border:var(--border-w) solid var(--border);
+  background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.42));
+  box-shadow:var(--shadow-card),var(--inner-gloss);backdrop-filter:blur(8px);
+}
+.dock .app-label{display:none}
+
+/* ---------- App 宿主（iframe） ---------- */
+#v-app{background:var(--page-bg)}
+#app-frame{width:100%;height:100%;border:0;display:block;background:transparent}
+.frame-loading{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-size:12.5px;font-weight:800;font-style:italic;color:var(--accent-ink);
+  background:var(--page-bg);
+}
+.frame-loading.hide{display:none}
+.frame-error{
+  position:absolute;inset:0;padding:80px 20px 20px;font-size:13px;line-height:1.8;color:var(--warn-fg);
+  background:var(--warn);
+}
+
+/* ---------- 自定义壁纸（相册里设的）----------
+   照片铺在 .wall 上，压一层深色遮罩 —— 照片的明暗完全不可控，桌面上的字必须在任何图上都看得清。
+   data-wallphoto 这个属性由外壳 index.html 的 applyWallpaper() 设置，值取自公共数据 key: "wallpaper"。
+   注意权重：html[data-wallphoto] .wall 是 (0,2,1)，比主题那条 .wall (0,1,0) 高，才盖得住。 */
+html[data-wallphoto] .wall{
+  background-image:var(--wall-scrim,linear-gradient(rgba(6,4,10,.22),rgba(6,4,10,.34))),var(--wall-photo);
+  background-size:cover,cover;
+  background-position:center,center;
+}
+html[data-wallphoto] .wall:before,
+html[data-wallphoto] .wall:after{display:none}      /* 网格与光斑压在照片上不好看 */
+html[data-wallphoto] .sparkles{display:none}        /* 星星同理 */
+/* 遮罩的深浅、文字的黑白，由外壳先数一遍照片的平均亮度再决定
+   （--wall-scrim / --wall-ink / --wall-ink-shadow 三个变量，见 index.html 的 paint()） */
+html[data-wallphoto] .screen{--sb-on-light:var(--wall-ink)}
+html[data-wallphoto] .screen.lighttext .statusbar{text-shadow:var(--wall-ink-shadow)}
+html[data-wallphoto] #v-lock,
+html[data-wallphoto] #v-home{--on-wall:var(--wall-ink);--on-wall-shadow:var(--wall-ink-shadow)}
+/* 锁屏那个大时间是「铬渐变字」：浅银渐变 + background-clip:text + color:transparent，
+   颜色写死 —— 压在亮照片上等于消失（我第一版漏了它，只适配了桌面文字和状态栏）。
+   贴照片时改成普通字 + 自适应字色，任何照片上都读得出来。 */
+html[data-wallphoto] .lock-time{
+  background:none;
+  -webkit-background-clip:border-box;background-clip:border-box;
+  color:var(--wall-ink);
+  filter:none;                    /* 原来的铬光晕是配浅色字的，换成与字色同向的投影 */
+  text-shadow:var(--wall-ink-shadow);
+}

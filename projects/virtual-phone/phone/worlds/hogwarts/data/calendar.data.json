@@ -1,0 +1,194 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 日历（这个世界里叫「课表」）：日子与约定。日期一律是「手机世界里的日期」（YYYY-MM-DD），不是现实日期",
+    "queries": {
+      "listEvents": {
+        "desc": "读取日程（不带参数就是全部）。要按天看就传 date；who 可以填 \"me\" 或某个角色的档案 id",
+        "path": "events",
+        "identity": "id",
+        "params": {
+          "date": { "type": "string" },
+          "who": { "type": "string" },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "asc" }
+        },
+        "defaultLimit": 100
+      },
+      "listMarks": {
+        "desc": "读取纪念日（「从那天起算」的事，比如认识、入学）。展示为「第 N 天」",
+        "path": "marks",
+        "identity": "id",
+        "defaultLimit": 20
+      }
+    },
+    "mutations": {
+      "addEvent": {
+        "desc": "记一件事（手机主人和角色都能加）。课、训练这类每周固定的填 repeat: \"weekly\"（日期填那周的任何一天）",
+        "op": "append",
+        "path": "events",
+        "fields": {
+          "date": { "type": "string", "required": true },
+          "title": { "type": "string", "required": true },
+          "time": { "type": "string" },
+          "who": { "type": "string", "default": "me" },
+          "kind": { "type": "enum", "values": ["plan", "work", "school", "date", "note", "anniversary"], "default": "plan" },
+          "note": { "type": "string" },
+          "repeat": { "type": "enum", "values": ["none", "weekly", "yearly"], "default": "none" },
+          "done": { "type": "boolean", "default": false }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "updateEvent": {
+        "desc": "改一件事：时间、标题、备注，或者标记做完（done）",
+        "op": "update",
+        "path": "events",
+        "match": "id",
+        "fields": {
+          "date": { "type": "string" },
+          "time": { "type": "string" },
+          "title": { "type": "string" },
+          "note": { "type": "string" },
+          "repeat": { "type": "enum", "values": ["none", "weekly", "yearly"] },
+          "done": { "type": "boolean" }
+        }
+      },
+      "removeEvent": {
+        "desc": "删一件事",
+        "op": "remove",
+        "path": "events",
+        "match": "id"
+      },
+      "addMark": {
+        "desc": "加一个纪念日（从某天开始算，展示为「第 N 天」）",
+        "op": "append",
+        "path": "marks",
+        "fields": {
+          "title": { "type": "string", "required": true },
+          "since": { "type": "string", "required": true },
+          "emoji": { "type": "string" }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      }
+    }
+  },
+  "events": [
+    {
+      "id": "ev-maeve-transfig",
+      "date": "2014-10-20",
+      "time": "09:00",
+      "title": "变形课",
+      "who": "char-harry",
+      "kind": "school",
+      "note": "麦格教授。她最喜欢这门。",
+      "repeat": "weekly",
+      "done": false,
+      "createdAt": "2014-09-01T08:10:00.000Z"
+    },
+    {
+      "id": "ev-maeve-potions",
+      "date": "2014-10-21",
+      "time": "09:00",
+      "title": "魔药课",
+      "who": "char-harry",
+      "kind": "school",
+      "note": "和斯莱特林一起上。",
+      "repeat": "weekly",
+      "done": false,
+      "createdAt": "2014-09-01T08:10:00.000Z"
+    },
+    {
+      "id": "ev-maeve-quidditch",
+      "date": "2014-10-22",
+      "time": "17:00",
+      "title": "魁地奇训练",
+      "who": "char-harry",
+      "kind": "note",
+      "note": "雨天也练。新扫帚还是没批下来。",
+      "repeat": "weekly",
+      "done": false,
+      "createdAt": "2014-09-01T08:12:00.000Z"
+    },
+    {
+      "id": "ev-maeve-astronomy",
+      "date": "2014-10-22",
+      "time": "21:00",
+      "title": "天文课",
+      "who": "char-harry",
+      "kind": "school",
+      "note": "塔顶很冷，记得带斗篷。",
+      "repeat": "weekly",
+      "done": false,
+      "createdAt": "2014-09-01T08:13:00.000Z"
+    },
+    {
+      "id": "ev-maeve-arithmancy",
+      "date": "2014-10-23",
+      "time": "14:00",
+      "title": "算术占卜",
+      "who": "char-hermione",
+      "kind": "school",
+      "note": "赫敏选的。她从不解释自己的课表为什么排得开。",
+      "repeat": "weekly",
+      "done": false,
+      "createdAt": "2014-09-01T08:14:00.000Z"
+    },
+    {
+      "id": "ev-me-library",
+      "date": "2014-10-23",
+      "time": "20:00",
+      "title": "图书馆还书",
+      "who": "me",
+      "kind": "plan",
+      "note": "平斯夫人已经瞪过我一次了。",
+      "repeat": "none",
+      "done": false,
+      "createdAt": "2014-10-21T19:40:00.000Z"
+    },
+    {
+      "id": "ev-maeve-hogsmeade",
+      "date": "2014-10-25",
+      "time": "11:00",
+      "title": "霍格莫德",
+      "who": "char-harry",
+      "kind": "note",
+      "note": "和队里的人约了，先去蜂蜜公爵。",
+      "repeat": "none",
+      "done": false,
+      "createdAt": "2014-10-19T21:05:00.000Z"
+    },
+    {
+      "id": "ev-maeve-quiz",
+      "date": "2014-10-27",
+      "time": "14:00",
+      "title": "算术占卜小测",
+      "who": "char-harry",
+      "kind": "school",
+      "note": "她说没关系，但你听出她有点紧。",
+      "repeat": "none",
+      "done": false,
+      "createdAt": "2014-10-20T22:30:00.000Z"
+    },
+    {
+      "id": "ev-halloween",
+      "date": "2014-10-31",
+      "time": "18:00",
+      "title": "万圣节晚宴",
+      "who": "world",
+      "kind": "note",
+      "note": "大礼堂会飘起南瓜灯。",
+      "repeat": "yearly",
+      "done": false,
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    }
+  ],
+  "marks": [
+    {
+      "id": "mark-know-maeve",
+      "title": "认识他们",
+      "since": "2014-09-01T08:00:00.000Z",
+      "emoji": "🪶",
+      "createdAt": "2014-09-01T08:00:00.000Z"
+    }
+  ]
+}

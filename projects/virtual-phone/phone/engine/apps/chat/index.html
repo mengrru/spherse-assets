@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>消息</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 本页专属：聊天区布局 */
+  body{position:relative}
+  .chat-body{flex:1;min-height:0}
+</style>
+</head>
+<body>
+<!-- 会话列表 -->
+<section id="pane-list" style="display:none;flex-direction:column;height:100%">
+  <header class="app-header">
+    <button class="back" id="list-home">‹</button>
+    <span>我的消息</span>
+    <button class="ghost" id="list-desktop">桌面</button>
+  </header>
+  <div class="app-body" id="conv-list"></div>
+</section>
+
+<!-- 聊天 -->
+<section id="pane-chat" style="display:none;flex-direction:column;height:100%">
+  <header class="app-header chat">
+    <button class="back" id="chat-back">‹</button>
+    <div id="chat-title" style="cursor:pointer">
+      <div style="font-size:16px;font-weight:800;font-style:italic" id="chat-name">—</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:rgba(255,255,255,.82)" id="chat-sub">在线</div>
+    </div>
+  </header>
+  <div class="status-strip" id="chat-status"></div>
+  <div class="chat-body" id="chat-body"></div>
+  <div class="composer">
+    <textarea id="chat-input" rows="1" placeholder="说点什么…"></textarea>
+    <button class="send" id="chat-send">发送</button>
+  </div>
+  <div class="afffloat" id="aff-float"></div>
+</section>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var P = phone.params();
+  var convId = (P.conv && P.conv !== "null" && P.conv !== "undefined") ? P.conv : null;
+  var mode = convId ? "chat" : "list";
+
+  var shared = {}, messages = [];
+  var pending = [];            // 乐观发送队列
+  var awaiting = null;         // { convId, since, timer }
+  var affSnapshot = {};
+  var affTimer = null;
+
+  /* ---------- 数据 ---------- */
+  async function load(first) {
+    shared = await phone.loadShared();
+    var data = await phone.entries(phone.FILES.CHAT);
+    messages = data.messages || [];
+
+    if (mode === "chat" && !conv()) {          // 路由过期：回会话列表
+      if (first) { phone.navigate("chatlist"); return; }
+      convId = null; mode = "list";
+      $("pane-chat").style.display = "none";
+      $("pane-list").style.display = "flex";
+    }
+
+    if (first) {
+      var seen = {};
+      (shared.characters || []).forEach(function (c) { seen[c.id] = c.affection; });
+      affSnapshot = seen;
+    } else {
+      trackAffection();
+    }
+    checkReplyArrived();
+    render();
+  }
+
+  function conv() {
+    return (shared.conversations || []).filter(function (c) { return c.id === convId; })[0] || null;
+  }
+  function ch() { return phone.charOfConv(conv()); }
+  function messagesOf(id) {
+    return messages.filter(function (m) { return m.conversationId === id; })
+      .sort(function (a, b) { return String(a.createdAt).localeCompare(String(b.createdAt)); });
+  }
+  function isResolved(p) { return !!(p.realId && messages.some(function (m) { return m.id === p.realId; })); }
+  function pendingOf(id) {
+    pending = pending.filter(function (p) { return !isResolved(p); });
+    return pending.filter(function (p) { return p.conversationId === id; });
+  }
+  function makeTempId() { return "local-" + Date.now() + "-" + Math.random().toString(16).slice(2, 7); }
+
+  /* ---------- 好感度变化提示 ---------- */
+  function trackAffection() {
+    var changed = null;
+    (shared.characters || []).forEach(function (c) {
+      var prev = affSnapshot[c.id];
+      if (prev != null && c.affection != null && c.affection !== prev) changed = { id: c.id, delta: c.affection - prev };
+      affSnapshot[c.id] = c.affection;
+    });
+    if (!changed) return;
+    if (convId && conv() && conv().characterId === changed.id) showAffFloat(changed.delta);
+  }
+  function showAffFloat(delta) {
+    var node = $("aff-float");
+    node.textContent = "♥ 好感度 " + (delta > 0 ? "+" : "-") + Math.abs(delta);
+    node.classList.add("show");
+    if (affTimer) clearTimeout(affTimer);
+    affTimer = setTimeout(function () { node.classList.remove("show"); }, 2600);
+  }
+
+  /* ---------- 渲染 ---------- */
+  function render() {
+    if (mode === "list") renderList(); else renderChat();
+  }
+
+  function renderList() {
+    var convs = (shared.conversations || []).slice().sort(function (a, b) {
+      var ma = messagesOf(a.id), mb = messagesOf(b.id);
+      var ta = ma.length ? String(ma[ma.length - 1].createdAt) : String(a.createdAt);
+      var tb = mb.length ? String(mb[mb.length - 1].createdAt) : String(b.createdAt);
+      return tb.localeCompare(ta);
+    });
+    if (!convs.length) {
+      $("conv-list").innerHTML = '<div class="ph"><div class="big">📭</div><div class="t">还没有聊天</div>' +
+        '<div class="d">让助手帮你加一个好友吧。</div></div>';
+      return;
+    }
+    $("conv-list").innerHTML = convs.map(function (c) {
+      var ch = phone.charOfConv(c) || { name: c.title || "未知", avatarEmoji: "❔", avatarColor: "#c9d3e6" };
+      var msgs = messagesOf(c.id);
+      var last = msgs[msgs.length - 1];
+      var text = last ? (last.role === "user" ? "我：" : "") + String(last.text).replace(/\s*\n\s*/g, " ") : "还没有消息";
+      var time = last ? phone.timeOf(last.createdAt) : "";
+      var pend = pendingOf(c.id);
+      if (pend.length) {
+        text = "我：" + String(pend[pend.length - 1].text).replace(/\s*\n\s*/g, " ");
+        time = phone.timeOf(pend[pend.length - 1].createdAt);
+      }
+      var unread = phone.unreadOf(c.id, messages);
+      return '<div class="conv" data-conv="' + phone.esc(c.id) + '">' +
+        phone.avatarHtml(ch.avatarEmoji, ch.avatarColor) +
+        '<div class="conv-main"><div class="conv-top"><span class="conv-name">' + phone.esc(ch.name) + "</span>" +
+        '<span class="conv-right"><span class="conv-time">' + phone.esc(time) + "</span>" +
+        (unread ? '<span class="conv-badge">' + unread + "</span>" : "") + "</span></div>" +
+        '<div class="conv-last">' + phone.esc(text) + "</div>" +
+        '<span class="conv-tag">' + phone.esc(ch.doing || ch.tagline || "") +
+        (ch.affection != null ? " · 好感 " + phone.clampAff(ch.affection) : "") + "</span></div></div>";
+    }).join("");
+  }
+
+  function renderChat() {
+    var c = conv(), character = ch();
+    if (!c || !character) { $("chat-body").innerHTML = '<div class="day">会话不存在</div>'; return; }
+
+    $("chat-name").textContent = character.name;
+    var typing = !!(awaiting && awaiting.convId === c.id);
+    $("chat-sub").textContent = typing ? "对方正在输入…" : (character.mood ? "此刻：" + character.mood : "在线");
+    $("chat-sub").style.color = typing ? "#c6ff45" : "rgba(255,255,255,.82)";
+
+    var aff = phone.clampAff(character.affection);
+    $("chat-status").innerHTML =
+      '<span class="heart">♥</span><span class="segbar">' + phone.affinitySegs(aff, 20) + "</span>" +
+      '<span class="num">' + aff + "</span><span class=\"sep\">|</span>" +
+      '<span class="mood">' + phone.esc(character.mood || "心情不明") + "</span>" +
+      '<span class="doing">' + (character.doing ? "· " + phone.esc(character.doing) : "") + "</span>" +
+      '<span class="arrow">档案 ›</span>';
+
+    var body = $("chat-body");
+    var atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 60;
+    var html = '<div class="day">' + phone.esc(phone.dateLabel()) + "</div>";
+
+    messagesOf(c.id).forEach(function (m) {
+      var me = m.role === "user";
+      var who = me ? { e: shared.profile.avatarEmoji, c: shared.profile.avatarColor }
+                   : { e: character.avatarEmoji, c: character.avatarColor };
+      html += '<div class="row' + (me ? " me" : "") + '">' + phone.avatarHtml(who.e, who.c) +
+        '<div class="bubble">' + phone.escLines(m.text) + "</div></div>";
+    });
+
+    pendingOf(c.id).forEach(function (p) {
+      var mark = p.status === "failed"
+        ? '<span class="msg-state fail" data-retry="' + phone.esc(p.tempId) + '" title="点击重发">!</span>'
+        : '<span class="msg-state">⟳</span>';
+      html += '<div class="row me">' + phone.avatarHtml(shared.profile.avatarEmoji, shared.profile.avatarColor) +
+        '<div class="bubble ' + (p.status === "failed" ? "failed" : "sending") + '">' +
+        phone.escLines(p.text) + mark + "</div></div>";
+    });
+
+    if (typing) {
+      html += '<div class="row">' + phone.avatarHtml(character.avatarEmoji, character.avatarColor) +
+        '<div class="bubble typing"><i></i><i></i><i></i></div></div>';
+    }
+    body.innerHTML = html;
+
+    $("chat-input").disabled = typing;
+    $("chat-input").placeholder = typing ? "等对方回你…" : "说点什么…";
+    $("chat-send").disabled = typing;
+    if (atBottom || typing) body.scrollTop = body.scrollHeight;
+  }
+
+  /* ---------- 发送 ---------- */
+  function armTimeout() {
+    if (!awaiting) return;
+    if (awaiting.timer) clearTimeout(awaiting.timer);
+    awaiting.timer = setTimeout(function () {
+      awaiting = null;
+      render();
+    }, 180000);
+  }
+  function clearAwaiting() {
+    if (awaiting && awaiting.timer) clearTimeout(awaiting.timer);
+    awaiting = null;
+  }
+  function checkReplyArrived() {
+    if (!awaiting) return;
+    var since = Date.parse(awaiting.since) || 0;
+    var hit = messages.some(function (m) {
+      return m.conversationId === awaiting.convId && m.role === "character" && (Date.parse(m.createdAt) || 0) > since;
+    });
+    if (hit) clearAwaiting();
+  }
+
+  async function persist(entry) {
+    try {
+      var saved = await phone.mutate(phone.FILES.CHAT, "appendMessage",
+        { conversationId: entry.conversationId, role: "user", text: entry.text },
+        "u:" + entry.conversationId + ":" + entry.tempId);
+      entry.realId = saved && saved.id ? saved.id : null;
+      entry.status = "sent";
+      if (!entry.realId) pending = pending.filter(function (p) { return p.tempId !== entry.tempId; });
+    } catch (e) {
+      entry.status = "failed";
+      phone.toast({ variant: "error", message: "这条没发出去", description: "点红色感叹号可以重发" });
+    }
+    render();
+  }
+
+  async function kick(conversation, character, text, since) {
+    if (!awaiting) {
+      awaiting = { convId: conversation.id, since: since, timer: null };
+      armTimeout();
+      render();
+    }
+    // 先把消息记到会话上（首次会创建后台会话），再交给角色
+    await phone.notify(character, phone.prompt.chat(character, conversation, text));
+  }
+
+  async function send() {
+    var input = $("chat-input");
+    var text = (input.value || "").trim();
+    if (!text || awaiting) return;
+    var c = conv(), character = ch();
+    if (!c || !character) return;
+
+    var entry = {
+      tempId: makeTempId(), realId: null, conversationId: c.id,
+      text: text, createdAt: new Date().toISOString(), status: "sending"
+    };
+    pending.push(entry);
+    input.value = "";
+    input.style.height = "auto";
+    awaiting = { convId: c.id, since: entry.createdAt, timer: null };
+    armTimeout();
+    render();
+
+    await persist(entry);
+    if (entry.status === "failed") { clearAwaiting(); render(); return; }
+    await kick(c, character, text, entry.createdAt);
+  }
+
+  async function retry(tempId) {
+    var entry = pending.filter(function (p) { return p.tempId === tempId; })[0];
+    if (!entry || entry.status !== "failed") return;
+    entry.status = "sending";
+    render();
+    await persist(entry);
+    if (entry.status === "failed") return;
+    var c = conv(), character = ch();
+    if (c && character) await kick(c, character, entry.text, entry.createdAt);
+  }
+
+  /* ---------- 事件 ---------- */
+  function bind() {
+    $("list-home").addEventListener("click", function () { phone.goHome(); });
+    $("list-desktop").addEventListener("click", function () { phone.goHome(); });
+    $("chat-back").addEventListener("click", function () { phone.navigate("chatlist"); });
+    $("chat-send").addEventListener("click", send);
+    $("chat-title").addEventListener("click", function () {
+      var c = conv();
+      if (c) phone.navigate("friend/" + c.characterId);
+    });
+    $("chat-status").addEventListener("click", function () {
+      var c = conv();
+      if (c) phone.navigate("friend/" + c.characterId);
+    });
+    $("conv-list").addEventListener("click", function (e) {
+      var row = e.target.closest("[data-conv]");
+      if (row) phone.navigate("chat/" + row.dataset.conv);
+    });
+    $("chat-body").addEventListener("click", function (e) {
+      var m = e.target.closest("[data-retry]");
+      if (m) retry(m.dataset.retry);
+    });
+    var input = $("chat-input");
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    input.addEventListener("input", function () {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 92) + "px";
+    });
+    phone.bindEscape(function () {
+      if (mode === "chat") { phone.navigate("chatlist"); return true; }
+      return false;
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  $("pane-" + mode).style.display = "flex";
+  bind();
+  load(true).then(function () {
+    if (mode === "chat") {
+      var c = conv();
+      if (c) phone.markSeen(c.id, messages);
+    }
+  }).catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.CHAT, phone.FILES.SHARED], function () { load(false).catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

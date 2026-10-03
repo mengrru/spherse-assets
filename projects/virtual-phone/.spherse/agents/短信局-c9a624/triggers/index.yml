@@ -1,0 +1,18 @@
+- id: 0c7FmIGKs4hOFopnrUZ1o
+  name: 掷骰子（每 4 小时）
+  enabled: true
+  type: time
+  cron: 0 */4 * * *
+  mode: reusable_session
+  message: >-
+    【掷骰子】现实时间是 {{weekday}} {{time}}。
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间判断"此刻外面该发生什么"。
+
+
+    按《短信局 · 行为规则》处理：想发就造一件小事（最多一条），觉得世界该安静就回一句「不发」，什么都不做。
+  notify: false
+  createdAt: 1790959799338
+  updatedAt: 1791048246974

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>应用</title>
+<link rel="stylesheet" href="../../theme/base.css">
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span id="title">应用</span>
+</header>
+<div class="app-body" id="body"></div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var P = phone.params();
+  var name = P.name || "应用";
+  var emoji = P.emoji || "📦";
+  var key = P.key || "";
+
+  $("title").textContent = name;
+  $("body").innerHTML = '<div class="ph"><div class="big">' + phone.esc(emoji) + "</div>" +
+    '<div class="t">' + phone.esc(name) + "</div>" +
+    '<div class="d">「' + phone.esc(name) + "」还在装修中 <span class=\"cursor\">▮</span><br>" +
+    "给这台手机加一个新应用，就是在 <code>phone/engine/apps/" + phone.esc(key || "新应用") +
+    "/</code> 下写一个 index.html。</div></div>";
+
+  $("back").addEventListener("click", function () { phone.goHome(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>临江论坛</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 论坛配色：老式 BBS 的蓝灰 + 纸感 */
+  .app-header.bbs{background:var(--app-hue-bbs)}
+  body{position:relative}
+  .boardbar{
+    display:flex;gap:7px;padding:9px 12px;flex:none;overflow-x:auto;
+    background:var(--tint-strip);border-bottom:var(--border-w) solid var(--border);
+  }
+  /* 发新帖：右下角的悬浮加号（几何样式在 base.css 的 .fab，这里只换颜色） */
+  .fab.bbs{background:var(--app-hue-bbs);color:#fff;box-shadow:var(--shadow-card)}
+  #post-list{padding-bottom:100px}   /* 别让最后一条被右下角的 ＋ 盖住 */
+  .boardbar button{
+    border:var(--border-w) solid var(--border);border-radius:999px;padding:4px 12px;cursor:pointer;white-space:nowrap;
+    font:inherit;font-size:11.5px;font-weight:800;background:var(--pill);color:var(--pill-fg);
+    box-shadow:var(--shadow-row);flex:none;
+  }
+  .boardbar button.on{background:var(--app-hue-bbs);color:#fff}
+  .post{
+    display:block;width:100%;text-align:left;padding:11px 12px;margin-bottom:10px;cursor:pointer;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));border:var(--border-w) solid var(--border);border-radius:13px;
+    box-shadow:var(--shadow-row);font:inherit;
+  }
+  .post:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(26,20,32,.85)}
+  .post-title{font-size:14px;font-weight:800;color:var(--text);line-height:1.4}
+  .post-body{font-size:12.5px;color:var(--text-dim);margin-top:5px;line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .post-meta{
+    margin-top:8px;font-size:10.5px;font-weight:700;color:var(--text-dim);
+    display:flex;justify-content:space-between;gap:8px;align-items:center;
+  }
+  .post-meta .left{color:var(--accent-ink)}
+  .tagboard{
+    display:inline-block;font-size:9.5px;font-weight:800;border:1.5px solid var(--border);
+    border-radius:5px;padding:0 5px;background:var(--btn-gold);color:var(--btn-gold-fg);margin-right:6px;
+  }
+  .postdetail{
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));border:var(--border-w) solid var(--border);border-radius:14px;
+    padding:13px;margin-bottom:12px;box-shadow:var(--shadow-card);
+  }
+  .postdetail h2{margin:0 0 8px;font-size:16px;font-weight:800;color:var(--text);line-height:1.4}
+  .postdetail .body{font-size:13.5px;line-height:1.65;color:var(--text);margin-top:6px;word-break:break-word}
+  .floor{
+    padding:10px 11px;margin-bottom:9px;border-radius:12px;
+    background:linear-gradient(180deg,var(--card-1),var(--card-2));border:var(--border-w) solid var(--border);
+    box-shadow:var(--shadow-row);
+  }
+  .floor-head{display:flex;justify-content:space-between;font-size:10.5px;font-weight:800;color:var(--accent-ink);gap:8px}
+  .floor-head .no{font-family:var(--mono);color:var(--text-dim)}
+  .floor-body{font-size:13.5px;line-height:1.6;color:var(--text);margin-top:5px;word-break:break-word}
+  .floor.anon .floor-head{color:var(--text-dim)}
+  .likerow{display:flex;gap:8px;margin-top:10px}
+  .composer.bbs{background:var(--tint-composer)}
+  .send.bbs{background:var(--app-hue-bbs);color:#fff}
+  .anonrow{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:12px;font-weight:800;color:var(--text-dim)}
+  .anonrow input{width:16px;height:16px;accent-color:var(--accent-ink)}
+</style>
+</head>
+<body>
+<!-- 帖子列表 -->
+<section id="pane-list" style="display:none;flex-direction:column;height:100%">
+  <header class="app-header bbs">
+    <button class="back" id="list-home">‹</button>
+    <span id="list-title">论坛</span>
+    <button class="ghost" id="list-refresh" title="刷一下，看有没有新帖">刷新</button>
+  </header>
+  <div class="boardbar" id="boards"></div>
+  <div class="app-body" id="post-list"></div>
+  <button class="fab bbs" id="fab" title="发新帖">＋</button>
+</section>
+
+<!-- 帖子详情 -->
+<section id="pane-post" style="display:none;flex-direction:column;height:100%">
+  <header class="app-header bbs">
+    <button class="back" id="post-back">‹</button>
+    <span>帖子</span>
+  </header>
+  <div class="app-body" id="post-body"></div>
+  <div class="composer bbs">
+    <textarea id="post-input" rows="1" placeholder="回复一层…"></textarea>
+    <button class="send bbs" id="post-send">回复</button>
+  </div>
+</section>
+
+<!-- 发帖 -->
+<div class="sheet" id="sheet">
+  <div class="sheet-head"><span id="sheet-title">发新帖</span><button id="sheet-cancel">取消</button></div>
+  <div class="wtargets" id="sheet-boards"></div>
+  <input id="sheet-title-input" class="winput" placeholder="标题">
+  <textarea id="sheet-body" class="winput" style="min-height:80px;resize:none" placeholder="正文（可以不写）"></textarea>
+  <label class="anonrow"><input type="checkbox" id="sheet-anon"> 匿名发（树洞版建议勾上）</label>
+  <button class="sheet-send" id="sheet-send">发布</button>
+</div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var P = phone.params();
+  function valid(v) { return (v && v !== "null" && v !== "undefined") ? v : null; }
+  var postId = valid(P.post);
+  var mode = postId ? "post" : "list";
+
+  var BOARDS = [
+    { key: "all", name: "全部" },
+    { key: "chat", name: "" },
+    { key: "hole", name: "" },
+    { key: "lost", name: "" },
+    { key: "market", name: "" }
+  ];
+  // 版块名由世界包决定（world.data.json 的 boards）
+  function boardLabel(key) { return key === "all" ? "全部" : phone.boardName(key); }
+  function forumTitle() { var m = phone.appMeta("bbs"); return (m && m.title) || "论坛"; }
+
+  var shared = {}, posts = [], replies = [], meta = {};
+  var board = "all";
+  var sheetBoard = "chat";
+  var awaitingReply = false;
+
+  /* ---------- 论坛 Agent（一群人，共用一个会话） ---------- */
+  async function forumSession(forceNew) {
+    if (!forceNew && meta.sessionId) return meta.sessionId;
+    var sessionId = await phone.createSystemSession(phone.SYSTEM_AGENTS.bbs);
+    await phone.mutate(phone.FILES.BBS, "setBbsAgentSession",
+      { sessionId: sessionId, updatedAt: new Date().toISOString() });
+    meta.sessionId = sessionId;
+    return sessionId;
+  }
+  async function askForum(build) {
+    try {
+      var sid = await forumSession();
+      await phone.sendSession(sid, build());
+      return true;
+    } catch (e) {
+      var msg = String((e && e.message) || e);
+      if (msg.indexOf("not_found") >= 0) {
+        try {
+          var sid2 = await forumSession(true);
+          await phone.sendSession(sid2, build());
+          return true;
+        } catch (e2) { msg = String((e2 && e2.message) || e2); }
+      }
+      phone.toast({ variant: "error", message: "论坛没接上", description: msg });
+      return false;
+    }
+  }
+
+  async function load(first) {
+    shared = await phone.loadShared();
+    var d = await phone.entries(phone.FILES.BBS);
+    posts = d.posts || [];
+    replies = d.replies || [];
+    meta = d.agent || {};
+    if (mode === "post" && !post()) {
+      if (first) { phone.navigate("bbs"); return; }
+      postId = null; mode = "list";
+      $("pane-post").style.display = "none";
+      $("pane-list").style.display = "flex";
+    }
+    render();
+  }
+
+  function post() { return posts.filter(function (p) { return p.id === postId; })[0] || null; }
+  function floorsOf(id) {
+    return replies.filter(function (r) { return r.postId === id; })
+      .sort(function (a, b) { return String(a.createdAt).localeCompare(String(b.createdAt)); });
+  }
+  function postsShown() {
+    return posts.filter(function (p) { return board === "all" || p.board === board; })
+      .sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
+  }
+
+  /* ---------- 渲染 ---------- */
+  function render() { if (mode === "list") renderList(); else renderPost(); }
+
+  function renderBoards() {
+    $("list-title").textContent = forumTitle();
+    document.title = forumTitle();
+    $("boards").innerHTML = BOARDS.map(function (b) {
+      return '<button data-board="' + b.key + '" class="' + (b.key === board ? "on" : "") + '">' + phone.esc(boardLabel(b.key)) + "</button>";
+    }).join("");
+  }
+
+  function renderList() {
+    renderBoards();
+    var list = postsShown();
+    if (!list.length) {
+      $("post-list").innerHTML = '<div class="ph"><div class="big">🗯️</div><div class="t">这个版还没有帖子</div>' +
+        '<div class="d">点右下角 ＋ 发一条。<br>或者点右上角「刷新」看看有没有人说话。</div></div>';
+      return;
+    }
+    $("post-list").innerHTML = list.map(function (p) {
+      var n = floorsOf(p.id).length;
+      return '<button class="post" data-post="' + phone.esc(p.id) + '">' +
+        '<div class="post-title">' + (p.anonymous ? '<span class="tagboard">匿名</span>' : "") + phone.esc(p.title) + "</div>" +
+        (p.body ? '<div class="post-body">' + phone.esc(String(p.body).replace(/\s*\n\s*/g, " ")) + "</div>" : "") +
+        '<div class="post-meta"><span class="left">' + phone.esc(p.author || "匿名") +
+        (p.anonymous ? "" : " · " + phone.esc(boardLabel(p.board))) + "</span>" +
+        "<span>" + phone.esc(phone.fmtAgo(p.createdAt)) + " · " + n + " 回复 · ♥" + (p.likeCount || 0) + "</span></div></button>";
+    }).join("");
+  }
+
+  function renderPost() {
+    var p = post();
+    if (!p) { $("post-body").innerHTML = '<div class="ph"><div class="t">帖子不存在</div></div>'; return; }
+    var fs = floorsOf(p.id);
+    renderPostInner(p, fs);
+  }
+
+  function renderPostInner(p, fs) {
+    var head = '<div class="postdetail">' +
+      '<div class="post-meta" style="margin:0 0 6px"><span class="left">' +
+      (p.anonymous ? '<span class="tagboard">匿名</span>' : "") + phone.esc(p.author || "匿名") +
+      " · " + phone.esc(boardLabel(p.board)) + "</span><span>" + phone.esc(phone.fmtAgo(p.createdAt)) + "</span></div>" +
+      "<h2>" + phone.esc(p.title) + "</h2>" +
+      (p.body ? '<div class="body">' + phone.escLines(p.body) + "</div>" : "") +
+      '<div class="likerow"><button class="mact' + (p.likedByMe ? " on" : "") + '" id="like">' +
+      (p.likedByMe ? "♥ 已赞" : "♡ 点赞") + " " + (p.likeCount || 0) + "</button></div></div>";
+
+    var floors = fs.map(function (r, i) {
+      var anon = (r.author === "匿名");
+      return '<div class="floor' + (anon ? " anon" : "") + '">' +
+        '<div class="floor-head"><span>' + phone.esc(r.author || "匿名") + '</span><span class="no">' +
+        (i + 1) + " 楼 · " + phone.esc(phone.fmtAgo(r.createdAt)) + "</span></div>" +
+        '<div class="floor-body">' + phone.escLines(r.body) + "</div></div>";
+    }).join("");
+
+    $("post-body").innerHTML = head +
+      (fs.length ? floors : '<div class="ph"><div class="d">还没有人回。这在老论坛里很正常。</div></div>');
+
+    var likeBtn = $("like");
+    if (likeBtn) likeBtn.addEventListener("click", function () { toggleLike(p); });
+
+    var busy = awaitingReply;
+    $("post-input").disabled = busy;
+    $("post-input").placeholder = busy ? "等一等…" : "回复一层…";
+    $("post-send").disabled = busy;
+  }
+
+  async function toggleLike(p) {
+    var wasLiked = !!p.likedByMe, wasCount = p.likeCount || 0;
+    var next = !wasLiked, count = Math.max(0, wasCount + (next ? 1 : -1));
+    p.likedByMe = next; p.likeCount = count;
+    render();
+    try {
+      await phone.mutate(phone.FILES.BBS, "likePost", { id: p.id, likedByMe: next, likeCount: count });
+    } catch (e) {
+      p.likedByMe = wasLiked; p.likeCount = wasCount;
+      render();
+      phone.toast({ variant: "error", message: "点赞没存上" });
+    }
+  }
+
+  /* ---------- 发帖 / 回复 ---------- */
+  function openSheet() {
+    sheetBoard = (board === "all" ? "chat" : board);
+    $("sheet-title").textContent = "发新帖";
+    $("sheet-title-input").value = "";
+    $("sheet-body").value = "";
+    $("sheet-anon").checked = sheetBoard === "hole";
+    $("sheet-boards").innerHTML = BOARDS.filter(function (b) { return b.key !== "all"; }).map(function (b) {
+      return '<button class="wchip' + (b.key === sheetBoard ? " on" : "") + '" data-sheetboard="' + b.key + '">' + phone.esc(boardLabel(b.key)) + "</button>";
+    }).join("");
+    $("sheet").classList.add("open");
+    setTimeout(function () { $("sheet-title-input").focus(); }, 90);
+  }
+  function closeSheet() { $("sheet").classList.remove("open"); }
+
+  async function publish() {
+    var title = ($("sheet-title-input").value || "").trim();
+    if (!title) { phone.toast({ variant: "warning", message: "标题不能空" }); return; }
+    var bodyText = ($("sheet-body").value || "").trim();
+    var anon = $("sheet-anon").checked || sheetBoard === "hole";
+    var author = anon ? "匿名" : phone.myName();
+    closeSheet();
+    try {
+      var saved = await phone.mutate(phone.FILES.BBS, "createPost", {
+        board: sheetBoard, title: title, body: bodyText, author: author, anonymous: anon
+      }, "post:" + Date.now());
+      phone.toast({ variant: "success", message: "发出去了", description: "看看有没有人回你" });
+      render();
+      askForum(function () { return phone.prompt.bbsPost(saved); });
+    } catch (e) {
+      phone.toast({ variant: "error", message: "发不出去", description: String(e.message || e) });
+    }
+  }
+
+  async function sendReply() {
+    var input = $("post-input");
+    var text = (input.value || "").trim();
+    if (!text || awaitingReply) return;
+    var p = post();
+    if (!p) return;
+
+    input.value = "";
+    input.style.height = "auto";
+    try {
+      await phone.mutate(phone.FILES.BBS, "addReply",
+        { postId: p.id, author: phone.myName(), body: text }, "rep:" + p.id + ":" + Date.now());
+    } catch (e) {
+      input.value = text;
+      phone.toast({ variant: "error", message: "回复没发出去" });
+      return;
+    }
+    awaitingReply = true;
+    render();
+    // 帖主是某个角色 → 通知他本人（他得知道自己被回了）；否则交给留言板上的那群人
+    var owner = phone.characters().filter(function (c) { return c.name === p.author; })[0];
+    var ok = owner
+      ? await phone.notify(owner, phone.prompt.bbsNote(owner, p, text))
+      : await askForum(function () { return phone.prompt.bbsReply(p, text, phone.myName()); });
+    awaitingReply = false;
+    render();
+    if (!ok) return;
+  }
+
+  /* ---------- 事件 ---------- */
+  $("list-home").addEventListener("click", function () { phone.goHome(); });
+  $("list-refresh").addEventListener("click", async function () {
+    var btn = $("list-refresh");
+    btn.disabled = true;
+    var ok = await askForum(function () { return phone.prompt.bbsRefresh(); });
+    btn.disabled = false;
+    if (ok) phone.toast({ variant: "info", message: "刷新了", description: "有人说话的话一会儿就来了" });
+  });
+  $("post-back").addEventListener("click", function () { phone.navigate("bbs"); });
+  $("fab").addEventListener("click", openSheet);
+  $("sheet-cancel").addEventListener("click", closeSheet);
+  $("sheet-send").addEventListener("click", publish);
+  $("sheet-boards").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-sheetboard]");
+    if (!b) return;
+    sheetBoard = b.dataset.sheetboard;
+    Array.prototype.forEach.call($("sheet-boards").children, function (n) {
+      n.classList.toggle("on", n.dataset.sheetboard === sheetBoard);
+    });
+    if (sheetBoard === "hole") $("sheet-anon").checked = true;
+  });
+  $("boards").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-board]");
+    if (!b) return;
+    board = b.dataset.board;
+    render();
+  });
+  $("post-list").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-post]");
+    if (b) phone.navigate("bbs/" + b.dataset.post);
+  });
+  $("post-send").addEventListener("click", sendReply);
+  var input = $("post-input");
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); }
+  });
+  input.addEventListener("input", function () {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 92) + "px";
+  });
+  phone.bindEscape(function () {
+    if ($("sheet").classList.contains("open")) { closeSheet(); return true; }
+    if (mode === "post") { phone.navigate("bbs"); return true; }
+    return false;
+  });
+
+  /* ---------- 启动 ---------- */
+  $("pane-" + mode).style.display = "flex";
+  renderBoards();
+  load(true).catch(phone.fatal);
+  phone.onFileUpdate([phone.FILES.BBS, phone.FILES.SHARED], function () { load(false).catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

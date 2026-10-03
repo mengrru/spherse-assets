@@ -1,0 +1,14 @@
+# 运行时 / 私有状态：不随项目分发
+# （被 git 忽略后，CI 从 git checkout 打包 zip 时也不会带上；
+#   本地 `npm run publish:projects` dry-run 是直接读磁盘的，仍会包含，仅作预览）
+
+# 会话库 —— 含 sessions.db-wal / -shm / -journal 等伴随文件
+sessions.db*
+# 长期记忆库
+memory.db*
+# 触发器运行日志
+logs.jsonl
+# 核心记忆（个人私有，不入库）
+.spherse/agents/*/memory/core.md
+# 生成图片产物
+.spherse/generated-images/

@@ -1,0 +1,108 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 微信：聊天记录",
+    "queries": {
+      "listMessages": {
+        "desc": "读取某个会话的聊天记录，默认按时间升序",
+        "path": "messages",
+        "identity": "id",
+        "params": {
+          "conversationId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "appendMessage": {
+        "desc": "向会话追加一条消息（role: user=手机主人, character=好友）",
+        "op": "append",
+        "path": "messages",
+        "fields": {
+          "conversationId": {
+            "type": "string",
+            "required": true
+          },
+          "role": {
+            "type": "enum",
+            "values": [
+              "user",
+              "character"
+            ],
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "required": true
+          },
+          "mood": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "removeMessage": {
+        "desc": "删除一条消息",
+        "op": "remove",
+        "path": "messages",
+        "match": "id"
+      }
+    }
+  },
+  "messages": [
+    {
+      "id": "seed-1",
+      "conversationId": "conv-suwan",
+      "role": "character",
+      "text": "还没睡？",
+      "mood": "失眠",
+      "createdAt": "2025-01-01T23:12:00.000Z"
+    },
+    {
+      "id": "seed-2",
+      "conversationId": "conv-suwan",
+      "role": "character",
+      "text": "回车把颜料打翻了，我那张画了三个小时的稿子。",
+      "mood": "想骂人",
+      "createdAt": "2025-01-01T23:12:00.000Z"
+    },
+    {
+      "id": "seed-3",
+      "conversationId": "conv-suwan",
+      "role": "character",
+      "text": "……你在吗",
+      "mood": "有点想找你",
+      "createdAt": "2025-01-01T23:13:00.000Z"
+    },
+    {
+      "id": "903e1f2a-e133-49f7-9108-5beeec46253c",
+      "conversationId": "4b372e7b-26f4-49f6-a1e8-6ed257d735ef",
+      "role": "character",
+      "text": "喂！！在不在",
+      "createdAt": "2026-10-03T13:40:18.686Z"
+    },
+    {
+      "id": "d945a01b-300c-4d82-b6af-14c506b8da3f",
+      "conversationId": "4b372e7b-26f4-49f6-a1e8-6ed257d735ef",
+      "role": "character",
+      "text": "店里新到的一盘，我留给你了。别问，问就是我挑的",
+      "createdAt": "2026-10-03T13:40:20.444Z"
+    }
+  ]
+}

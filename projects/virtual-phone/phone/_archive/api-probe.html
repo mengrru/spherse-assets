@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API 冒烟</title>
+<style>
+  body{font:13px/1.75 -apple-system,"PingFang SC",sans-serif;padding:14px;margin:0;background:#fff;color:#111}
+  code{background:#f0f0f0;padding:1px 4px;border-radius:3px;word-break:break-all}
+  .ok{color:#0a7}.bad{color:#c00}.wait{color:#888}
+</style>
+</head>
+<body>
+<h3>API 冒烟（结果也写进 _archive/debug.data.json 的 apiprobe）</h3>
+<div id="out" class="wait">跑着呢…</div>
+
+<script src="../engine/theme/phone.js"></script>
+<script>
+/* 为什么要有这个：我几次"凭印象写标识符"（worldId ✗ / wallOkSrc ✗）都要等用户点了才发现。
+   这个探针**真的调用**引擎里我动过的公开 API —— 名字错了、路径错了、返回结构变了，这里立刻报。
+   新增/修改 phone.js 的 API 之后，顺手把它加进来跑一遍。
+   ⚠ 注：**卡片预览环境不可靠**（同一路径会缓存、新页面也可能不执行）——
+   要真跑，在真实环境里打开这页（桌面 App / 文件预览），别指望聊天里渲染的卡片。 */
+(function () {
+  "use strict";
+  var lines = [], result = { at: new Date().toISOString(), checks: [] };
+  var out = document.getElementById("out");
+  function log(html) { lines.push(html); out.innerHTML = lines.join("<br>"); }
+  // 上报前擦掉 origin 与平台的 __auth 令牌：绝对 URL 只留项目内路径
+  function scrub(s) {
+    return String(s == null ? "" : s)
+      .replace(/https?:\/\/[^\s"'<>]*?(\/phone\/)/g, "$1")   // 去掉 origin 与 __auth 前缀，只留 /phone/…
+      .replace(/https?:\/\/[^\s"'<>*]+/g, "•origin•")        // 剩下还带域名的，只留个标记
+      .replace(/\/__auth\/[^/"'\s]+/g, "/__auth/***");       // 兜底：至少把令牌掩掉
+  }
+  function check(label, fn) {
+    return Promise.resolve().then(fn).then(function (v) {
+      var brief = scrub(JSON.stringify(v));
+      if (brief && brief.length > 240) brief = brief.slice(0, 240) + "…";
+      result.checks.push({ label: label, ok: true, value: brief });
+      log('✅ <span class="ok">' + label + "</span> → <code>" + brief + "</code>");
+    }).catch(function (e) {
+      var m = scrub(String((e && e.message) || e));
+      result.checks.push({ label: label, ok: false, error: m });
+      log('❌ <span class="bad">' + label + "</span> → <code>" + m + "</code>");
+    });
+  }
+  (async function () {
+    try { await phone.ensureWorld(); log("<b>世界</b>：" + phone.worldId()); }
+    catch (e) { log("ensureWorld 失败：" + String(e.message || e)); }
+
+    await check("phone.worldId()", function () { return phone.worldId(); });
+    await check("FILES.ALBUM / FILES.RADIO", function () { return [phone.FILES.ALBUM, phone.FILES.RADIO]; });
+    await check("assetUrl('assets/map.svg')", function () { return phone.assetUrl("assets/map.svg"); });
+    await check("listWorldAssets('image')", function () { return phone.listWorldAssets("image"); });
+    await check("listWorldAssets('audio')", function () { return phone.listWorldAssets("audio"); });
+    await check("shared().wallpaper", function () { return (phone.shared() || {}).wallpaper; });
+    await check("worldNow() 是 Date", function () { return phone.worldNow() instanceof Date; });
+
+    var okN = result.checks.filter(function (c) { return c.ok; }).length;
+    log("<b>—— 完 ——</b> " + okN + "/" + result.checks.length + " 通过");
+    try {
+      // 走 phone.dataSet（和 js-check 同一条通道，实测能写）；SDK 直连只是兜底
+      await phone.dataSet("phone/_archive/debug.data.json", "apiprobe", result);
+      log('<span class="ok">结果已写进 debug.data.json 的 apiprobe</span>');
+    } catch (e) {
+      try {
+        await spherse.data.set({ file: "phone/_archive/debug.data.json", key: "apiprobe", value: result });
+        log('<span class="ok">结果已写进（sdk）</span>');
+      } catch (e2) {
+        log('<span class="bad">写不进去：' + String((e2 && e2.message) || e2) + "</span>");
+      }
+    }
+  })();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 相册：photos（手机主人上传的照片 + 他自己写的说明）。图片文件放在**世界目录内**的 assets/ 下，photos[].src 就是世界内的相对路径（如 assets/xxx.jpg）。**别人看不到画面本身，只能看到 caption / place / 时间**",
+    "queries": {
+      "listPhotos": {
+        "desc": "看相册，最新在前。注意：你只能读到说明（caption）、地点和拍摄时间 —— **画面本身你看不到**",
+        "path": "photos",
+        "identity": "id",
+        "params": {
+          "place": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        },
+        "defaultLimit": 100
+      }
+    },
+    "mutations": {
+      "addPhoto": {
+        "desc": "往相册加一张。**给手机页面用**（照片是用户在相册里手动上传的）—— 上传成功后调用，src 填世界目录内的相对路径",
+        "op": "append",
+        "path": "photos",
+        "fields": {
+          "src": {
+            "type": "string",
+            "required": true
+          },
+          "caption": {
+            "type": "string"
+          },
+          "place": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "updatePhoto": {
+        "desc": "改一张的说明或地点",
+        "op": "update",
+        "path": "photos",
+        "match": "id",
+        "fields": {
+          "caption": {
+            "type": "string"
+          },
+          "place": {
+            "type": "string"
+          }
+        }
+      },
+      "removePhoto": {
+        "desc": "从相册里去掉一张（图片文件不会删）",
+        "op": "remove",
+        "path": "photos",
+        "match": "id"
+      }
+    }
+  },
+  "photos": []
+}

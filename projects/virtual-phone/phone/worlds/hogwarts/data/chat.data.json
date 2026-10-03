@@ -1,0 +1,174 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "霍格沃茨 · 双面镜：聊天记录",
+    "queries": {
+      "listMessages": {
+        "desc": "读取某个会话的聊天记录，默认按时间升序",
+        "path": "messages",
+        "identity": "id",
+        "params": {
+          "conversationId": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "field"
+          },
+          "dir": {
+            "type": "enum",
+            "values": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        },
+        "defaultLimit": 50
+      }
+    },
+    "mutations": {
+      "appendMessage": {
+        "desc": "向会话追加一条消息（role: user=手机主人, character=好友）",
+        "op": "append",
+        "path": "messages",
+        "fields": {
+          "conversationId": {
+            "type": "string",
+            "required": true
+          },
+          "role": {
+            "type": "enum",
+            "values": [
+              "user",
+              "character"
+            ],
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "required": true
+          },
+          "mood": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "id": "uuid",
+          "createdAt": "nowIso"
+        }
+      },
+      "removeMessage": {
+        "desc": "删除一条消息",
+        "op": "remove",
+        "path": "messages",
+        "match": "id"
+      }
+    }
+  },
+  "messages": [
+    {
+      "conversationId": "conv-luna",
+      "role": "character",
+      "text": "金妮说你也有这个。她还说你人还行 —— 她一般不会这么说。",
+      "mood": "出神",
+      "id": "seed-l1",
+      "createdAt": "2014-09-17T21:15:00.000Z"
+    },
+    {
+      "conversationId": "conv-neville",
+      "role": "character",
+      "text": "那个……你看见我的蟾蜍了吗。莱福又跑了。",
+      "mood": "着急",
+      "id": "seed-n1",
+      "createdAt": "2014-09-06T09:12:00.000Z"
+    },
+    {
+      "conversationId": "conv-ginny",
+      "role": "character",
+      "text": "别跟我哥说我给你发过消息。",
+      "mood": "无所谓",
+      "id": "seed-g1",
+      "createdAt": "2014-09-08T20:40:00.000Z"
+    },
+    {
+      "conversationId": "conv-twins",
+      "role": "character",
+      "text": "。——是我们吗？（是）\n没事，就是试试这个玩意儿到底能不能用。",
+      "mood": "兴致高",
+      "id": "seed-t1",
+      "createdAt": "2014-09-09T23:05:00.000Z"
+    },
+    {
+      "conversationId": "conv-wood",
+      "role": "character",
+      "text": "周六早上六点。球场。带两把扫帚。",
+      "mood": "严肃",
+      "id": "seed-w1",
+      "createdAt": "2014-09-11T06:02:00.000Z"
+    },
+    {
+      "conversationId": "conv-draco",
+      "role": "character",
+      "text": "听说你也搞到一台。真寒酸。",
+      "mood": "得意",
+      "id": "seed-d1",
+      "createdAt": "2014-09-12T17:25:00.000Z"
+    },
+    {
+      "conversationId": "conv-cho",
+      "role": "character",
+      "text": "训练时间改成周四下午了。你要是去球场的话。",
+      "mood": "平静",
+      "id": "seed-c1",
+      "createdAt": "2014-09-14T15:30:00.000Z"
+    },
+    {
+      "conversationId": "conv-cedric",
+      "role": "character",
+      "text": "昨天那场你打得不错。真的。",
+      "mood": "愉快",
+      "id": "seed-ce1",
+      "createdAt": "2014-09-15T18:10:00.000Z"
+    },
+    {
+      "id": "seed-h1",
+      "conversationId": "conv-harry",
+      "role": "character",
+      "text": "喂",
+      "mood": "兴奋",
+      "createdAt": "2025-01-01T00:00:01.000Z"
+    },
+    {
+      "id": "seed-h2",
+      "conversationId": "conv-harry",
+      "role": "character",
+      "text": "你猜我刚在球场干了什么",
+      "mood": "藏不住",
+      "createdAt": "2025-01-01T00:00:02.000Z"
+    },
+    {
+      "id": "seed-h3",
+      "conversationId": "conv-harry",
+      "role": "character",
+      "text": "我连抓了三次飞贼！！三次！！",
+      "mood": "得意",
+      "createdAt": "2025-01-01T00:00:03.000Z"
+    },
+    {
+      "id": "seed-h4",
+      "conversationId": "conv-harry",
+      "role": "character",
+      "text": "就是降落的时候撞进看台第三排了，胳膊青了一大块",
+      "mood": "嘴上不在意",
+      "createdAt": "2025-01-01T00:00:04.000Z"
+    },
+    {
+      "id": "seed-h5",
+      "conversationId": "conv-harry",
+      "role": "character",
+      "text": "对了，三楼这边信号是真好，你那边呢",
+      "mood": "好奇",
+      "createdAt": "2025-01-01T00:00:05.000Z"
+    }
+  ]
+}

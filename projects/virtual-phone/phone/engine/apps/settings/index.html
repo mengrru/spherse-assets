@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设置</title>
+<link rel="stylesheet" href="../../theme/base.css">
+<style>
+  /* 本页专属：世界时钟面板 */
+  .wcbox{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .wcnow{font-family:var(--mono);font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--text)}
+  .wcmeta{font-size:11px;font-weight:700;color:var(--text-dim);margin-top:2px}
+  .wcrow{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .wcrow input{
+    flex:1;min-width:0;background:var(--input-bg);color:var(--input-fg);font:inherit;font-size:12.5px;
+    border:var(--border-w) solid var(--border);border-radius:11px;padding:8px 10px;outline:none;
+    box-shadow:inset 2px 2px 0 rgba(26,20,32,.08);
+  }
+  .wcrow button{
+    border:var(--border-w) solid var(--border);border-radius:11px;background:var(--btn-grad);
+    color:var(--btn-fg);font:inherit;font-size:12.5px;font-weight:800;padding:8px 12px;cursor:pointer;
+    box-shadow:var(--shadow-row);flex:none;
+  }
+  .wchint{font-size:10.5px;font-weight:700;color:var(--text-dim);line-height:1.7;margin-top:10px}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <button class="back" id="back">‹</button>
+  <span>设置</span>
+</header>
+<div class="app-body" id="body"></div>
+
+<script src="../../theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = phone.$;
+  var shared = {}, chat = {};
+  var saving = false, tickTimer = null;
+
+  async function load() {
+    shared = await phone.loadShared();
+    chat = await phone.entries(phone.FILES.CHAT);
+    render();
+  }
+
+  function friendsRows() {
+    var chs = shared.characters || [];
+    if (!chs.length) return '<div class="kv"><span class="k">暂无好友</span><span>—</span></div>';
+    return chs.map(function (c) {
+      return '<div class="kv"><span class="k">' + phone.esc(c.name) + "</span><span>" +
+        (c.affection != null ? "好感 " + phone.clampAff(c.affection) + " · " + phone.esc(phone.affectionLevel(c.affection)) : "—") +
+        (c.mood ? " · " + phone.esc(c.mood) : "") +
+        (c.doing ? " · " + phone.esc(c.doing) : "") + "</span></div>";
+    }).join("");
+  }
+
+  function clockPanel() {
+    var cfg = phone.clockCfg();
+    var now = phone.worldNow();
+    var local = now.getFullYear() + "-" + phone.pad(now.getMonth() + 1) + "-" + phone.pad(now.getDate()) +
+      "T" + phone.pad(now.getHours()) + ":" + phone.pad(now.getMinutes());
+    var real = new Date();
+    var chips = [1, 12, 60, 180, 1440].map(function (r) {
+      return '<button class="wchip' + (cfg && cfg.rate === r ? " on" : "") + '" data-rate="' + r +
+        '" title="' + phone.worldRateHint(r) + '">' + phone.worldRateLabel(r) + "</button>";
+    }).join("");
+    return '<div class="card"><h3>★ 手机世界时钟 ★</h3>' +
+      '<div class="wcbox"><div>' +
+      '<div class="wcnow" id="wc-now">' + phone.pad(now.getHours()) + ":" + phone.pad(now.getMinutes()) + "</div>" +
+      '<div class="wcmeta" id="wc-date">' + phone.esc(phone.worldFullLabel(now)) + "</div></div>" +
+      '<div class="wcmeta" style="text-align:right">现实 <span id="wc-real">' +
+      phone.pad(real.getHours()) + ":" + phone.pad(real.getMinutes()) + "</span><br>" +
+      '<span id="wc-hint">' + phone.esc(cfg ? phone.worldRateHint(cfg.rate) : "未启用") + "</span></div></div>" +
+      '<div class="wtargets" style="margin-top:12px">' + chips + "</div>" +
+      '<div class="wcrow"><input id="wc-input" type="datetime-local" value="' + phone.esc(local) + '">' +
+      '<button id="wc-set">设为基准</button></div>' +
+      '<div class="wchint">流速点一下立刻生效。设基准 = 「现在手机里是几点」，之后按流速往前走。<br>' +
+      "手机关着的时候，世界照样在往前跑（**没有封顶**）—— 流速调得大的话，隔一阵再打开会跳过很多。</div></div>";
+  }
+
+  function appearancePanel() {
+    var t = phone.themeById(phone.themeId());
+    var s = phone.skinById(phone.skinId());
+    var dots = t.dots.map(function (c) {
+      return '<span style="display:inline-block;width:13px;height:13px;border-radius:4px;margin-left:3px;' +
+        "border:1.5px solid var(--ink);background:" + c + '"></span>';
+    }).join("");
+    return '<div class="card"><h3>★ 外观 ★</h3>' +
+      '<div class="kv"><span class="k">配色</span><span>' + phone.esc(t.name) + dots + "</span></div>" +
+      '<div class="kv"><span class="k">设计语言</span><span>' + phone.esc(s.name) + "</span></div>" +
+      '<div class="fbtns" style="margin-top:12px">' +
+      '<button class="primary" id="go-theme">去主题商店</button></div>' +
+      '<div class="wchint">配色决定颜色，设计语言决定形状（描边、投影、圆角、字重、密度）—— 两者可以任意组合。</div></div>';
+  }
+
+  function worldPanel() {
+    var cur = phone.world();
+    return '<div class="card"><h3>★ 世界 ★</h3>' +
+      '<div class="kv"><span class="k">当前</span><span>' + phone.esc(cur.name || cur.id) + "</span></div>" +
+      (cur.tagline ? '<div class="wchint">' + phone.esc(cur.tagline) + "</div>" : "") +
+      '<div class="wtargets" style="margin-top:12px" id="set-worlds">' +
+      '<span class="wchint">正在找这个世界之外还有哪些世界…</span></div></div>';
+  }
+
+  async function loadWorlds() {
+    var box = $("set-worlds");
+    if (!box) return;
+    var cur = phone.worldId();
+    var dirs = [];
+    try {
+      var list = await phone.rpc("content.listDir", { path: "phone/worlds" });
+      dirs = (list || []).filter(function (n) { return n.type === "directory"; });
+    } catch (e) {
+      box.innerHTML = '<span class="wchint">读不到世界列表（' + phone.esc(String(e.message || e)) + "）</span>";
+      return;
+    }
+    var out = [];
+    for (var i = 0; i < dirs.length; i++) {
+      var id = dirs[i].name;
+      var name = id;
+      try {
+        var w = await phone.entriesRaw("phone/worlds/" + id + "/world.data.json");
+        // 只有真能读出清单、而且像一份世界包的，才算一个世界（挡掉半路产生的垃圾目录）
+        if (!w || (!w.name && !w.apps)) continue;
+        name = w.name || id;
+      } catch (e) { continue; }
+      out.push('<button class="wchip' + (id === cur ? " on" : "") + '" data-world="' + phone.esc(id) + '">' +
+        phone.esc(name) + (id === cur ? " · 使用中" : "") + "</button>");
+    }
+    box.innerHTML = out.join("") || '<span class="wchint">phone/worlds 下还没有别的世界</span>';
+  }
+
+  async function switchWorld(id) {
+    if (id === phone.worldId()) return;
+    try {
+      await phone.mutate("phone/config.data.json", "setWorld", { world: id });
+    } catch (e) {
+      phone.toast({ variant: "error", message: "换不了世界", description: String(e.message || e) });
+      return;
+    }
+    phone.toast({ variant: "success", message: "正在进入另一个世界…", description: "手机要重启一下" });
+    setTimeout(function () { phone.post("reload"); }, 700);
+  }
+
+  function render() {
+    var name = (shared.profile && shared.profile.displayName) || "";
+    $("body").innerHTML =
+      '<div class="card"><h3>★ 我的昵称 ★</h3><div class="field">' +
+      '<input id="nick-input" value="' + phone.esc(name) + '" placeholder="好友会这样叫你">' +
+      '<button id="nick-save">保存</button></div></div>' +
+      appearancePanel() +
+      worldPanel() +
+      clockPanel() +
+      '<div class="card"><h3>★ 好友状态 ★</h3><div id="set-friends">' + friendsRows() + "</div></div>" +
+      '<div class="card"><h3>★ 计数器 ★</h3><div class="led" id="set-counter">' +
+      phone.esc(phone.ledDigits((chat.messages || []).length)) + "</div>" +
+      '<div class="led-cap">这台手机里累计的消息数</div></div>' +
+      '<div class="card"><h3>★ 系统信息 ★</h3>' +
+      '<div class="kv"><span class="k">公共数据</span><span>' + phone.esc(phone.FILES.SHARED) + "</span></div>" +
+      '<div class="kv"><span class="k">页面记忆</span><span>' + (localStorageOK() ? "localStorage" : "内存（刷新即失）") + "</span></div>" +
+      '<div class="kv"><span class="k">机体型号</span><span>XIAO-SHOU-JI 2000</span></div>' +
+      '<div class="fbtns" style="margin-top:12px">' +
+      '<button class="secondary" id="go-reload">重启手机</button>' +
+      '<button class="secondary" id="go-jscheck">自检 js-check</button>' +
+      '<button class="secondary" id="go-apiprobe">API 冒烟</button></div>' +
+      '<div class="wchint">加过新数据文件、或改过世界包之后点这里 —— 手机是在打开时读一遍数据的，' +
+      "之后新加的东西它还不知道。</div></div>";
+
+    $("nick-save").addEventListener("click", async function () {
+      var v = ($("nick-input").value || "").trim();
+      if (!v) { phone.toast({ variant: "warning", message: "昵称不能为空" }); return; }
+      var profile = Object.assign({}, shared.profile, { displayName: v, updatedAt: new Date().toISOString() });
+      shared.profile = profile;
+      try {
+        await spherse.data.set({ file: phone.FILES.SHARED, key: "profile", value: profile });
+        phone.toast({ variant: "success", message: "已保存", description: "好友以后会叫你「" + v + "」" });
+      } catch (e) {
+        phone.toast({ variant: "error", message: "保存失败" });
+      }
+    });
+    $("nick-input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); $("nick-save").click(); }
+    });
+  }
+
+  function localStorageOK() {
+    try { localStorage.setItem("__t__", "1"); localStorage.removeItem("__t__"); return true; } catch (e) { return false; }
+  }
+
+  /* ---------- 世界时钟：改流速 / 改基准 ---------- */
+  async function writeClock(anchorWorldDate, rate) {
+    var now = new Date();
+    phone.setShared(Object.assign({}, shared, {
+      worldClock: { anchorReal: now.toISOString(), anchorWorld: anchorWorldDate.toISOString(), rate: rate }
+    }));
+    var w = phone.worldNow();
+    var wc = {
+      anchorReal: now.toISOString(),
+      anchorWorld: anchorWorldDate.toISOString(),
+      rate: rate,
+      now: w.toISOString(),
+      label: (w.getMonth() + 1) + "月" + w.getDate() + "日 " + phone.pad(w.getHours()) + ":00 前后",
+      updatedAt: now.toISOString()
+    };
+    shared.worldClock = wc;
+    try {
+      await phone.mutate(phone.FILES.SHARED, "setWorldClock", wc);
+    } catch (e) {
+      phone.toast({ variant: "error", message: "时钟没存上", description: String(e.message || e) });
+    }
+  }
+
+  async function setRate(rate) {
+    if (saving) return;
+    var cfg = phone.clockCfg();
+    if (cfg && cfg.rate === rate) return;
+    saving = true;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-rate]"), function (n) {
+      n.classList.toggle("on", Number(n.dataset.rate) === rate);
+    });
+    phone.toast({ variant: "success", message: "流速 " + phone.worldRateLabel(rate), description: phone.worldRateHint(rate) });
+    try { await writeClock(phone.worldNow(), rate); } finally { saving = false; }
+  }
+
+  function tickClock() {
+    if (!$("wc-now")) return;
+    var now = phone.worldNow();
+    $("wc-now").textContent = phone.pad(now.getHours()) + ":" + phone.pad(now.getMinutes());
+    $("wc-date").textContent = phone.worldFullLabel(now);
+    var real = new Date();
+    $("wc-real").textContent = phone.pad(real.getHours()) + ":" + phone.pad(real.getMinutes());
+    var cfg = phone.clockCfg();
+    if (cfg && $("wc-hint")) $("wc-hint").textContent = phone.worldRateHint(cfg.rate);
+  }
+
+  /* ---------- 事件 ---------- */
+  $("back").addEventListener("click", function () { phone.goHome(); });
+  $("body").addEventListener("click", function (e) {
+    // 诊断工具：用「文件预览」打开 _archive 下的页面（结果会写进 debug.data.json）
+    if (e.target.id === "go-jscheck") {
+      phone.openProjectFile("phone/_archive/js-check.html");
+      phone.toast({ variant: "info", message: "打开自检页", description: "跑完结果写进 _archive/debug.data.json" });
+      return;
+    }
+    if (e.target.id === "go-apiprobe") {
+      phone.openProjectFile("phone/_archive/api-probe.html");
+      phone.toast({ variant: "info", message: "打开 API 冒烟", description: "真的调一遍引擎 API 并打印结果" });
+      return;
+    }
+    if (e.target.id === "go-reload") {
+      phone.toast({ variant: "info", message: "正在重启手机…" });
+      setTimeout(function () { phone.post("reload"); }, 400);
+      return;
+    }
+    if (e.target.id === "go-theme") { phone.navigate("theme"); return; }
+    var w = e.target.closest("[data-world]");
+    if (w) { switchWorld(w.dataset.world); return; }
+    var chip = e.target.closest("[data-rate]");
+    if (chip) { setRate(Number(chip.dataset.rate)); return; }
+    if (e.target.id === "wc-set") {
+      var v = $("wc-input").value;
+      if (!v) return;
+      var d = new Date(v);
+      if (isNaN(d.getTime())) { phone.toast({ variant: "warning", message: "时间格式不对" }); return; }
+      var cfg = phone.clockCfg();
+      writeClock(d, cfg ? cfg.rate : 60);
+      phone.toast({ variant: "success", message: "基准已设为 " + phone.worldFullLabel(d) });
+    }
+  });
+
+  load().then(loadWorlds).catch(phone.fatal);
+  tickTimer = setInterval(tickClock, 1000);
+  phone.onFileUpdate([phone.FILES.SHARED, phone.FILES.CHAT], function () { load().catch(phone.fatal); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>壁纸诊断</title>
+<style>
+  body{font:13px/1.75 -apple-system,"PingFang SC",sans-serif;padding:14px;background:#fff;color:#111;margin:0}
+  code{background:#f0f0f0;padding:1px 4px;border-radius:3px;word-break:break-all}
+  h3{margin:4px 0 10px}
+  .ok{color:#0a7}.bad{color:#c00}.wait{color:#888}
+</style>
+</head>
+<body>
+<h3>壁纸诊断（结果也会写进 _archive/debug.data.json 的 report）</h3>
+<div id="out" class="wait">跑着呢…</div>
+
+<script src="../engine/theme/phone.js"></script>
+<script>
+(function () {
+  "use strict";
+  var WORLD = "hogwarts";
+  // 要探测哪张图就把下面这行换成**世界目录内**的相对路径，例如 "assets/xxx.png"
+  var SRC = "assets/map.svg";
+  var lines = [], report = {};
+
+  // 上报/显示前把 URL 擦干净：只留项目内路径，去掉 origin 与平台的 __auth 令牌（那是访问凭据）
+  function safePath(u) {
+    var s = String(u == null ? "" : u);
+    var i = s.indexOf("/phone/");
+    if (i >= 0) return s.slice(i);
+    try { var x = new URL(s, location.href); s = x.pathname + x.search + x.hash; } catch (e) {}
+    var j = s.indexOf("/phone/");
+    if (j >= 0) return s.slice(j);
+    return s.replace(/\/__auth\/[^/]+/g, "/__auth/***");
+  }
+
+  function log(s) {
+    lines.push(s);
+    document.getElementById("out").innerHTML = lines.map(function (x) { return "<div>" + x + "</div>"; }).join("");
+  }
+  function test(label, url) {
+    return new Promise(function (res) {
+      var im = new Image(), done = false;
+      var t = setTimeout(function () {
+        if (done) return; done = true;
+        log('⏱ <span class="wait">' + label + ' 6 秒没动静（大图会这样）</span> → <code>' + safePath(url) + "</code>");
+        report[label] = "timeout: " + safePath(url); res();
+      }, 6000);
+      im.onload = function () {
+        if (done) return; done = true; clearTimeout(t);
+        log('✅ <span class="ok">' + label + " 载入成功 " + im.naturalWidth + "×" + im.naturalHeight + "</span> → <code>" + safePath(url) + "</code>");
+        report[label] = "ok " + im.naturalWidth + "x" + im.naturalHeight + ": " + safePath(url); res();
+      };
+      im.onerror = function () {
+        if (done) return; done = true; clearTimeout(t);
+        log('❌ <span class="bad">' + label + " 载入失败</span> → <code>" + safePath(url) + "</code>");
+        report[label] = "error: " + safePath(url); res();
+      };
+      im.src = url;
+    });
+  }
+  (async function () {
+    report.href = safePath(location.href);
+    report.baseURI = safePath(document.baseURI);
+    report.hasSDK = !!window.spherse;
+    report.src = SRC;
+    log("<b>location.href</b>: <code>" + safePath(location.href) + "</code>");
+    log("<b>document.baseURI</b>: <code>" + safePath(document.baseURI) + "</code>");
+    log("<b>有 spherse SDK</b>: " + (!!window.spherse) + " ・ <b>有 phone</b>: " + (typeof window.phone !== "undefined"));
+
+    var list = [
+      ["A 外壳现在用的 ../worlds/", "../worlds/" + WORLD + "/" + SRC],
+      ["B ./worlds/（同级）", "./worlds/" + WORLD + "/" + SRC],
+      ["C ../../worlds/", "../../worlds/" + WORLD + "/" + SRC],
+      ["D 站点根 /phone/worlds/", "/phone/worlds/" + WORLD + "/" + SRC],
+      ["E ../phone/worlds/", "../phone/worlds/" + WORLD + "/" + SRC]
+    ];
+    // 官方 API 给的是什么，也测一遍
+    try {
+      if (window.phone && phone.assetUrl) {
+        var u = phone.assetUrl(SRC);
+        report.assetUrl = safePath(u);
+        list.push(["F phone.assetUrl()", u]);
+        log("<b>phone.assetUrl(src)</b> = <code>" + safePath(u) + "</code>");
+      }
+    } catch (e) { log("assetUrl 调不动：" + e.message); }
+
+    for (var i = 0; i < list.length; i++) await test(list[i][0], list[i][1]);
+
+    log("—— 完 ——");
+    try {
+      if (window.spherse && spherse.data && spherse.data.set) {
+        await spherse.data.set({ file: "phone/_archive/debug.data.json", key: "report", value: report });
+        log('<span class="ok">结果已写进 debug.data.json 的 report</span>');
+      } else {
+        log('<span class="bad">没有 SDK，写不出去（结果只能看这一页）</span>');
+      }
+    } catch (e) { log('<span class="bad">写文件失败：' + e.message + "</span>"); }
+  })();
+})();
+</script>
+</body>
+</html>

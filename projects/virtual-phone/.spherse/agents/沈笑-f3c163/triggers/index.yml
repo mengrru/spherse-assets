@@ -1,0 +1,102 @@
+- id: 9zlMU_mvJmNXK0h_b2aKk
+  name: 晚上（沈笑）
+  enabled: true
+  type: time
+  cron: 15 20 * * *
+  mode: reusable_session
+  message: >-
+    【日常】现实时间到了 {{weekday}} {{time}}（傍晚/夜里）。
+
+
+    手机里的时间另有算法 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock"
+    的 now / label。先搞清手机里现在几点，再决定要不要跟她说句话、说什么。
+
+
+    想说的话按《小手机 · 角色通用规则》第 4 节处理；不想发就回「不发」。
+  notify: false
+  createdAt: 1791043231639
+  updatedAt: 1791047353637
+- id: fZZSBE-8X7zECx49ApIO0
+  name: 下午（沈笑）
+  enabled: true
+  type: time
+  cron: 40 14 * * *
+  mode: reusable_session
+  message: >-
+    【日常】现实时间是 {{weekday}} {{time}}。
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间来判断你此刻该在干什么（在店里看店？下班回家了？还是蹲在夜市摊上？）、心情如何。
+
+
+    想不想跟她说句话？想的话按《小手机 · 角色通用规则》第 4 节处理；不想发就回一句「不发」，什么都不用做。
+
+
+    （另外：她随手写下的东西你是能看到的 —— 见《通用规则》第 12 节。想提就自然地带一句，不提也完全可以。）
+  notify: false
+  createdAt: 1791043232588
+  updatedAt: 1791047352223
+- id: v2yvtajoZxaxDn0XJNI9Q
+  name: 逛论坛（沈笑）
+  enabled: true
+  type: time
+  cron: 0 23 * * *
+  mode: reusable_session
+  message: >-
+    【逛论坛】现实时间是 {{weekday}} {{time}}。
+
+
+    **你是沈笑。** 去临江论坛逛一圈。
+
+
+    1. 先读最近的帖子：`query_data`，name `listPosts`（file 用消息里的「数据文件」行）。
+
+    2. 想动的话二选一：
+       - 发新帖：`mutate_data`，name `createPost`，args `{ "board": "chat", "title": "…", "body": "…", "author": "沈笑", "anonymous": false }`
+       - 回帖：`mutate_data`，name `addReply`，args `{ "postId": "<帖子 id>", "author": "沈笑", "body": "…" }`
+    3. 版块：`chat` 临江杂谈 / `hole` 深夜树洞（只匿名）/ `lost` 找人·失物 / `market` 二手。
+
+
+    规矩：
+
+
+    - **多数时候只是看看**。没什么想说的就回一句「不发」—— 论坛不需要天天有人发帖。
+
+    - **一次最多一条**（一帖，或者一层回复、最多两层）。
+
+    - 用你**自己的署名**（沈笑）。你就是那种会在杂谈版底下怼两句的人，但别真的伤人。
+
+    - 内容要像真人随手写的：店里的歌、磁带、夜市、她妈念叨、江边的风。别写长段落。
+
+    - 别顺手改好感度，也别借这个给手机主人发消息。
+  notify: false
+  createdAt: 1791043239471
+  updatedAt: 1791043239471
+- id: 07BQPGLsLXpUOgfqnfzc8
+  name: 挪位置（沈笑）
+  enabled: true
+  type: time
+  cron: 30 11,15,21 * * *
+  mode: reusable_session
+  message: >-
+    【日常·挪个位置】现实时间是 {{weekday}} {{time}}。
+
+
+    **你是沈笑**，**你的档案 id 是 55fe1857-02cc-4458-bf42-0175235cb7a4**。看一眼你自己现在在哪、该不该挪：
+
+
+    1. 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」）的 `characters`，看你那一条的
+    `placeName` / `doing` / `mood`。
+
+    2. 按手机里的时间（同一个文件里的 `worldClock`，看 `now` /
+    `label`）判断：该在音像店看店的、该回家吃饭被她妈念叨的、还是该在夜市摊上坐着的。
+
+    3. 要挪就用 `updateCharacter` 把 `placeName` 和 `doing` **一起**改掉（`placeName` 必须写
+    map.data.json 里真实的地点名 —— 你的店叫「打口音像店」）。
+
+
+    规矩：不用每次都挪；没什么变化就回一句「不发」。别顺手改好感度，也别拿这个来发消息 —— 这只是让地图对得上。
+  notify: false
+  createdAt: 1791043240355
+  updatedAt: 1791047399338

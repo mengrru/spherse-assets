@@ -1,0 +1,19 @@
+- id: zjn4HohH14lEfDloXFfAf
+  name: 熄灯后（23:40）
+  enabled: true
+  type: time
+  cron: 40 23 * * *
+  mode: reusable_session
+  message: >-
+    【电台】现实时间是 {{weekday}} {{time}}，熄灯之后了。
+
+
+    手机里的时间另算 —— 用 read_data 读本世界的公共数据（路径见 world.md 的「数据在哪」），看 key="worldClock" 的
+    now / label，按那个时间判断"外面安不安全、该不该出声"。
+
+
+    按《校园无线 · 行为规则》处理：先看最近说过什么（`listShows`）、歌单里有什么（`listTracks`），敢播就写一条节目（有对应的歌就填
+    trackId）；觉得今晚不该出声，就回一句「不发」。
+  notify: false
+  createdAt: 1791032761633
+  updatedAt: 1791048258608

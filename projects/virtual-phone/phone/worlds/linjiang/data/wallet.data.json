@@ -1,0 +1,52 @@
+{
+  "$manifest": {
+    "version": 1,
+    "desc": "小手机 · 钱包：零钱与账单流水",
+    "queries": {
+      "listTransactions": {
+        "desc": "读取账单流水，最新在前，可按方向或对象过滤",
+        "path": "transactions",
+        "identity": "id",
+        "params": {
+          "direction": { "type": "enum", "values": ["in", "out"] },
+          "counterpartyId": { "type": "string" },
+          "sort": { "type": "field" },
+          "dir": { "type": "enum", "values": ["asc", "desc"], "default": "desc" }
+        },
+        "defaultLimit": 20
+      }
+    },
+    "mutations": {
+      "sendMoney": {
+        "desc": "记一笔转账或红包。direction 以手机主人为基准：out=主人转出，in=主人收到",
+        "op": "append",
+        "path": "transactions",
+        "fields": {
+          "kind": { "type": "enum", "values": ["transfer", "redPacket", "topup"], "required": true },
+          "direction": { "type": "enum", "values": ["in", "out"], "required": true },
+          "amount": { "type": "number", "required": true },
+          "counterpartyId": { "type": "string", "required": true },
+          "counterpartyName": { "type": "string" },
+          "note": { "type": "string" },
+          "status": { "type": "enum", "values": ["pending", "accepted", "returned"], "default": "pending" }
+        },
+        "auto": { "id": "uuid", "createdAt": "nowIso" }
+      },
+      "setTransactionStatus": {
+        "desc": "收下 / 退回一笔转账（pending → accepted 或 returned）",
+        "op": "update",
+        "path": "transactions",
+        "match": "id",
+        "fields": {
+          "status": { "type": "enum", "values": ["pending", "accepted", "returned"], "required": true }
+        }
+      }
+    }
+  },
+  "wallet": {
+    "initial": 1280,
+    "currency": "元",
+    "updatedAt": "2026-10-03T15:00:00.000Z"
+  },
+  "transactions": []
+}
