@@ -11,6 +11,7 @@ on:
         options:
           - skills
           - projects
+          - prompts
 
 permissions:
   contents: read
@@ -46,8 +47,12 @@ jobs:
           OSS_PUBLIC_BASE_URL: ${{ vars.OSS_PUBLIC_BASE_URL }}
         run: node scripts/publish-projects.mjs
 
+      - name: Build prompt publish artifacts
+        if: inputs.resource == 'prompts'
+        run: node scripts/publish-prompts.mjs
+
       - name: Install ossutil
-        if: inputs.resource == 'skills' || inputs.resource == 'projects'
+        if: inputs.resource == 'skills' || inputs.resource == 'projects' || inputs.resource == 'prompts'
         run: |
           curl -fsSL -o /tmp/ossutil https://gosspublic.alicdn.com/ossutil/1.7.18/ossutil64
           chmod +x /tmp/ossutil
@@ -111,3 +116,20 @@ jobs:
             -e "$OSS_ENDPOINT" \
             -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" \
             --force -u
+
+      - name: Upload prompt language jsons
+        if: inputs.resource == 'prompts'
+        env:
+          OSS_BUCKET: ${{ vars.OSS_BUCKET }}
+          OSS_ENDPOINT: ${{ vars.OSS_ENDPOINT }}
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        run: |
+          find dist/spherse/prompts -type f -name '*.json' | while read -r f; do
+            key="${f#dist/}"
+            echo "uploading $key"
+            /tmp/ossutil cp "$f" "oss://$OSS_BUCKET/$key" \
+              -e "$OSS_ENDPOINT" \
+              -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" \
+              --force -u
+          done

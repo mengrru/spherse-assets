@@ -6,7 +6,8 @@
   "scripts": {
     "publish:skills": "node scripts/publish-skills.mjs",
     "publish:projects": "node scripts/publish-projects.mjs",
-    "test": "node scripts/publish-skills.test.mjs && node scripts/publish-projects.test.mjs"
+    "publish:prompts": "node scripts/publish-prompts.mjs",
+    "test": "node scripts/publish-skills.test.mjs && node scripts/publish-projects.test.mjs && node scripts/publish-prompts.test.mjs"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
