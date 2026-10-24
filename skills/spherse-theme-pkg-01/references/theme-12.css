@@ -242,8 +242,14 @@ button[aria-haspopup="listbox"] {
 [data-tab-bar] {
   background: rgba(8, 11, 16, 0.7);
   border-bottom: 1px solid rgba(46, 230, 230, 0.2);
+  /* 这里的 gap 只作用于「欢迎页标签 ↔ 内容标签滚动列表」之间 */
   gap: 3px;
   padding: 3px 4px 0;
+}
+
+/* 内容标签都在横向滚动容器 [data-tab-scroll] 内，标签之间的间距要加在它上面 */
+[data-tab-scroll] {
+  gap: 3px;
 }
 
 [data-tab] {

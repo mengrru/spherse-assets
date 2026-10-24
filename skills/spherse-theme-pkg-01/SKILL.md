@@ -1,7 +1,7 @@
 ---
 name: spherse-theme-pkg-01
 description: Spherse 主题包，内置 15 款可一键应用的 UI 主题；当用户询问有哪些主题、想要查看主题预览或要求更换/应用某个主题时使用
-version: 0.1.9
+version: 0.1.10
 ---
 
 # Spherse 主题包（spherse-theme-pkg-01）
